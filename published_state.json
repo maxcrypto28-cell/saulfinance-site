@@ -41,7 +41,9 @@
       "value_native": 6614.0,
       "value_cad": 6614.0,
       "quote": null,
-      "weight_cad": 0.05838663491490135
+      "weight_cad": 0.05838663491490135,
+      "shares": 100.0,
+      "starting_shares_theoretical": 100.0
     },
     {
       "symbol": "PPL.TO",
@@ -54,7 +56,9 @@
       "value_native": 6816.0,
       "value_cad": 6816.0,
       "quote": null,
-      "weight_cad": 0.06016983725128026
+      "weight_cad": 0.06016983725128026,
+      "shares": 100.0,
+      "starting_shares_theoretical": 100.0
     },
     {
       "symbol": "H.TO",
@@ -67,7 +71,9 @@
       "value_native": 6633.2,
       "value_cad": 6633.2,
       "quote": null,
-      "weight_cad": 0.05855612741420073
+      "weight_cad": 0.05855612741420073,
+      "shares": 115.0,
+      "starting_shares_theoretical": 115.0
     },
     {
       "symbol": "RY.TO",
@@ -80,7 +86,9 @@
       "value_native": 8781.54,
       "value_cad": 8781.54,
       "quote": null,
-      "weight_cad": 0.07752110220299409
+      "weight_cad": 0.07752110220299409,
+      "shares": 30.90350506756757,
+      "starting_shares_theoretical": 30.90350506756757
     },
     {
       "symbol": "CM.TO",
@@ -93,7 +101,9 @@
       "value_native": 4067.25,
       "value_cad": 4067.25,
       "quote": null,
-      "weight_cad": 0.03590460248830247
+      "weight_cad": 0.03590460248830247,
+      "shares": 25.0,
+      "starting_shares_theoretical": 25.0
     },
     {
       "symbol": "CNR.TO",
@@ -106,7 +116,9 @@
       "value_native": 8709.51,
       "value_cad": 8709.51,
       "quote": null,
-      "weight_cad": 0.07688524049859125
+      "weight_cad": 0.07688524049859125,
+      "shares": 49.70897779807088,
+      "starting_shares_theoretical": 49.70897779807088
     },
     {
       "symbol": "EIF.TO",
@@ -119,7 +131,9 @@
       "value_native": 4150.3,
       "value_cad": 4150.3,
       "quote": null,
-      "weight_cad": 0.036637745825115677
+      "weight_cad": 0.036637745825115677,
+      "shares": 35.0,
+      "starting_shares_theoretical": 35.0
     },
     {
       "symbol": "POW.TO",
@@ -132,7 +146,9 @@
       "value_native": 3654.4,
       "value_cad": 3654.4,
       "quote": null,
-      "weight_cad": 0.03226007236664885
+      "weight_cad": 0.03226007236664885,
+      "shares": 40.0,
+      "starting_shares_theoretical": 40.0
     },
     {
       "symbol": "CRT-UN.TO",
@@ -145,7 +161,9 @@
       "value_native": 2715.0,
       "value_cad": 2715.0,
       "quote": null,
-      "weight_cad": 0.023967298729053094
+      "weight_cad": 0.023967298729053094,
+      "shares": 150.0,
+      "starting_shares_theoretical": 150.0
     },
     {
       "symbol": "CNQ.TO",
@@ -158,7 +176,9 @@
       "value_native": 4110.0,
       "value_cad": 4110.0,
       "quote": null,
-      "weight_cad": 0.03628198813127374
+      "weight_cad": 0.03628198813127374,
+      "shares": 60.0,
+      "starting_shares_theoretical": 60.0
     },
     {
       "symbol": "O",
@@ -171,7 +191,9 @@
       "value_native": 5904.0,
       "value_cad": 8332.3152,
       "quote": null,
-      "weight_cad": 0.07355546501032403
+      "weight_cad": 0.07355546501032403,
+      "shares": 100.0,
+      "starting_shares_theoretical": 100.0
     },
     {
       "symbol": "NNN",
@@ -184,7 +206,9 @@
       "value_native": 2056.0,
       "value_cad": 2901.6328,
       "quote": null,
-      "weight_cad": 0.025614843506305256
+      "weight_cad": 0.025614843506305256,
+      "shares": 50.0,
+      "starting_shares_theoretical": 50.0
     },
     {
       "symbol": "KO",
@@ -197,7 +221,9 @@
       "value_native": 1913.4,
       "value_cad": 2700.38142,
       "quote": null,
-      "weight_cad": 0.02383824978840685
+      "weight_cad": 0.02383824978840685,
+      "shares": 20.0,
+      "starting_shares_theoretical": 20.0
     },
     {
       "symbol": "V",
@@ -210,7 +236,9 @@
       "value_native": 5532.41,
       "value_cad": 7807.890233,
       "quote": null,
-      "weight_cad": 0.06892598072116647
+      "weight_cad": 0.06892598072116647,
+      "shares": 13.089814267124098,
+      "starting_shares_theoretical": 13.089814267124098
     },
     {
       "symbol": "WM",
@@ -223,7 +251,9 @@
       "value_native": 5185.82,
       "value_cad": 7318.7477659999995,
       "quote": null,
-      "weight_cad": 0.06460796096880736
+      "weight_cad": 0.06460796096880736,
+      "shares": 21.949631761618555,
+      "starting_shares_theoretical": 21.949631761618555
     },
     {
       "symbol": "RTX",
@@ -236,7 +266,9 @@
       "value_native": 2274.36,
       "value_cad": 3209.8042680000003,
       "quote": null,
-      "weight_cad": 0.02833529935651772
+      "weight_cad": 0.02833529935651772,
+      "shares": 12.0,
+      "starting_shares_theoretical": 12.0
     },
     {
       "symbol": "NOC",
@@ -249,7 +281,9 @@
       "value_native": 2625.05,
       "value_cad": 3704.7330650000004,
       "quote": null,
-      "weight_cad": 0.03270439929291178
+      "weight_cad": 0.03270439929291178,
+      "shares": 5.0,
+      "starting_shares_theoretical": 5.0
     },
     {
       "symbol": "IRM",
@@ -262,7 +296,9 @@
       "value_native": 2130.4,
       "value_cad": 3006.6335200000003,
       "quote": null,
-      "weight_cad": 0.026541761967817473
+      "weight_cad": 0.026541761967817473,
+      "shares": 20.0,
+      "starting_shares_theoretical": 20.0
     },
     {
       "symbol": "PEP",
@@ -275,7 +311,9 @@
       "value_native": 1413.4,
       "value_cad": 1994.73142,
       "quote": null,
-      "weight_cad": 0.01760895905243767
+      "weight_cad": 0.01760895905243767,
+      "shares": 10.0,
+      "starting_shares_theoretical": 10.0
     },
     {
       "symbol": "WMT",
@@ -288,7 +326,9 @@
       "value_native": 4393.2,
       "value_cad": 6200.12316,
       "quote": null,
-      "weight_cad": 0.05473304012251958
+      "weight_cad": 0.05473304012251958,
+      "shares": 35.0,
+      "starting_shares_theoretical": 35.0
     },
     {
       "symbol": "JNJ",
@@ -301,7 +341,9 @@
       "value_native": 2762.2000000000003,
       "value_cad": 3898.2928600000005,
       "quote": null,
-      "weight_cad": 0.03441309374178813
+      "weight_cad": 0.03441309374178813,
+      "shares": 10.0,
+      "starting_shares_theoretical": 10.0
     },
     {
       "symbol": "LMT",
@@ -314,7 +356,9 @@
       "value_native": 2835.4,
       "value_cad": 4001.6000200000003,
       "quote": null,
-      "weight_cad": 0.035325061905534014
+      "weight_cad": 0.035325061905534014,
+      "shares": 5.0,
+      "starting_shares_theoretical": 5.0
     },
     {
       "symbol": "MCD",
@@ -327,7 +371,9 @@
       "value_native": 1382.6,
       "value_cad": 1951.2633799999999,
       "quote": null,
-      "weight_cad": 0.017225234743101968
+      "weight_cad": 0.017225234743101968,
+      "shares": 5.0,
+      "starting_shares_theoretical": 5.0
     }
   ],
   "sectors": {

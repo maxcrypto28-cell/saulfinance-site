@@ -15,7 +15,7 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
  $('holdings').innerHTML=s.holdings.map(h=>`<article class="holding"><h3>${esc(h.symbol)} <small class="status">${esc(h.status)}</small></h3><p class="name">${esc(h.name)}<br>${esc(h.sector)}</p><p class="fine">${live?'Observed position value':'Planned capital · model reference'}</p><div class="quote">${money(h.value_native,h.currency)}</div><div class="row-metrics"><span>CAD equivalent: ${money(h.value_cad)}</span><span>Weight: ${h.weight_cad==null?'—':(h.weight_cad*100).toFixed(2)+'%'}</span></div>${live?`<p class="quote-state">${h.quote?(h.quote.stale?'STALE cached observation':'Observed bar, possibly delayed'):'UNAVAILABLE'}<br>Market bar start: ${esc(date(h.quote?.market_bar_start))}<br>Last fetch: ${esc(date(h.quote?.fetched_at))}</p>`:'<p class="fine">Original model reference · not a confirmed purchase</p>'}</article>`).join('');
  $('sector-note').textContent=v.complete?(live?'CAD weights use the observed prices/FX above, including any flagged stale values.':'CAD weights use original model capital and fixed reference FX. Custom mutually exclusive business categories sum to 100%.'):'Weights hidden until all required observations are available.';
  $('sectors').innerHTML=Object.entries(s.sectors).sort((a,b)=>b[1]-a[1]).map(([name,w])=>`<div class="sector"><div class="sector-label"><span>${esc(name)}</span><span>${(w*100).toFixed(2)}%</span></div><div class="bar"><span style="width:${Math.max(0,Math.min(100,w*100))}%"></span></div></div>`).join('');
- renderDesktop(s);clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
+ await renderDesktop(s);clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
@@ -104,15 +104,82 @@ function allocationLabelGeometry(rows){
  }
  return {width:720,height,cx,cy,radius,labels};
 }
-// Desktop keeps the full labelled viewBox; phones crop to the ring (outside labels hidden, legend shown).
-function fitDonut(){const svg=document.querySelector('#native-holdings .native-donut');if(!svg)return;if(!svg.dataset.full)svg.dataset.full=svg.getAttribute('viewBox');
- const [,,w,h]=svg.dataset.full.split(' ').map(Number),c=[w/2,h/2],r=215;svg.setAttribute('viewBox',MOBILE.matches?`${c[0]-r} ${c[1]-r} ${2*r} ${2*r}`:svg.dataset.full)}
+// Mobile: top N slices by weight with outside tickers + thin leaders; desktop geometry untouched.
+const MOBILE_DONUT_LABELS=9;
+function mobileAllocationLabelGeometry(rows,desk,n=MOBILE_DONUT_LABELS){
+ // Reuse desktop pie center so arc geometry stays correct; only the label set and mobile viewBox crop change.
+ const cx=desk.cx,cy=desk.cy,radius=desk.radius,outer=186;let cumulative=0;
+ const angled=rows.map(holding=>{const angle=-Math.PI/2+(cumulative+holding.weight_cad/2)*Math.PI*2;cumulative+=holding.weight_cad;
+  return {symbol:holding.symbol,ticker:holding.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'),weight:holding.weight_cad,angle,side:Math.cos(angle)>=0?'right':'left',rawY:outer*Math.sin(angle)};
+ });
+ const top=[...angled].sort((a,b)=>b.weight-a.weight).slice(0,n);
+ const groups={left:top.filter(l=>l.side==='left'),right:top.filter(l=>l.side==='right')};
+ const labels=[];
+ for(const side of ['left','right']){const list=groups[side].sort((a,b)=>a.rawY-b.rawY),sign=side==='right'?1:-1;
+  const span=210,topY=cy-span/2,botY=cy+span/2;
+  list.forEach((label,i)=>{const y=list.length===1?cy:topY+i*(botY-topY)/Math.max(1,list.length-1);
+   labels.push({...label,x:side==='right'?cx+275:cx-275,y,points:[[cx+outer*Math.cos(label.angle),cy+outer*Math.sin(label.angle)],[cx+(outer+12)*Math.cos(label.angle),cy+(outer+12)*Math.sin(label.angle)],[cx+sign*235,y],[cx+sign*255,y]]});
+  });
+ }
+ // Mobile crop: ring + side gutters for tickers (~600x480 around center)
+ const padX=300,padY=250;
+ return {width:desk.width,height:desk.height,cx,cy,radius,labels,count:top.length,viewBox:`${cx-padX} ${cy-padY} ${padX*2} ${padY*2}`};
+}
+function normalizeTicker(t){return String(t||'').toUpperCase().replace(/-UN\.TO$/,'-UN').replace(/\.TO$/,'').replace('CRT-UN','CRT.UN')}
+function daysToExpiration(opened,expiration){
+ if(!expiration)return null;
+ const end=new Date(expiration+'T12:00:00');
+ const start=new Date((opened||new Date().toISOString().slice(0,10))+'T12:00:00');
+ if(Number.isNaN(end.getTime())||Number.isNaN(start.getTime()))return null;
+ const days=(end-start)/86400000;return days>0?days:null;
+}
+function premiumToCad(pos,fx){
+ const t=premiumTotal(pos);if(t==null)return null;
+ return (String(pos.currency||'CAD').toUpperCase()==='USD')?t*Number(fx||1):t;
+}
+function ccYieldMap(holdings,positions,fx){
+ const map=new Map();
+ const open=(positions||[]).filter(p=>String(p.status||'').toLowerCase()==='open');
+ for(const h of holdings){
+  const matches=open.filter(p=>normalizeTicker(p.underlying)===normalizeTicker(h.symbol));
+  if(!matches.length){map.set(h.symbol,null);continue}
+  const valueCad=Number(h.value_cad??h.reference_capital_cad??h.planned_capital_native);
+  if(!valueCad){map.set(h.symbol,null);continue}
+  let sum=0,ok=false;
+  for(const p of matches){
+   const premCad=premiumToCad(p,fx);const days=daysToExpiration(p.opened_date,p.expiration);
+   if(premCad==null||days==null)continue;
+   sum+=(premCad/valueCad)*(365/days);ok=true;
+  }
+  map.set(h.symbol,ok?sum:null);
+ }
+ return map;
+}
+function formatCcYield(frac){
+ if(frac==null||Number.isNaN(frac))return '—';
+ return (frac*100).toFixed(1)+'%';
+}
+function formatShares(n){
+ if(n==null||Number.isNaN(Number(n)))return '—';
+ const v=Number(n);
+ if(Number.isInteger(v)||Math.abs(v-Math.round(v))<1e-9)return Math.round(v).toLocaleString('en-CA')+' sh';
+ return v.toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2})+' sh';
+}
+// Desktop: full labelled viewBox. Mobile: taller labelled viewBox for top-N tickers (not ring crop).
+function fitDonut(){const svg=document.querySelector('#native-holdings .native-donut');if(!svg)return;
+ if(MOBILE.matches){if(svg.dataset.mobile)svg.setAttribute('viewBox',svg.dataset.mobile)}
+ else{if(svg.dataset.full)svg.setAttribute('viewBox',svg.dataset.full)}
+}
 MOBILE.addEventListener?.('change',fitDonut);
-function renderDesktop(s){
+async function renderDesktop(s){
  const palette=['#00dca6','#49ffd0','#0daa96','#7af5be','#29b9c8','#52d878','#a6dc63','#73bcac','#1bdbb4','#74f3df','#97c7a0','#40f1bc'];
- const sorted=[...s.holdings].sort((a,b)=>b.weight_cad-a.weight_cad),pie=allocationLabelGeometry(sorted),circumference=2*Math.PI*pie.radius;let offset=0;
+ const sorted=[...s.holdings].sort((a,b)=>b.weight_cad-a.weight_cad),pie=allocationLabelGeometry(sorted),mobilePie=mobileAllocationLabelGeometry(sorted,pie),circumference=2*Math.PI*pie.radius;let offset=0;
+ try{if(!COVERED_CALLS._loaded){const r=await fetch('/data/covered-calls.json',{cache:'no-store'});if(r.ok){COVERED_CALLS=await r.json();COVERED_CALLS._loaded=true;renderCoveredCalls(COVERED_CALLS)}}}catch(e){}
+ const yields=ccYieldMap(sorted,COVERED_CALLS.positions||[],s.valuation.fx_cad_per_usd);
  const arcs=sorted.map((h,i)=>{const percent=h.weight_cad*100,arc=`<circle cx="${pie.cx}" cy="${pie.cy}" r="${pie.radius}" fill="none" stroke="${palette[i%palette.length]}" stroke-width="46" stroke-dasharray="${h.weight_cad*circumference} ${circumference*(1-h.weight_cad)}" stroke-dashoffset="${-offset*circumference/100}" transform="rotate(-90 ${pie.cx} ${pie.cy})"><title>${esc(h.symbol)} · ${percent.toFixed(2)}%</title></circle>`;offset+=percent;return arc}).join('');
- $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><p class="eyebrow">23 HOLDINGS. EVERY DOLLAR AT WORK.</p><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" role="img" aria-label="Capital-weighted allocation across 23 planned holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('')}</g><text x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD MODEL REFERENCE</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>23 PLANNED</strong> · Not confirmed trades</p><p>Native C$ / US$ allocations.<br>CAD weights use fixed FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p><p class="muted">Original November 6 inputs, prepared November 8, 2026. Not live account values.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The proposed basket</h3><span>23 PLANNED · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all 23 planned holding allocations"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Native capital</th><th scope="col">Weight</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</th><td class="business-name" title="${esc(h.name)}">${esc(h.name)}</td><td>${money(h.planned_capital_native,h.currency)}</td><td>${(h.weight_cad*100).toFixed(2)}%</td></tr>`).join('')}</tbody></table></div></section>`;
+ const deskLabels=pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
+ const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
+ $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><p class="eyebrow">23 HOLDINGS. EVERY DOLLAR AT WORK.</p><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across 23 planned holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD MODEL REFERENCE</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>23 PLANNED</strong> · Not confirmed trades</p><p>Native C$ / US$ allocations.<br>CAD weights use fixed FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p><p class="muted">Original November 6 inputs, prepared November 8, 2026. Not live account values.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The proposed basket</h3><span>23 PLANNED · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all 23 planned holding allocations"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annualized open covered-call premium ÷ position value × (365 ÷ days from opened date, or today, to expiration). Multiple open calls on one ticker are summed.">CC yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</th><td class="business-name" title="${esc(h.name)}">${esc(h.name)}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td data-label="Weight">${(h.weight_cad*100).toFixed(2)}%</td><td class="cc-yield" data-label="CC yield">${formatCcYield(yields.get(h.symbol))}</td></tr>`).join('')}</tbody></table></div><p class="fine cc-yield-note">Shares = model starting shares theoretical (allocation_v3). CC yield = annualized open covered-call premium ÷ position CAD value × (365 ÷ days to expiration). No open call → —.</p></section>`;
  fitDonut(); loadDailyPnl();
  const gross=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[1],0),net=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[2],0),max=Math.max(...MODEL_DISPLAY.monthly.map(r=>r[2]));
  $('native-monthly').innerHTML=`<div class="income-totals"><div><span>Annual gross model</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable proxy</span><strong>${money(net)}</strong></div></div><p class="native-note">Representative monthly net income in C$ · not actual receipts</p><div class="monthly-bars">${MODEL_DISPLAY.monthly.map(r=>`<div class="monthly-row"><span>${esc(r[0])}</span><div class="monthly-track"><span style="width:${r[2]/max*100}%"></span></div><strong>${money(r[2])}</strong></div>`).join('')}</div><p class="native-note">Original rates and fixed FX. Modeled net income is reinvested; payments and tax outcomes are not guaranteed.</p>`;
@@ -183,7 +250,7 @@ function formatShortDate(s){
 }
 function renderCoveredCalls(data){
   const host=$('native-covered-calls'); if(!host)return;
-  COVERED_CALLS=data||{updated_at:null,positions:[]};
+  COVERED_CALLS=data||{updated_at:null,positions:[]};COVERED_CALLS._loaded=true;
   const positions=Array.isArray(COVERED_CALLS.positions)?COVERED_CALLS.positions:[];
   const open=positions.filter(p=>String(p.status||'').toLowerCase()==='open');
   const history=positions.filter(p=>['closed','assigned','expired'].includes(String(p.status||'').toLowerCase()));
