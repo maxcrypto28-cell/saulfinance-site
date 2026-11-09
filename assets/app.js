@@ -17,3 +17,53 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
  clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
+
+// Five physical slides, three content pages; portfolio data stays read-only.
+(()=>{
+ const slides=[...document.querySelectorAll('.slide')],deck=$('deck');
+ const nav=[...document.querySelectorAll('[data-page]')],ids=slides.map(s=>s.id);
+ let index=0,wheelTotal=0,lastWheel=0,lockedUntil=0,touchStart=null;
+ const dialogOpen=()=>!!document.querySelector('dialog[open]');
+ function goTo(value){
+  const next=Math.max(0,Math.min(slides.length-1,Number(value)));if(!Number.isInteger(next))return;
+  const old=slides[index],moveFocus=old?.contains(document.activeElement);index=next;
+  deck.style.transform=`translate3d(${-index*100}%,0,0)`;
+  $('portfolio-deck').scrollLeft=0;$('portfolio-deck').scrollTop=0;
+  slides.forEach((slide,i)=>{slide.inert=i!==index;slide.setAttribute('aria-hidden',String(i!==index))});
+  nav.forEach(button=>{if(Number(button.dataset.page)===index)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
+  const content=[0,2,4].indexOf(index),position=`Slide ${index+1} of ${slides.length}`;
+  $('page-counter').textContent=content>=0?`Page ${content+1} of 3 · ${position}`:`Logo transition ${index===1?'1 → 2':'2 → 3'} · ${position}`;
+  $('previous-slide').disabled=index===0;$('next-slide').disabled=index===slides.length-1;
+  history.replaceState(null,'',`#${ids[index]}`);
+  if(moveFocus)slides[index].querySelector('h2')?.focus({preventScroll:true});
+ }
+ nav.forEach(button=>button.addEventListener('click',()=>goTo(button.dataset.page)));
+ $('previous-slide').addEventListener('click',()=>goTo(index-1));$('next-slide').addEventListener('click',()=>goTo(index+1));
+ document.addEventListener('keydown',event=>{
+  if(dialogOpen()||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
+  if(['ArrowRight','ArrowLeft','Home','End'].includes(event.key)){event.preventDefault();goTo(event.key==='Home'?0:event.key==='End'?slides.length-1:index+(event.key==='ArrowRight'?1:-1))}
+ });
+ $('portfolio-deck').addEventListener('wheel',event=>{
+  if(event.ctrlKey||event.metaKey||dialogOpen()||event.target.closest('[data-scroll-region]'))return;
+  const now=performance.now(),scale=event.deltaMode===1?16:event.deltaMode===2?window.innerHeight:1;
+  const delta=(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*scale;if(!delta)return;
+  event.preventDefault();if(now<lockedUntil){lastWheel=now;return}
+  if(now-lastWheel>220||Math.sign(wheelTotal)!==Math.sign(delta))wheelTotal=0;lastWheel=now;wheelTotal+=delta;
+  if(Math.abs(wheelTotal)>=75){goTo(index+Math.sign(wheelTotal));wheelTotal=0;lockedUntil=now+700}
+ },{passive:false});
+ const viewport=$('portfolio-deck');
+ viewport.addEventListener('touchstart',event=>{
+  if(event.touches.length!==1||dialogOpen()||event.target.closest('[data-scroll-region],button')){touchStart=null;return}
+  touchStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
+ },{passive:true});
+ viewport.addEventListener('touchend',event=>{
+  if(!touchStart||event.touches.length||event.changedTouches.length!==1)return;
+  const dx=touchStart.x-event.changedTouches[0].clientX,dy=touchStart.y-event.changedTouches[0].clientY;touchStart=null;
+  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25){event.preventDefault();goTo(index+Math.sign(dx))}
+ },{passive:false});
+ viewport.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
+ document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.open).showModal()));
+ document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
+ window.addEventListener('hashchange',()=>{const found=ids.indexOf(location.hash.slice(1));if(found>=0)goTo(found)});
+ goTo(Math.max(0,ids.indexOf(location.hash.slice(1))));
+})();
