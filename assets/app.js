@@ -344,27 +344,30 @@ async function fetchPnlJson(){
   return null;
 }
 function paintPnl(data){
-  const el=$('daily-pnl-strip'); if(!el)return;
-  const value=el.querySelector('.daily-pnl-value');
-  const face=el.querySelector('.daily-pnl-face');
-  const meta=el.querySelector('.daily-pnl-meta');
-  if(!data||data.day_change_cad==null){
-    el.classList.remove('pnl-up','pnl-down');
-    if(value)value.textContent='—';
-    if(face)face.innerHTML='';
-    if(meta)meta.textContent='';
-    return;
+  const els=[...document.querySelectorAll('.daily-pnl-strip')]; if(!els.length)return;
+  let text='—', faceHtml='', metaText='', up=null;
+  if(data&&data.day_change_cad!=null){
+    const cad=Number(data.day_change_cad); up=cad>=0;
+    text=formatPnl(cad,data.day_change_pct);
+    faceHtml=pnlFace(up);
+    const bits=[];
+    if(data.basis&&String(data.basis).toUpperCase().includes('PLANNED'))bits.push('model');
+    if(data.delayed||(data.session==='open'))bits.push('delayed ~15 min');
+    if(data.updated_et)bits.push('updated '+data.updated_et);
+    else if(data.price_as_of)bits.push(String(data.price_as_of));
+    metaText=bits.join(' · ');
   }
-  const cad=Number(data.day_change_cad), up=cad>=0;
-  el.classList.toggle('pnl-up',up); el.classList.toggle('pnl-down',!up);
-  if(value)value.textContent=formatPnl(cad,data.day_change_pct);
-  if(face)face.innerHTML=pnlFace(up);
-  const bits=[];
-  if(data.basis&&String(data.basis).toUpperCase().includes('PLANNED'))bits.push('model');
-  if(data.delayed||(data.session==='open'))bits.push('delayed ~15 min');
-  if(data.updated_et)bits.push('updated '+data.updated_et);
-  else if(data.price_as_of)bits.push(String(data.price_as_of));
-  if(meta)meta.textContent=bits.join(' · ');
+  for(const el of els){
+    const value=el.querySelector('.daily-pnl-value');
+    const face=el.querySelector('.daily-pnl-face');
+    const meta=el.querySelector('.daily-pnl-meta');
+    el.classList.remove('pnl-up','pnl-down');
+    if(up==null){ if(value)value.textContent='—'; if(face)face.innerHTML=''; if(meta)meta.textContent=''; continue; }
+    el.classList.add(up?'pnl-up':'pnl-down');
+    if(value)value.textContent=text;
+    if(face)face.innerHTML=faceHtml;
+    if(meta)meta.textContent=metaText;
+  }
 }
 async function loadDailyPnl(){paintPnl(await fetchPnlJson())}
 (()=>{

@@ -20,8 +20,8 @@
   "valuation": {
     "basis": "MODEL_REFERENCE",
     "label": "Planned capital \u2014 original model reference",
-    "total_cad": 113279.34911200003,
-    "reference_total_cad": 113279.34911200003,
+    "total_cad": 113248.794467,
+    "reference_total_cad": 113248.794467,
     "complete": true,
     "priced_count": 23,
     "holding_count": 23,
@@ -41,7 +41,7 @@
       "value_native": 6614.0,
       "value_cad": 6614.0,
       "quote": null,
-      "weight_cad": 0.05838663491490135,
+      "weight_cad": 0.05840238769099903,
       "shares": 100.0,
       "starting_shares_theoretical": 100.0
     },
@@ -56,7 +56,7 @@
       "value_native": 6816.0,
       "value_cad": 6816.0,
       "quote": null,
-      "weight_cad": 0.06016983725128026,
+      "weight_cad": 0.06018607113726178,
       "shares": 100.0,
       "starting_shares_theoretical": 100.0
     },
@@ -71,7 +71,7 @@
       "value_native": 6633.2,
       "value_cad": 6633.2,
       "quote": null,
-      "weight_cad": 0.05855612741420073,
+      "weight_cad": 0.0585719259195547,
       "shares": 115.0,
       "starting_shares_theoretical": 115.0
     },
@@ -86,7 +86,7 @@
       "value_native": 8781.54,
       "value_cad": 8781.54,
       "quote": null,
-      "weight_cad": 0.07752110220299409,
+      "weight_cad": 0.07754201747868396,
       "shares": 30.90350506756757,
       "starting_shares_theoretical": 30.90350506756757
     },
@@ -101,7 +101,7 @@
       "value_native": 4067.25,
       "value_cad": 4067.25,
       "quote": null,
-      "weight_cad": 0.03590460248830247,
+      "weight_cad": 0.03591428958817899,
       "shares": 25.0,
       "starting_shares_theoretical": 25.0
     },
@@ -116,7 +116,7 @@
       "value_native": 8709.51,
       "value_cad": 8709.51,
       "quote": null,
-      "weight_cad": 0.07688524049859125,
+      "weight_cad": 0.07690598421811808,
       "shares": 49.70897779807088,
       "starting_shares_theoretical": 49.70897779807088
     },
@@ -131,7 +131,7 @@
       "value_native": 4150.3,
       "value_cad": 4150.3,
       "quote": null,
-      "weight_cad": 0.036637745825115677,
+      "weight_cad": 0.03664763072784295,
       "shares": 35.0,
       "starting_shares_theoretical": 35.0
     },
@@ -146,7 +146,7 @@
       "value_native": 3654.4,
       "value_cad": 3654.4,
       "quote": null,
-      "weight_cad": 0.03226007236664885,
+      "weight_cad": 0.03226877616842862,
       "shares": 40.0,
       "starting_shares_theoretical": 40.0
     },
@@ -161,7 +161,7 @@
       "value_native": 2715.0,
       "value_cad": 2715.0,
       "quote": null,
-      "weight_cad": 0.023967298729053094,
+      "weight_cad": 0.023973765131699784,
       "shares": 150.0,
       "starting_shares_theoretical": 150.0
     },
@@ -176,7 +176,7 @@
       "value_native": 4110.0,
       "value_cad": 4110.0,
       "quote": null,
-      "weight_cad": 0.03628198813127374,
+      "weight_cad": 0.03629177705019746,
       "shares": 60.0,
       "starting_shares_theoretical": 60.0
     },
@@ -191,7 +191,7 @@
       "value_native": 5904.0,
       "value_cad": 8332.3152,
       "quote": null,
-      "weight_cad": 0.07355546501032403,
+      "weight_cad": 0.07357531035288843,
       "shares": 100.0,
       "starting_shares_theoretical": 100.0
     },
@@ -206,7 +206,7 @@
       "value_native": 2056.0,
       "value_cad": 2901.6328,
       "quote": null,
-      "weight_cad": 0.025614843506305256,
+      "weight_cad": 0.025621754418282287,
       "shares": 50.0,
       "starting_shares_theoretical": 50.0
     },
@@ -216,14 +216,14 @@
       "sector": "Consumer staples",
       "status": "PLANNED",
       "currency": "USD",
-      "planned_capital_native": 1913.4,
-      "reference_capital_cad": 2700.38142,
-      "value_native": 1913.4,
-      "value_cad": 2700.38142,
+      "planned_capital_native": 478.35,
+      "reference_capital_cad": 675.095355,
+      "value_native": 478.35,
+      "value_cad": 675.095355,
       "quote": null,
-      "weight_cad": 0.02383824978840685,
-      "shares": 20.0,
-      "starting_shares_theoretical": 20.0
+      "weight_cad": 0.00596117034337808,
+      "shares": 5.0,
+      "starting_shares_theoretical": 5.0
     },
     {
       "symbol": "V",
@@ -236,7 +236,7 @@
       "value_native": 5532.41,
       "value_cad": 7807.890233,
       "quote": null,
-      "weight_cad": 0.06892598072116647,
+      "weight_cad": 0.06894457702395385,
       "shares": 13.089814267124098,
       "starting_shares_theoretical": 13.089814267124098
     },
@@ -251,7 +251,7 @@
       "value_native": 5185.82,
       "value_cad": 7318.7477659999995,
       "quote": null,
-      "weight_cad": 0.06460796096880736,
+      "weight_cad": 0.06462539226528047,
       "shares": 21.949631761618555,
       "starting_shares_theoretical": 21.949631761618555
     },
@@ -266,7 +266,7 @@
       "value_native": 2274.36,
       "value_cad": 3209.8042680000003,
       "quote": null,
-      "weight_cad": 0.02833529935651772,
+      "weight_cad": 0.028342944250371843,
       "shares": 12.0,
       "starting_shares_theoretical": 12.0
     },
@@ -281,7 +281,7 @@
       "value_native": 2625.05,
       "value_cad": 3704.7330650000004,
       "quote": null,
-      "weight_cad": 0.03270439929291178,
+      "weight_cad": 0.03271322297456806,
       "shares": 5.0,
       "starting_shares_theoretical": 5.0
     },
@@ -296,7 +296,7 @@
       "value_native": 2130.4,
       "value_cad": 3006.6335200000003,
       "quote": null,
-      "weight_cad": 0.026541761967817473,
+      "weight_cad": 0.026548922963379667,
       "shares": 20.0,
       "starting_shares_theoretical": 20.0
     },
@@ -306,14 +306,14 @@
       "sector": "Consumer staples",
       "status": "PLANNED",
       "currency": "USD",
-      "planned_capital_native": 1413.4,
-      "reference_capital_cad": 1994.73142,
-      "value_native": 1413.4,
-      "value_cad": 1994.73142,
+      "planned_capital_native": 2826.8,
+      "reference_capital_cad": 3989.46284,
+      "value_native": 2826.8,
+      "value_cad": 3989.46284,
       "quote": null,
-      "weight_cad": 0.01760895905243767,
-      "shares": 10.0,
-      "starting_shares_theoretical": 10.0
+      "weight_cad": 0.035227419936576056,
+      "shares": 20.0,
+      "starting_shares_theoretical": 20.0
     },
     {
       "symbol": "WMT",
@@ -326,7 +326,7 @@
       "value_native": 4393.2,
       "value_cad": 6200.12316,
       "quote": null,
-      "weight_cad": 0.05473304012251958,
+      "weight_cad": 0.05474780715486272,
       "shares": 35.0,
       "starting_shares_theoretical": 35.0
     },
@@ -336,12 +336,12 @@
       "sector": "Healthcare",
       "status": "PLANNED",
       "currency": "USD",
-      "planned_capital_native": 2762.2000000000003,
-      "reference_capital_cad": 3898.2928600000005,
-      "value_native": 2762.2000000000003,
-      "value_cad": 3898.2928600000005,
+      "planned_capital_native": 2762.2,
+      "reference_capital_cad": 3898.2928599999996,
+      "value_native": 2762.2,
+      "value_cad": 3898.2928599999996,
       "quote": null,
-      "weight_cad": 0.03441309374178813,
+      "weight_cad": 0.034422378431021076,
       "shares": 10.0,
       "starting_shares_theoretical": 10.0
     },
@@ -356,7 +356,7 @@
       "value_native": 2835.4,
       "value_cad": 4001.6000200000003,
       "quote": null,
-      "weight_cad": 0.035325061905534014,
+      "weight_cad": 0.035334592644745914,
       "shares": 5.0,
       "starting_shares_theoretical": 5.0
     },
@@ -371,22 +371,22 @@
       "value_native": 1382.6,
       "value_cad": 1951.2633799999999,
       "quote": null,
-      "weight_cad": 0.017225234743101968,
+      "weight_cad": 0.01722988212972621,
       "shares": 5.0,
       "starting_shares_theoretical": 5.0
     }
   ],
   "sectors": {
-    "Energy": 0.15483846029745535,
-    "Utilities": 0.05855612741420073,
-    "Banking": 0.11342570469129656,
-    "Industrials": 0.2744957078474778,
-    "Diversified financials": 0.03226007236664885,
-    "Real estate / REITs": 0.14967936921349986,
-    "Consumer staples": 0.0961802489633641,
-    "Payments": 0.06892598072116647,
-    "Healthcare": 0.03441309374178813,
-    "Restaurants / discretionary": 0.017225234743101968
+    "Industrials": 0.27456976708092734,
+    "Energy": 0.15488023587845828,
+    "Real estate / REITs": 0.14971975286625017,
+    "Banking": 0.11345630706686294,
+    "Consumer staples": 0.09593639743481686,
+    "Payments": 0.06894457702395385,
+    "Utilities": 0.0585719259195547,
+    "Healthcare": 0.034422378431021076,
+    "Diversified financials": 0.03226877616842862,
+    "Restaurants / discretionary": 0.01722988212972621
   },
   "disclosures": [
     "Public read-only view. All initial positions are PLANNED, not verified trades.",
