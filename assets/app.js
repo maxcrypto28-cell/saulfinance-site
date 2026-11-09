@@ -122,10 +122,10 @@ function mobileAllocationLabelGeometry(rows,desk,n=MOBILE_DONUT_LABELS){
   for(let pass=0;pass<4;pass++){for(let i=1;i<ys.length;i++){if(ys[i]-ys[i-1]<minGap)ys[i]=ys[i-1]+minGap}}
   const mid=(ys[0]+ys[ys.length-1])/2;const shift=cy-mid;for(let i=0;i<ys.length;i++)ys[i]+=shift;
   list.forEach((label,i)=>{const y=ys[i];
-   labels.push({...label,x:side==='right'?cx+278:cx-278,y,points:[[cx+outer*Math.cos(label.angle),cy+outer*Math.sin(label.angle)],[cx+(outer+12)*Math.cos(label.angle),cy+(outer+12)*Math.sin(label.angle)],[cx+sign*238,y],[cx+sign*258,y]]});
+   labels.push({...label,x:side==='right'?cx+268:cx-268,y,points:[[cx+outer*Math.cos(label.angle),cy+outer*Math.sin(label.angle)],[cx+(outer+12)*Math.cos(label.angle),cy+(outer+12)*Math.sin(label.angle)],[cx+sign*228,y],[cx+sign*248,y]]});
   });
  }
- const padX=310,padY=270;
+ const padX=340,padY=280;
  return {width:desk.width,height:desk.height,cx,cy,radius,labels,count:top.length,viewBox:`${cx-padX} ${cy-padY} ${padX*2} ${padY*2}`};
 }
 function normalizeTicker(t){return String(t||'').toUpperCase().replace(/-UN\.TO$/,'-UN').replace(/\.TO$/,'').replace('CRT-UN','CRT.UN')}
