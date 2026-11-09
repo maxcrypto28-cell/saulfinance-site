@@ -112,8 +112,8 @@ function renderDesktop(s){
  const palette=['#00dca6','#49ffd0','#0daa96','#7af5be','#29b9c8','#52d878','#a6dc63','#73bcac','#1bdbb4','#74f3df','#97c7a0','#40f1bc'];
  const sorted=[...s.holdings].sort((a,b)=>b.weight_cad-a.weight_cad),pie=allocationLabelGeometry(sorted),circumference=2*Math.PI*pie.radius;let offset=0;
  const arcs=sorted.map((h,i)=>{const percent=h.weight_cad*100,arc=`<circle cx="${pie.cx}" cy="${pie.cy}" r="${pie.radius}" fill="none" stroke="${palette[i%palette.length]}" stroke-width="46" stroke-dasharray="${h.weight_cad*circumference} ${circumference*(1-h.weight_cad)}" stroke-dashoffset="${-offset*circumference/100}" transform="rotate(-90 ${pie.cx} ${pie.cy})"><title>${esc(h.symbol)} · ${percent.toFixed(2)}%</title></circle>`;offset+=percent;return arc}).join('');
- $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><p class="eyebrow">23 HOLDINGS. EVERY DOLLAR AT WORK.</p><h3>Planned capital</h3><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" role="img" aria-label="Capital-weighted allocation across 23 planned holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('')}</g><text x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD MODEL REFERENCE</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>23 PLANNED</strong> · Not confirmed trades</p><p>Native C$ / US$ allocations.<br>CAD weights use fixed FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p><p class="muted">Original November 6 inputs, prepared November 8, 2026. Not live account values.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The proposed basket</h3><span>23 PLANNED · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all 23 planned holding allocations"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Native capital</th><th scope="col">Weight</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</th><td class="business-name" title="${esc(h.name)}">${esc(h.name)}</td><td>${money(h.planned_capital_native,h.currency)}</td><td>${(h.weight_cad*100).toFixed(2)}%</td></tr>`).join('')}</tbody></table></div></section>`;
- fitDonut();
+ $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><p class="eyebrow">23 HOLDINGS. EVERY DOLLAR AT WORK.</p><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" role="img" aria-label="Capital-weighted allocation across 23 planned holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('')}</g><text x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD MODEL REFERENCE</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>23 PLANNED</strong> · Not confirmed trades</p><p>Native C$ / US$ allocations.<br>CAD weights use fixed FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p><p class="muted">Original November 6 inputs, prepared November 8, 2026. Not live account values.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The proposed basket</h3><span>23 PLANNED · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all 23 planned holding allocations"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Native capital</th><th scope="col">Weight</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</th><td class="business-name" title="${esc(h.name)}">${esc(h.name)}</td><td>${money(h.planned_capital_native,h.currency)}</td><td>${(h.weight_cad*100).toFixed(2)}%</td></tr>`).join('')}</tbody></table></div></section>`;
+ fitDonut(); loadDailyPnl();
  const gross=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[1],0),net=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[2],0),max=Math.max(...MODEL_DISPLAY.monthly.map(r=>r[2]));
  $('native-monthly').innerHTML=`<div class="income-totals"><div><span>Annual gross model</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable proxy</span><strong>${money(net)}</strong></div></div><p class="native-note">Representative monthly net income in C$ · not actual receipts</p><div class="monthly-bars">${MODEL_DISPLAY.monthly.map(r=>`<div class="monthly-row"><span>${esc(r[0])}</span><div class="monthly-track"><span style="width:${r[2]/max*100}%"></span></div><strong>${money(r[2])}</strong></div>`).join('')}</div><p class="native-note">Original rates and fixed FX. Modeled net income is reinvested; payments and tax outcomes are not guaranteed.</p>`;
  const colors={Bearish:'#8bb4a2',Neutral:'#20ed87',Bullish:'#32d2e7'},start=s.valuation.reference_total_cad,low=80000,high=220000,L=88,R=602,T=20,B=286;
@@ -161,6 +161,83 @@ function formatCountdown(ms){const total=Math.max(0,Math.ceil(ms/1000)),days=Mat
  function restart(){if(raf!==null)cancelAnimationFrame(raf);raf=null;if(reduced.matches){draw(0);return}if(!document.hidden)raf=requestAnimationFrame(frame)}
  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{size();restart()},150)});document.addEventListener('visibilitychange',restart);reduced.addEventListener('change',restart);size();restart();
 })();
+
+// Daily PNL strip: live feed (Render JSON API, no redeploy) with same-origin fallback.
+const PNL_LIVE='https://saulfinance-pnl.onrender.com/daily-pnl.json';
+const PNL_FALLBACK='/data/daily-pnl.json';
+const NYSE_HOLIDAYS_2026=new Set(['2026-01-01','2026-01-19','2026-02-16','2026-04-03','2026-05-25','2026-06-19','2026-07-03','2026-09-07','2026-11-26','2026-12-25']);
+function pnlMarketOpen(d=new Date()){
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);
+  const g=t=>parts.find(p=>p.type===t)?.value;
+  const date=`${g('year')}-${g('month')}-${g('day')}`;
+  if(NYSE_HOLIDAYS_2026.has(date))return false;
+  const wd=g('weekday'); if(wd==='Sat'||wd==='Sun')return false;
+  const mins=(+g('hour'))*60+(+g('minute'));
+  return mins>=9*60+30 && mins<16*60;
+}
+function pnlFace(positive){
+  // Inline SVG so fill color is reliable (not emoji).
+  if(positive)return '<svg class="pnl-face" viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="6.5" r="1" fill="currentColor"/><circle cx="10.5" cy="6.5" r="1" fill="currentColor"/><path d="M4.5 9.5c1.2 2 5.8 2 7 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+  return '<svg class="pnl-face" viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="5.5" cy="6.5" r="1" fill="currentColor"/><circle cx="10.5" cy="6.5" r="1" fill="currentColor"/><path d="M4.5 11.5c1.2-2 5.8-2 7 0" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+}
+function formatPnl(cad,pct){
+  if(cad==null||Number.isNaN(Number(cad)))return '—';
+  const n=Number(cad), sign=n>0?'+':(n<0?'':''); // zero still gets + below
+  const signed=(n>=0?'+':'')+Math.abs(n).toLocaleString('en-CA',{style:'currency',currency:'CAD',minimumFractionDigits:0,maximumFractionDigits:0}).replace('CA$','$');
+  // en-CA currency may be "$1,240"; ensure leading sign
+  const dollar=(n>0?'+':n<0?'−':'+')+'$'+Math.abs(Math.round(n)).toLocaleString('en-CA');
+  let pctPart='';
+  if(pct!=null&&!Number.isNaN(Number(pct))){
+    const p=Number(pct);
+    pctPart=', '+(p>0?'+':p<0?'':'+')+p.toFixed(1)+'%';
+  }
+  return dollar+pctPart;
+}
+async function fetchPnlJson(){
+  const bust='t='+Date.now();
+  const urls=[`${PNL_LIVE}?${bust}`, `${PNL_FALLBACK}?${bust}`];
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{cache:'no-store',mode:'cors'});
+      if(!r.ok)throw Error('HTTP '+r.status);
+      return await r.json();
+    }catch(e){ /* try next */ }
+  }
+  return null;
+}
+function paintPnl(data){
+  const el=$('daily-pnl-strip'); if(!el)return;
+  const value=el.querySelector('.daily-pnl-value');
+  const face=el.querySelector('.daily-pnl-face');
+  const meta=el.querySelector('.daily-pnl-meta');
+  if(!data||data.day_change_cad==null){
+    el.classList.remove('pnl-up','pnl-down');
+    if(value)value.textContent='—';
+    if(face)face.innerHTML='';
+    if(meta)meta.textContent='';
+    return;
+  }
+  const cad=Number(data.day_change_cad), up=cad>=0;
+  el.classList.toggle('pnl-up',up); el.classList.toggle('pnl-down',!up);
+  if(value)value.textContent=formatPnl(cad,data.day_change_pct);
+  if(face)face.innerHTML=pnlFace(up);
+  const bits=[];
+  if(data.basis&&String(data.basis).toUpperCase().includes('PLANNED'))bits.push('model');
+  if(data.delayed||(data.session==='open'))bits.push('delayed ~15 min');
+  if(data.updated_et)bits.push('updated '+data.updated_et);
+  else if(data.price_as_of)bits.push(String(data.price_as_of));
+  if(meta)meta.textContent=bits.join(' · ');
+}
+async function loadDailyPnl(){paintPnl(await fetchPnlJson())}
+(()=>{
+  const tick=()=>{loadDailyPnl();};
+  // After native holdings render, strip exists; also poll.
+  const boot=()=>{tick();};
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
+  setInterval(()=>{if(document.hidden)return; if(pnlMarketOpen())tick();},60*1000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
+})();
+
 // Launch-day pixel firework: once per visitor, only on 2026-11-09 local date, ~2 s at 3 fps, beside the page-one title.
 window.addEventListener('load',()=>setTimeout(()=>{try{
  const KEY='sff-launch-fireworks-v1',d=new Date(),today=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
