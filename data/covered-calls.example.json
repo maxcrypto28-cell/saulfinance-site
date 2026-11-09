@@ -1,0 +1,67 @@
+{
+  "updated_at": "2026-11-09T09:00:00-06:00",
+  "positions": [
+    {
+      "id": "cc-enb-2026-12-19-55c",
+      "underlying": "ENB.TO",
+      "shares_covered": 100,
+      "contracts": 1,
+      "strike": 55.0,
+      "expiration": "2026-12-19",
+      "premium_received": {
+        "per_share": 0.85,
+        "total": 85.0
+      },
+      "currency": "CAD",
+      "opened_date": "2026-11-09",
+      "status": "open",
+      "close_price": null,
+      "close_date": null,
+      "realized_pnl": null,
+      "unrealized_pnl": null,
+      "notes": "Example only — not a live position. Do not copy into covered-calls.json until a real call is sold."
+    },
+    {
+      "id": "cc-aapl-2026-10-17-250c-closed",
+      "underlying": "AAPL",
+      "shares_covered": 100,
+      "contracts": 1,
+      "strike": 250.0,
+      "expiration": "2026-10-17",
+      "premium_received": {
+        "per_share": 1.2,
+        "total": 120.0
+      },
+      "currency": "USD",
+      "opened_date": "2026-09-02",
+      "status": "closed",
+      "close_price": 0.05,
+      "close_date": "2026-10-10",
+      "realized_pnl": 115.0,
+      "unrealized_pnl": null,
+      "notes": "Example closed history row."
+    }
+  ],
+  "_schema": {
+    "updated_at": "ISO-8601 timestamp of last edit",
+    "positions": "array of covered-call records",
+    "position_fields": {
+      "id": "stable unique string",
+      "underlying": "ticker as on holdings (e.g. ENB.TO, AAPL)",
+      "shares_covered": "integer shares covered",
+      "contracts": "option contracts (usually shares_covered/100)",
+      "strike": "strike price in premium currency",
+      "expiration": "YYYY-MM-DD",
+      "premium_received": "{ per_share, total } in premium currency",
+      "currency": "CAD or USD",
+      "opened_date": "YYYY-MM-DD",
+      "status": "open | closed | assigned | expired",
+      "close_price": "buy-to-close price or null",
+      "close_date": "YYYY-MM-DD or null",
+      "realized_pnl": "number or null",
+      "unrealized_pnl": "number or null",
+      "notes": "optional string"
+    },
+    "cc_yield_note": "Holdings CC yield annualizes open premiums as (premium_total_in_CAD / position_value_cad) * (365 / days_from_opened_or_today_to_expiration). Multiple open calls on one ticker are summed."
+  }
+}

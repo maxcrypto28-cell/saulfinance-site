@@ -19,9 +19,9 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
-// Five physical panels; ONLY the three content panels are navigation destinations.
+// Seven physical panels; ONLY the four content panels are navigation destinations.
 (()=>{
- const slides=[...document.querySelectorAll('.slide')],deck=$('deck'),stops=[0,2,4];
+ const slides=[...document.querySelectorAll('.slide')],deck=$('deck'),stops=[0,2,4,6];
  const nav=[...document.querySelectorAll('[data-page]')],ids=stops.map(i=>slides[i].id);
  const motion=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):{matches:false};
  const GLIDE_MS=900,WHEEL_IDLE_MS=260,MIN_WHEEL_PX=4;
@@ -161,6 +161,74 @@ function formatCountdown(ms){const total=Math.max(0,Math.ceil(ms/1000)),days=Mat
  function restart(){if(raf!==null)cancelAnimationFrame(raf);raf=null;if(reduced.matches){draw(0);return}if(!document.hidden)raf=requestAnimationFrame(frame)}
  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{size();restart()},150)});document.addEventListener('visibilitychange',restart);reduced.addEventListener('change',restart);size();restart();
 })();
+
+
+// Covered calls page: load data/covered-calls.json; empty positions show intentional empty state.
+let COVERED_CALLS={updated_at:null,positions:[]};
+function premiumTotal(pos){
+  if(pos.premium_received==null)return null;
+  if(typeof pos.premium_received==='number')return pos.premium_received;
+  if(pos.premium_received.total!=null)return Number(pos.premium_received.total);
+  if(pos.premium_received.per_share!=null){
+    const shares=pos.shares_covered??((pos.contracts||0)*100);
+    return Number(pos.premium_received.per_share)*shares;
+  }
+  return null;
+}
+function formatShortDate(s){
+  if(!s)return '—';
+  const d=new Date(s+'T12:00:00');
+  if(Number.isNaN(d.getTime()))return esc(s);
+  return d.toLocaleDateString('en-CA',{year:'numeric',month:'short',day:'numeric'});
+}
+function renderCoveredCalls(data){
+  const host=$('native-covered-calls'); if(!host)return;
+  COVERED_CALLS=data||{updated_at:null,positions:[]};
+  const positions=Array.isArray(COVERED_CALLS.positions)?COVERED_CALLS.positions:[];
+  const open=positions.filter(p=>String(p.status||'').toLowerCase()==='open');
+  const history=positions.filter(p=>['closed','assigned','expired'].includes(String(p.status||'').toLowerCase()));
+  const premiumSum=open.reduce((a,p)=>{const t=premiumTotal(p);return a+(t==null?0:t)},0);
+  const realizedSum=history.reduce((a,p)=>a+(p.realized_pnl==null?0:Number(p.realized_pnl)),0);
+  const currencyHint=open[0]?.currency||history[0]?.currency||'CAD';
+  const moneyOrDash=(n,c)=>n==null?'—':money(n,c||currencyHint);
+
+  if(!open.length&&!history.length){
+    host.innerHTML=`<div class="cc-empty native-panel" role="status"><p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold.</p></div>`;
+    return;
+  }
+
+  const row=(p,hist=false)=>{
+    const cur=p.currency||'CAD';
+    const prem=premiumTotal(p);
+    const premPer=p.premium_received&&typeof p.premium_received==='object'?p.premium_received.per_share:null;
+    return `<tr>
+      <th scope="row">${esc(p.underlying)}</th>
+      <td data-label="Shares">${esc(p.shares_covered??'—')}</td>
+      <td data-label="Contracts">${esc(p.contracts??'—')}</td>
+      <td data-label="Strike">${p.strike==null?'—':Number(p.strike).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td data-label="Expiration">${formatShortDate(p.expiration)}</td>
+      <td data-label="Premium">${prem==null?'—':money(prem,cur)}${premPer!=null?`<span class="cc-per"> · ${money(premPer,cur)}/sh</span>`:''}</td>
+      <td data-label="Status"><span class="cc-status cc-status-${esc(String(p.status||'').toLowerCase())}">${esc(p.status||'—')}</span></td>
+      ${hist?`<td data-label="P&amp;L">${p.realized_pnl==null?'—':money(p.realized_pnl,cur)}</td>`:''}
+    </tr>`;
+  };
+
+  const openTable=open.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Open positions</h3><span>${open.length} open</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Open covered calls"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th></tr></thead><tbody>${open.map(p=>row(p,false)).join('')}</tbody></table></div></section>`:'<section class="native-panel cc-panel"><div class="cc-empty-inline" role="status"><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold.</p></div></section>';
+
+  const histTable=history.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Closed / assigned</h3><span>${history.length} recorded</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Covered call history"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th><th scope="col">P&amp;L</th></tr></thead><tbody>${history.map(p=>row(p,true)).join('')}</tbody></table></div></section>`:'';
+
+  host.innerHTML=`<section class="native-panel cc-summary" aria-label="Covered call summary"><div class="cc-stats"><div><span>Open</span><strong>${open.length}</strong></div><div><span>Premium collected (open)</span><strong>${open.length?money(premiumSum,currencyHint):'—'}</strong></div><div><span>Realized P&amp;L</span><strong>${history.length?money(realizedSum,currencyHint):'—'}</strong></div></div><p class="fine">Updated ${esc(COVERED_CALLS.updated_at||'—')} · educational display, not a brokerage blotter</p></section>${openTable}${histTable}`;
+}
+async function loadCoveredCalls(){
+  try{
+    const r=await fetch('/data/covered-calls.json',{cache:'no-store'});
+    if(!r.ok)throw Error('unavailable');
+    renderCoveredCalls(await r.json());
+  }catch(e){
+    renderCoveredCalls({updated_at:null,positions:[]});
+  }
+}
+loadCoveredCalls();
 
 // Daily PNL strip: live feed (Render JSON API, no redeploy) with same-origin fallback.
 const PNL_LIVE='https://saulfinance-pnl.onrender.com/daily-pnl.json';
