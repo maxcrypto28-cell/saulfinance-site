@@ -136,29 +136,46 @@ class Handler(BaseHTTPRequestHandler):
 
 
 
-def seed_from_github() -> None:
-    """Best-effort seed so a fresh deploy is not empty until the box loop POSTs."""
+def _apply_seed(data: dict, source: str) -> bool:
+    """Write seed payload. Boot is single-threaded; do not take LOCK here."""
+    if not isinstance(data, dict) or data.get("day_change_cad") is None:
+        return False
+    save_state({k: data.get(k) for k in DEFAULT.keys()})
+    print("seeded from", source, flush=True)
+    return True
+
+
+def seed_state() -> None:
+    """Best-effort seed so a fresh deploy is not empty until the box loop POSTs.
+
+    Must never nest LOCK: threading.Lock is not reentrant, and holding LOCK
+    while seeding previously deadlocked boot so Render never saw an open port.
+    """
+    local = Path(__file__).resolve().parent.parent / "data" / "daily-pnl.json"
+    if local.exists():
+        try:
+            if _apply_seed(json.loads(local.read_text()), str(local)):
+                return
+        except Exception as e:
+            print("local seed skipped:", e, flush=True)
     url = os.environ.get(
         "PNL_SEED_URL",
         "https://raw.githubusercontent.com/maxcrypto28-cell/saulfinance-site/pnl-data/data/daily-pnl.json",
     )
     try:
         req = __import__("urllib.request").request.Request(url, headers={"User-Agent": "saul-pnl-seed/1"})
-        with __import__("urllib.request").request.urlopen(req, timeout=10) as resp:
+        with __import__("urllib.request").request.urlopen(req, timeout=5) as resp:
             data = json.loads(resp.read().decode())
-        if isinstance(data, dict) and data.get("day_change_cad") is not None:
-            with LOCK:
-                save_state({k: data.get(k) for k in DEFAULT.keys()})
-            print("seeded from", url, flush=True)
+        _apply_seed(data, url)
     except Exception as e:
-        print("seed skipped:", e, flush=True)
+        print("remote seed skipped:", e, flush=True)
+
 
 def main() -> None:
-    # Seed empty state
-    with LOCK:
-        if not STATE_PATH.exists():
-            save_state(dict(DEFAULT))
-            seed_from_github()
+    # Seed before binding; never hold LOCK across seed (non-reentrant Lock).
+    if not STATE_PATH.exists():
+        save_state(dict(DEFAULT))
+        seed_state()
     httpd = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
     print(f"saul-pnl listening on :{PORT}", flush=True)
     httpd.serve_forever()
