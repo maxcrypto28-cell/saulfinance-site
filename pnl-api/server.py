@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 
 PORT = int(os.environ.get("PORT", "10000"))
 PUBLISH_TOKEN = os.environ.get("PNL_PUBLISH_TOKEN", "")
-STATE_PATH = Path(os.environ.get("PNL_STATE_PATH", "/tmp/daily-pnl.json"))
+STATE_PATH = Path(os.environ.get("PNL_STATE_PATH", str(Path(__file__).resolve().parent / "state-daily-pnl.json")))
 LOCK = threading.Lock()
 DEFAULT = {
     "date": None,
@@ -135,11 +135,30 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
+
+def seed_from_github() -> None:
+    """Best-effort seed so a fresh deploy is not empty until the box loop POSTs."""
+    url = os.environ.get(
+        "PNL_SEED_URL",
+        "https://raw.githubusercontent.com/maxcrypto28-cell/saulfinance-site/pnl-data/data/daily-pnl.json",
+    )
+    try:
+        req = __import__("urllib.request").request.Request(url, headers={"User-Agent": "saul-pnl-seed/1"})
+        with __import__("urllib.request").request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        if isinstance(data, dict) and data.get("day_change_cad") is not None:
+            with LOCK:
+                save_state({k: data.get(k) for k in DEFAULT.keys()})
+            print("seeded from", url, flush=True)
+    except Exception as e:
+        print("seed skipped:", e, flush=True)
+
 def main() -> None:
     # Seed empty state
     with LOCK:
         if not STATE_PATH.exists():
             save_state(dict(DEFAULT))
+            seed_from_github()
     httpd = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
     print(f"saul-pnl listening on :{PORT}", flush=True)
     httpd.serve_forever()
