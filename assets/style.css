@@ -59,7 +59,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .allocation-overview p,.native-note{font-size:15px}
 .muted,.allocation-overview .muted{font-size:14px}
 .native-donut{max-width:340px;margin:8px auto 4px}
-.native-donut .donut-labels{display:none}.native-donut .donut-labels-mobile{display:block}.donut-ticker-mobile{fill:#8cbca0;font-size:30px;font-weight:600}
+.native-donut .donut-labels{display:none}.native-donut .donut-labels-mobile{display:block}.donut-ticker-mobile{fill:#8cbca0;font-weight:600}
 .donut-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;list-style:none;margin:10px 0 6px;padding:0;font-size:14px;line-height:1.35;font-variant-numeric:tabular-nums}
 .donut-legend li{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}
 .donut-legend i{width:10px;height:10px;border-radius:2px;flex-shrink:0}

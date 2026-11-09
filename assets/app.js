@@ -105,7 +105,7 @@ function allocationLabelGeometry(rows){
  return {width:720,height,cx,cy,radius,labels};
 }
 // Mobile: top N slices by weight with outside tickers + thin leaders; desktop geometry untouched.
-const MOBILE_DONUT_LABELS=9;
+const MOBILE_DONUT_LABELS=8;
 function mobileAllocationLabelGeometry(rows,desk,n=MOBILE_DONUT_LABELS){
  // Reuse desktop pie center so arc geometry stays correct; only the label set and mobile viewBox crop change.
  const cx=desk.cx,cy=desk.cy,radius=desk.radius,outer=186;let cumulative=0;
@@ -116,13 +116,16 @@ function mobileAllocationLabelGeometry(rows,desk,n=MOBILE_DONUT_LABELS){
  const groups={left:top.filter(l=>l.side==='left'),right:top.filter(l=>l.side==='right')};
  const labels=[];
  for(const side of ['left','right']){const list=groups[side].sort((a,b)=>a.rawY-b.rawY),sign=side==='right'?1:-1;
-  const span=210,topY=cy-span/2,botY=cy+span/2;
-  list.forEach((label,i)=>{const y=list.length===1?cy:topY+i*(botY-topY)/Math.max(1,list.length-1);
-   labels.push({...label,x:side==='right'?cx+275:cx-275,y,points:[[cx+outer*Math.cos(label.angle),cy+outer*Math.sin(label.angle)],[cx+(outer+12)*Math.cos(label.angle),cy+(outer+12)*Math.sin(label.angle)],[cx+sign*235,y],[cx+sign*255,y]]});
+  const minGap=36,span=Math.max(240,(list.length-1)*minGap),topY=cy-span/2;
+  const ys=list.map((label,i)=>list.length===1?cy:topY+i*(span/Math.max(1,list.length-1)));
+  // Push apart if still closer than minGap (stable)
+  for(let pass=0;pass<4;pass++){for(let i=1;i<ys.length;i++){if(ys[i]-ys[i-1]<minGap)ys[i]=ys[i-1]+minGap}}
+  const mid=(ys[0]+ys[ys.length-1])/2;const shift=cy-mid;for(let i=0;i<ys.length;i++)ys[i]+=shift;
+  list.forEach((label,i)=>{const y=ys[i];
+   labels.push({...label,x:side==='right'?cx+278:cx-278,y,points:[[cx+outer*Math.cos(label.angle),cy+outer*Math.sin(label.angle)],[cx+(outer+12)*Math.cos(label.angle),cy+(outer+12)*Math.sin(label.angle)],[cx+sign*238,y],[cx+sign*258,y]]});
   });
  }
- // Mobile crop: ring + side gutters for tickers (~600x480 around center)
- const padX=300,padY=250;
+ const padX=310,padY=270;
  return {width:desk.width,height:desk.height,cx,cy,radius,labels,count:top.length,viewBox:`${cx-padX} ${cy-padY} ${padX*2} ${padY*2}`};
 }
 function normalizeTicker(t){return String(t||'').toUpperCase().replace(/-UN\.TO$/,'-UN').replace(/\.TO$/,'').replace('CRT-UN','CRT.UN')}
@@ -178,7 +181,7 @@ async function renderDesktop(s){
  const yields=ccYieldMap(sorted,COVERED_CALLS.positions||[],s.valuation.fx_cad_per_usd);
  const arcs=sorted.map((h,i)=>{const percent=h.weight_cad*100,arc=`<circle cx="${pie.cx}" cy="${pie.cy}" r="${pie.radius}" fill="none" stroke="${palette[i%palette.length]}" stroke-width="46" stroke-dasharray="${h.weight_cad*circumference} ${circumference*(1-h.weight_cad)}" stroke-dashoffset="${-offset*circumference/100}" transform="rotate(-90 ${pie.cx} ${pie.cy})"><title>${esc(h.symbol)} · ${percent.toFixed(2)}%</title></circle>`;offset+=percent;return arc}).join('');
  const deskLabels=pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
- const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
+ const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle" font-size="28">${esc(label.ticker)}</text>`).join('');
  $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><p class="eyebrow">23 HOLDINGS. EVERY DOLLAR AT WORK.</p><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across 23 planned holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD MODEL REFERENCE</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>23 PLANNED</strong> · Not confirmed trades</p><p>Native C$ / US$ allocations.<br>CAD weights use fixed FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p><p class="muted">Original November 6 inputs, prepared November 8, 2026. Not live account values.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The proposed basket</h3><span>23 PLANNED · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all 23 planned holding allocations"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annualized open covered-call premium ÷ position value × (365 ÷ days from opened date, or today, to expiration). Multiple open calls on one ticker are summed.">CC yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</th><td class="business-name" title="${esc(h.name)}">${esc(h.name)}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td data-label="Weight">${(h.weight_cad*100).toFixed(2)}%</td><td class="cc-yield" data-label="CC yield">${formatCcYield(yields.get(h.symbol))}</td></tr>`).join('')}</tbody></table></div><p class="fine cc-yield-note">Shares = model starting shares theoretical (allocation_v3). CC yield = annualized open covered-call premium ÷ position CAD value × (365 ÷ days to expiration). No open call → —.</p></section>`;
  fitDonut(); loadDailyPnl();
  const gross=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[1],0),net=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[2],0),max=Math.max(...MODEL_DISPLAY.monthly.map(r=>r[2]));
