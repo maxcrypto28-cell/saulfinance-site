@@ -204,8 +204,8 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 /* Laptop landing: raise pie, green PNL text, compact holdings actions */
 .daily-pnl-value{color:var(--green)}
 .daily-pnl-strip.pnl-up .daily-pnl-value,
-.daily-pnl-strip.pnl-down .daily-pnl-value{color:var(--green)}
 .daily-pnl-strip.pnl-up .daily-pnl-face{color:var(--green)}
+.daily-pnl-strip.pnl-down .daily-pnl-value,
 .daily-pnl-strip.pnl-down .daily-pnl-face{color:#ff5b5b}
 
 @media(min-width:1024px){
