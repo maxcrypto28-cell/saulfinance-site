@@ -20,11 +20,11 @@
   "valuation": {
     "basis": "MODEL_REFERENCE",
     "label": "Planned capital \u2014 original model reference",
-    "total_cad": 113202.75595600001,
-    "reference_total_cad": 113202.75595600001,
+    "total_cad": 113126.955956,
+    "reference_total_cad": 113126.955956,
     "complete": true,
-    "priced_count": 23,
-    "holding_count": 23,
+    "priced_count": 26,
+    "holding_count": 26,
     "fx_cad_per_usd": 1.4113,
     "fx_basis": "STATIC_MODEL_REFERENCE",
     "fx_quote": null
@@ -41,12 +41,13 @@
       "value_native": 8598.2,
       "value_cad": 8598.2,
       "quote": null,
-      "weight_cad": 0.07595398122058067,
+      "weight_cad": 0.07600487370440884,
       "shares": 130.0,
       "starting_shares_theoretical": 130.0,
       "annual_rate_native": 3.88,
       "reference_price_native": 66.14,
-      "div_yield": 0.05866344118536437
+      "div_yield": 0.05866344118536437,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "PPL.TO",
@@ -59,12 +60,13 @@
       "value_native": 7838.4,
       "value_cad": 7838.4,
       "quote": null,
-      "weight_cad": 0.06924213049235879,
+      "weight_cad": 0.06928852574313671,
       "shares": 115.0,
       "starting_shares_theoretical": 115.0,
       "annual_rate_native": 2.94,
       "reference_price_native": 68.16,
-      "div_yield": 0.043133802816901406
+      "div_yield": 0.043133802816901406,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "H.TO",
@@ -77,12 +79,32 @@
       "value_native": 6633.2,
       "value_cad": 6633.2,
       "quote": null,
-      "weight_cad": 0.058595746578627574,
+      "weight_cad": 0.05863500828732579,
       "shares": 115.0,
       "starting_shares_theoretical": 115.0,
       "annual_rate_native": 1.4124,
       "reference_price_native": 57.68,
-      "div_yield": 0.024486823855755898
+      "div_yield": 0.024486823855755898,
+      "pay_months": "3,6,9,12"
+    },
+    {
+      "symbol": "CU.TO",
+      "name": "Canadian Utilities Limited",
+      "sector": "Utilities",
+      "status": "PLANNED",
+      "currency": "CAD",
+      "planned_capital_native": 5268.0,
+      "reference_capital_cad": 5268.0,
+      "value_native": 5268.0,
+      "value_cad": 5268.0,
+      "quote": null,
+      "weight_cad": 0.04656715064488215,
+      "shares": 100.0,
+      "starting_shares_theoretical": 100.0,
+      "annual_rate_native": 1.85,
+      "reference_price_native": 52.68,
+      "div_yield": 0.03511769172361428,
+      "pay_months": "2,5,8,11"
     },
     {
       "symbol": "RY.TO",
@@ -90,17 +112,18 @@
       "sector": "Banking",
       "status": "PLANNED",
       "currency": "CAD",
-      "planned_capital_native": 8781.54,
-      "reference_capital_cad": 8781.54,
-      "value_native": 8781.54,
-      "value_cad": 8781.54,
+      "planned_capital_native": 2000.0,
+      "reference_capital_cad": 2000.0,
+      "value_native": 2000.0,
+      "value_cad": 2000.0,
       "quote": null,
-      "weight_cad": 0.07757355309806448,
-      "shares": 30.90350506756757,
-      "starting_shares_theoretical": 30.90350506756757,
+      "weight_cad": 0.01767925233290894,
+      "shares": 7.038288288288288,
+      "starting_shares_theoretical": 7.038288288288288,
       "annual_rate_native": 7.04,
       "reference_price_native": 284.16,
-      "div_yield": 0.02477477477477477
+      "div_yield": 0.02477477477477477,
+      "pay_months": "2,5,8,11"
     },
     {
       "symbol": "CM.TO",
@@ -113,12 +136,32 @@
       "value_native": 4067.25,
       "value_cad": 4067.25,
       "quote": null,
-      "weight_cad": 0.0359288955966838,
+      "weight_cad": 0.03595296952551194,
       "shares": 25.0,
       "starting_shares_theoretical": 25.0,
       "annual_rate_native": 4.28,
       "reference_price_native": 162.69,
-      "div_yield": 0.026307701764091217
+      "div_yield": 0.026307701764091217,
+      "pay_months": "1,4,7,10"
+    },
+    {
+      "symbol": "BNS.TO",
+      "name": "The Bank of Nova Scotia",
+      "sector": "Banking",
+      "status": "PLANNED",
+      "currency": "CAD",
+      "planned_capital_native": 3214.25,
+      "reference_capital_cad": 3214.25,
+      "value_native": 3214.25,
+      "value_cad": 3214.25,
+      "quote": null,
+      "weight_cad": 0.02841276840552628,
+      "shares": 25.0,
+      "starting_shares_theoretical": 25.0,
+      "annual_rate_native": 4.56,
+      "reference_price_native": 128.57,
+      "div_yield": 0.03546706074511939,
+      "pay_months": "1,4,7,10"
     },
     {
       "symbol": "CNR.TO",
@@ -126,17 +169,18 @@
       "sector": "Industrials",
       "status": "PLANNED",
       "currency": "CAD",
-      "planned_capital_native": 8709.51,
-      "reference_capital_cad": 8709.51,
-      "value_native": 8709.51,
-      "value_cad": 8709.51,
+      "planned_capital_native": 2500.0,
+      "reference_capital_cad": 2500.0,
+      "value_native": 2500.0,
+      "value_cad": 2500.0,
       "quote": null,
-      "weight_cad": 0.07693726116867013,
-      "shares": 49.70897779807088,
-      "starting_shares_theoretical": 49.70897779807088,
+      "weight_cad": 0.022099065416136175,
+      "shares": 14.268591975343872,
+      "starting_shares_theoretical": 14.268591975343872,
       "annual_rate_native": 3.6600000000000006,
       "reference_price_native": 175.21,
-      "div_yield": 0.02088921865190343
+      "div_yield": 0.02088921865190343,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "EIF.TO",
@@ -149,12 +193,13 @@
       "value_native": 4150.3,
       "value_cad": 4150.3,
       "quote": null,
-      "weight_cad": 0.036662534979388234,
+      "weight_cad": 0.036687100478635985,
       "shares": 35.0,
       "starting_shares_theoretical": 35.0,
       "annual_rate_native": 2.88,
       "reference_price_native": 118.58,
-      "div_yield": 0.024287400910777534
+      "div_yield": 0.024287400910777534,
+      "pay_months": "1,2,3,4,5,6,7,8,9,10,11,12"
     },
     {
       "symbol": "POW.TO",
@@ -167,12 +212,13 @@
       "value_native": 3654.4,
       "value_cad": 3654.4,
       "quote": null,
-      "weight_cad": 0.03228189958043427,
+      "weight_cad": 0.032303529862691215,
       "shares": 40.0,
       "starting_shares_theoretical": 40.0,
       "annual_rate_native": 2.67,
       "reference_price_native": 91.36,
-      "div_yield": 0.029225043782837128
+      "div_yield": 0.029225043782837128,
+      "pay_months": "1,5,7,10"
     },
     {
       "symbol": "CRT-UN.TO",
@@ -185,12 +231,13 @@
       "value_native": 2715.0,
       "value_cad": 2715.0,
       "quote": null,
-      "weight_cad": 0.0239835150396451,
+      "weight_cad": 0.023999585041923885,
       "shares": 150.0,
       "starting_shares_theoretical": 150.0,
       "annual_rate_native": 0.9816,
       "reference_price_native": 18.1,
-      "div_yield": 0.054232044198895026
+      "div_yield": 0.054232044198895026,
+      "pay_months": "1,2,3,4,5,6,7,8,9,10,11,12"
     },
     {
       "symbol": "CNQ.TO",
@@ -203,12 +250,33 @@
       "value_native": 6850.0,
       "value_cad": 6850.0,
       "quote": null,
-      "weight_cad": 0.06051089429892042,
+      "weight_cad": 0.06055143924021312,
       "shares": 100.0,
       "starting_shares_theoretical": 100.0,
       "annual_rate_native": 2.5,
       "reference_price_native": 68.5,
-      "div_yield": 0.0364963503649635
+      "div_yield": 0.0364963503649635,
+      "pay_months": "1,4,7,10"
+    },
+    {
+      "symbol": "SOBO.TO",
+      "name": "South Bow Corporation",
+      "sector": "Energy",
+      "status": "PLANNED",
+      "currency": "CAD",
+      "planned_capital_native": 4433.0,
+      "reference_capital_cad": 4433.0,
+      "value_native": 4433.0,
+      "value_cad": 4433.0,
+      "quote": null,
+      "weight_cad": 0.039186062795892665,
+      "shares": 100.0,
+      "starting_shares_theoretical": 100.0,
+      "annual_rate_native": 2.8226,
+      "reference_price_native": 44.33,
+      "div_yield": 0.06367245657568238,
+      "pay_months": "3,6,9,12",
+      "dividend_note": "USD-paid US$2.00/yr modeled in CAD at FX 1.4113"
     },
     {
       "symbol": "O",
@@ -221,12 +289,13 @@
       "value_native": 7380.0,
       "value_cad": 10415.394,
       "quote": null,
-      "weight_cad": 0.09200654093658539,
+      "weight_cad": 0.09206818933633289,
       "shares": 125.0,
       "starting_shares_theoretical": 125.0,
       "annual_rate_native": 3.258,
       "reference_price_native": 59.04,
-      "div_yield": 0.05518292682926829
+      "div_yield": 0.05518292682926829,
+      "pay_months": "1,2,3,4,5,6,7,8,9,10,11,12"
     },
     {
       "symbol": "NNN",
@@ -239,12 +308,13 @@
       "value_native": 4112.0,
       "value_cad": 5803.2656,
       "quote": null,
-      "weight_cad": 0.05126434909637386,
+      "weight_cad": 0.0512986984486451,
       "shares": 100.0,
       "starting_shares_theoretical": 100.0,
       "annual_rate_native": 2.48,
       "reference_price_native": 41.12,
-      "div_yield": 0.06031128404669261
+      "div_yield": 0.06031128404669261,
+      "pay_months": "2,5,8,11"
     },
     {
       "symbol": "KO",
@@ -257,12 +327,13 @@
       "value_native": 478.35,
       "value_cad": 675.095355,
       "quote": null,
-      "weight_cad": 0.005963594696072577,
+      "weight_cad": 0.00596759056490987,
       "shares": 5.0,
       "starting_shares_theoretical": 5.0,
       "annual_rate_native": 2.12,
       "reference_price_native": 95.67,
-      "div_yield": 0.022159506637399396
+      "div_yield": 0.022159506637399396,
+      "pay_months": "4,7,10,12"
     },
     {
       "symbol": "V",
@@ -275,12 +346,13 @@
       "value_native": 1500.0,
       "value_cad": 2116.95,
       "quote": null,
-      "weight_cad": 0.018700516450525482,
+      "weight_cad": 0.01871304661307579,
       "shares": 3.549035845262037,
       "starting_shares_theoretical": 3.549035845262037,
       "annual_rate_native": 3.1199999999999997,
       "reference_price_native": 422.65,
-      "div_yield": 0.0073819945581450365
+      "div_yield": 0.0073819945581450365,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "WM",
@@ -293,12 +365,13 @@
       "value_native": 3768.2599999999998,
       "value_cad": 5318.145337999999,
       "quote": null,
-      "weight_cad": 0.046978938746571434,
+      "weight_cad": 0.04701041668679264,
       "shares": 15.949631761618555,
       "starting_shares_theoretical": 15.949631761618555,
       "annual_rate_native": 3.78,
       "reference_price_native": 236.26,
-      "div_yield": 0.015999322779988147
+      "div_yield": 0.015999322779988147,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "RTX",
@@ -311,12 +384,13 @@
       "value_native": 2274.36,
       "value_cad": 3209.8042680000003,
       "quote": null,
-      "weight_cad": 0.028354471062944763,
+      "weight_cad": 0.02837346979661004,
       "shares": 12.0,
       "starting_shares_theoretical": 12.0,
       "annual_rate_native": 2.92,
       "reference_price_native": 189.53,
-      "div_yield": 0.015406531947448952
+      "div_yield": 0.015406531947448952,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "NOC",
@@ -329,12 +403,13 @@
       "value_native": 2625.05,
       "value_cad": 3704.7330650000004,
       "quote": null,
-      "weight_cad": 0.032726527138967954,
+      "weight_cad": 0.03274845534110307,
       "shares": 5.0,
       "starting_shares_theoretical": 5.0,
       "annual_rate_native": 9.88,
       "reference_price_native": 525.01,
-      "div_yield": 0.018818689167825378
+      "div_yield": 0.018818689167825378,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "IRM",
@@ -347,12 +422,13 @@
       "value_native": 2130.4,
       "value_cad": 3006.6335200000003,
       "quote": null,
-      "weight_cad": 0.026559720164132997,
+      "weight_cad": 0.02657751633633111,
       "shares": 20.0,
       "starting_shares_theoretical": 20.0,
       "annual_rate_native": 3.972,
       "reference_price_native": 106.52,
-      "div_yield": 0.03728877206158468
+      "div_yield": 0.03728877206158468,
+      "pay_months": "1,4,7,10"
     },
     {
       "symbol": "PEP",
@@ -365,12 +441,13 @@
       "value_native": 3533.5,
       "value_cad": 4986.82855,
       "quote": null,
-      "weight_cad": 0.044052183251954535,
+      "weight_cad": 0.04408170013820221,
       "shares": 25.0,
       "starting_shares_theoretical": 25.0,
       "annual_rate_native": 5.92,
       "reference_price_native": 141.34,
-      "div_yield": 0.0418848167539267
+      "div_yield": 0.0418848167539267,
+      "pay_months": "1,3,6,9"
     },
     {
       "symbol": "WMT",
@@ -383,12 +460,13 @@
       "value_native": 1500.0,
       "value_cad": 2116.95,
       "quote": null,
-      "weight_cad": 0.018700516450525482,
+      "weight_cad": 0.01871304661307579,
       "shares": 11.950286806883366,
       "starting_shares_theoretical": 11.950286806883366,
       "annual_rate_native": 0.99,
       "reference_price_native": 125.52,
-      "div_yield": 0.00788718929254302
+      "div_yield": 0.00788718929254302,
+      "pay_months": "1,4,5,9"
     },
     {
       "symbol": "JNJ",
@@ -401,12 +479,13 @@
       "value_native": 2762.2,
       "value_cad": 3898.2928599999996,
       "quote": null,
-      "weight_cad": 0.03443637769309433,
+      "weight_cad": 0.03445945156975863,
       "shares": 10.0,
       "starting_shares_theoretical": 10.0,
       "annual_rate_native": 5.36,
       "reference_price_native": 276.22,
-      "div_yield": 0.019404822243139525
+      "div_yield": 0.019404822243139525,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "LMT",
@@ -419,12 +498,13 @@
       "value_native": 2835.4,
       "value_cad": 4001.6000200000003,
       "quote": null,
-      "weight_cad": 0.03534896289587998,
+      "weight_cad": 0.03537264824447673,
       "shares": 5.0,
       "starting_shares_theoretical": 5.0,
       "annual_rate_native": 14.4,
       "reference_price_native": 567.08,
-      "div_yield": 0.025393242576003384
+      "div_yield": 0.025393242576003384,
+      "pay_months": "3,6,9,12"
     },
     {
       "symbol": "MCD",
@@ -437,25 +517,26 @@
       "value_native": 1382.6,
       "value_cad": 1951.2633799999999,
       "quote": null,
-      "weight_cad": 0.01723688936299769,
+      "weight_cad": 0.01724843883149239,
       "shares": 5.0,
       "starting_shares_theoretical": 5.0,
       "annual_rate_native": 7.720000000000001,
       "reference_price_native": 276.52,
-      "div_yield": 0.027918414581223787
+      "div_yield": 0.027918414581223787,
+      "pay_months": "3,6,9,12"
     }
   ],
   "sectors": {
-    "Industrials": 0.2570086959924225,
-    "Energy": 0.20570700601185987,
-    "Real estate / REITs": 0.19381412523673733,
-    "Banking": 0.11350244869474828,
-    "Consumer staples": 0.0687162943985526,
-    "Payments": 0.018700516450525482,
-    "Utilities": 0.058595746578627574,
-    "Healthcare": 0.03443637769309433,
-    "Diversified financials": 0.03228189958043427,
-    "Restaurants / discretionary": 0.01723688936299769
+    "Industrials": 0.20229115596375466,
+    "Energy": 0.2450309014836513,
+    "Real estate / REITs": 0.19394398916323297,
+    "Banking": 0.08204499026394717,
+    "Consumer staples": 0.06876233731618786,
+    "Payments": 0.01871304661307579,
+    "Utilities": 0.10520215893220794,
+    "Healthcare": 0.03445945156975863,
+    "Diversified financials": 0.032303529862691215,
+    "Restaurants / discretionary": 0.01724843883149239
   },
   "disclosures": [
     "Public read-only view. All initial positions are PLANNED, not verified trades.",
