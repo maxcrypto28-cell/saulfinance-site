@@ -272,21 +272,79 @@ function renderAnnual(scenario){
  const annualHost=$('native-annual'); if(annualHost) annualHost.innerHTML=`<div class="scenario-tabs" aria-label="Projection scenarios">${['Bearish','Neutral','Bullish'].map(name=>`<button data-scenario="${name}" aria-pressed="${name===scenario}">${name}</button>`).join('')}</div><table class="annual-table"><thead><tr><th scope="col">Yr</th><th scope="col">Gross</th><th scope="col">Net</th><th scope="col">Portfolio</th><th scope="col">Gain</th></tr></thead><tbody>${rows.map(r=>`<tr><th scope="row">${r[1]}</th><td>${money(r[2])}</td><td>${money(r[3])}</td><td>${money(r[4])}</td><td>${r[5]>=0?'+':''}${(r[5]*100).toFixed(0)}%</td></tr>`).join('')}</tbody></table><div class="annual-result"><span>Year 5</span><strong>${money(rows[4][4])}</strong><span>${(rows[4][5]*100).toFixed(0)}% model gain</span></div>`;
  document.querySelectorAll('[data-scenario]').forEach(button=>button.addEventListener('click',()=>renderAnnual(button.dataset.scenario)));
 }
+// NYSE early closes at 13:00 ET (day after Thanksgiving + Christmas Eve when it is a trading day).
+// TSX has no Black Friday early close and stays 09:30–16:00 ET; NYSE is primary for this close clock.
+const NYSE_EARLY_CLOSES=new Set(['2026-11-27','2026-12-24','2027-11-26']);
+function etYmd(ms){
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(ms));
+ const g=t=>parts.find(p=>p.type===t)?.value;
+ return `${g('year')}-${g('month')}-${g('day')}`;
+}
+function sessionCloseMs(openMs){
+ // Regular: 09:30→16:00 = 6.5h; early close: 09:30→13:00 = 3.5h. Open stamps already encode ET/DST.
+ return openMs+(NYSE_EARLY_CLOSES.has(etYmd(openMs))?3.5:6.5)*3600*1000;
+}
 function findNextOpen(now){
  if(now<OPEN_CALENDAR.start||now>OPEN_CALENDAR.end)return null;
  let low=0,high=OPEN_CALENDAR.sessions.length;
  while(low<high){const mid=(low+high)>>1;if(OPEN_CALENDAR.sessions[mid][0]<=now)low=mid+1;else high=mid}
  return OPEN_CALENDAR.sessions[low]||null;
 }
+function findCurrentClose(now){
+ if(now<OPEN_CALENDAR.start||now>OPEN_CALENDAR.end)return null;
+ let low=0,high=OPEN_CALENDAR.sessions.length;
+ while(low<high){const mid=(low+high)>>1;if(OPEN_CALENDAR.sessions[mid][0]<=now)low=mid+1;else high=mid}
+ const idx=low-1; if(idx<0)return null;
+ const sess=OPEN_CALENDAR.sessions[idx], close=sessionCloseMs(sess[0]);
+ if(now<sess[0]||now>=close)return null;
+ return [close,sess[1]];
+}
 function formatCountdown(ms){const total=Math.max(0,Math.ceil(ms/1000)),days=Math.floor(total/86400),pad=n=>String(n).padStart(2,'0');return `${days?days+'d ':''}${pad(Math.floor(total/3600)%24)}:${pad(Math.floor(total/60)%60)}:${pad(total%60)}`}
+function setText(id,value){const el=$(id); if(el) el.textContent=value}
+function clockNow(){
+ // ?now= ISO override is localhost/127.0.0.1 only — ignored on the live site.
+ try{
+  const host=location.hostname;
+  if(host!=='localhost'&&host!=='127.0.0.1')return Date.now();
+  const raw=new URLSearchParams(location.search).get('now');
+  if(!raw)return Date.now();
+  const t=Date.parse(raw);
+  return Number.isFinite(t)?t:Date.now();
+ }catch(e){return Date.now()}
+}
 (()=>{
- const dateFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZoneName:'short'});let last=null;
- function tick(){const now=Date.now(),next=findNextOpen(now);
-  $('open-market-label').textContent=next?`NEXT OPEN · ${next[1]}`:'SCHEDULE UNAVAILABLE';
-  $('open-countdown').textContent=next?formatCountdown(next[0]-now):'—';
-  if((next?.[0]??null)!==last){last=next?.[0]??null;$('open-at').textContent=next?dateFormat.format(new Date(next[0])):'Calendar covers 2026–2027'}
-  if(!next)$('open-at').textContent='Calendar covers 2026–2027';setTimeout(tick,1000);
- }tick();
+ const dateFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZoneName:'short'});
+ let lastOpen=null, lastClose=null;
+ function tick(){
+  const now=clockNow(), next=findNextOpen(now), close=findCurrentClose(now);
+  setText('open-market-label', next?`NEXT OPEN · ${next[1]}`:'SCHEDULE UNAVAILABLE');
+  setText('open-countdown', next?formatCountdown(next[0]-now):'—');
+  if((next?.[0]??null)!==lastOpen){
+   lastOpen=next?.[0]??null;
+   setText('open-at', next?dateFormat.format(new Date(next[0])):'Calendar covers 2026–2027');
+  }
+  if(!next) setText('open-at','Calendar covers 2026–2027');
+
+  const closeEl=$('close-clock');
+  if(closeEl){
+   if(close){
+    closeEl.hidden=false;
+    setText('close-market-label', `MARKET CLOSES · ${close[1]}`);
+    setText('close-countdown', formatCountdown(close[0]-now));
+    if(close[0]!==lastClose){
+     lastClose=close[0];
+     setText('close-at', dateFormat.format(new Date(close[0])));
+    }
+   }else{
+    closeEl.hidden=true;
+    lastClose=null;
+    setText('close-countdown','--:--:--');
+    setText('close-at','');
+   }
+  }
+  setTimeout(tick,1000);
+ }
+ tick();
 })();
 // Subtle descending SAUL FINANCE streams, adapted from the approved Matrix graphics.
 (()=>{
