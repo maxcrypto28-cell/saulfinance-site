@@ -234,27 +234,33 @@ async function renderDesktop(s){
   if(MOBILE.matches){
    monthlyHost.innerHTML=`<div class="income-totals"><div><span>Annual gross</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable</span><strong>${money(net)}</strong></div></div><div class="monthly-bars">${MODEL_DISPLAY.monthly.map(r=>`<div class="monthly-row"><span>${esc(r[0])}</span><div class="monthly-track"><span style="width:${r[2]/maxNet*100}%"></span></div><strong>${money(r[2])}</strong></div>`).join('')}</div><p class="native-note income-footnote">Net modeled C$ · indicated rates · not receipts</p>`;
   }else{
-   const chartH=420, chartW=920, padL=8, padR=8, padT=36, padB=28;
+   // Bars stay in a stretch-filled SVG (preserveAspectRatio=none). Dollar/month labels are
+   // HTML overlays so they are never distorted by non-uniform SVG scaling.
+   const chartH=420, chartW=920, padL=8, padR=8, padT=48, padB=30;
    const plotW=chartW-padL-padR, plotH=chartH-padT-padB;
    const gap=10, barW=(plotW-gap*11)/12;
-   let bars='';
+   const barScale=0.90; // leave headroom above the tallest bar for crisp HTML labels
+   let bars='', labels='';
    monthStacks.forEach((m,i)=>{
     const x=padL+i*(barW+gap);
-    const h=Math.max(2,(m.gross/maxGross)*plotH);
+    const h=Math.max(2,(m.gross/maxGross)*plotH*barScale);
     const y=padT+plotH-h;
     let yCursor=padT+plotH;
     const segs=m.parts.map((p,pi)=>{
-     const segH=Math.max(0.5,(p.cad/maxGross)*plotH);
+     const segH=Math.max(0.5,(p.cad/maxGross)*plotH*barScale);
      yCursor-=segH;
      const color=payerPalette[pi%payerPalette.length];
      return `<rect class="pay-seg" x="${x.toFixed(2)}" y="${yCursor.toFixed(2)}" width="${barW.toFixed(2)}" height="${segH.toFixed(2)}" fill="${color}" rx="1"><title>${esc(p.ticker)} · ${moneyFull(p.cad)} in ${m.name}</title></rect>`;
     }).join('');
     const peak=peakMonths.has(m.month);
-    const labelY=y-8;
-    bars+=`<g class="month-bar${peak?' peak':''}">${segs}<text class="bar-val" x="${(x+barW/2).toFixed(2)}" y="${labelY.toFixed(2)}" text-anchor="middle" fill="${peak?'#38ff94':'#e1f3e6'}" font-size="13" font-weight="600">${moneyShort(m.net)}</text><text class="bar-month" x="${(x+barW/2).toFixed(2)}" y="${(padT+plotH+18).toFixed(2)}" text-anchor="middle" fill="#8cbca0" font-size="13">${m.name}</text></g>`;
+    const centerPct=((x+barW/2)/chartW)*100;
+    const topPct=(y/chartH)*100;
+    const monthTopPct=((padT+plotH+16)/chartH)*100;
+    bars+=`<g class="month-bar${peak?' peak':''}">${segs}</g>`;
+    labels+=`<span class="bar-val${peak?' peak':''}" style="left:${centerPct.toFixed(3)}%;top:${topPct.toFixed(3)}%">${moneyShort(m.net)}</span><span class="bar-month" style="left:${centerPct.toFixed(3)}%;top:${monthTopPct.toFixed(3)}%">${esc(m.name)}</span>`;
    });
    const payersStrip=monthStacks.map(m=>`<div class="pay-when-row"><span class="pay-when-m">${m.name}</span><span class="pay-when-tickers">${m.parts.map(p=>esc(p.ticker)).join(' · ')}</span></div>`).join('');
-   monthlyHost.innerHTML=`<div class="income-totals"><div><span>Annual gross</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable</span><strong>${money(net)}</strong></div></div><div class="income-chart-wrap"><svg class="income-barchart" viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="none" role="img" aria-label="Monthly net dividend calendar from current holdings">${bars}</svg></div><div class="pay-when" aria-label="Who pays when"><div class="pay-when-head">Who pays when</div><div class="pay-when-grid">${payersStrip}</div></div><p class="native-note income-footnote">Bars = indicated monthly CAD (stacked by payer) · labels show net reinvestable · not receipts</p>`;
+   monthlyHost.innerHTML=`<div class="income-totals"><div><span>Annual gross</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable</span><strong>${money(net)}</strong></div></div><div class="income-chart-wrap"><svg class="income-barchart" viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="none" role="img" aria-label="Monthly net dividend calendar from current holdings">${bars}</svg><div class="income-chart-labels" aria-hidden="true">${labels}</div></div><div class="pay-when" aria-label="Who pays when"><div class="pay-when-head">Who pays when</div><div class="pay-when-grid">${payersStrip}</div></div><p class="native-note income-footnote">Bars = indicated monthly CAD (stacked by payer) · labels show net reinvestable · not receipts</p>`;
   }
  }
  const colors={Bearish:'#8bb4a2',Neutral:'#20ed87',Bullish:'#32d2e7'},start=s.valuation.reference_total_cad,low=80000,high=220000,L=70,R=610,T=14,B=250;
