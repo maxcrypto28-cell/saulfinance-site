@@ -212,7 +212,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 /* Raise page-1 content into the unused band under the title; mobile untouched. */
 #holdings-page.slide{
   gap:4px;
-  padding-top:6px;
+  padding-top:44px;
   padding-bottom:6px;
   grid-template-rows:auto minmax(0,1fr) auto;
 }
@@ -291,7 +291,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 #holdings-page .allocation-overview>p:not(.eyebrow){font-size:11px;margin-top:2px}
 }
 @media(min-width:1024px) and (max-height:760px){
-#holdings-page.slide{gap:3px;padding-top:4px;padding-bottom:4px}
+#holdings-page.slide{gap:3px;padding-top:40px;padding-bottom:4px}
 #holdings-page .slide-heading h2{font-size:24px}
 #holdings-page .slide-heading>p:last-child{font-size:12px}
 #holdings-page .page-one-heading-copy{font-size:13px}
@@ -303,15 +303,15 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 #holdings-page .allocation-overview>p:not(.eyebrow){display:none}
 }
 
-/* Desktop header PNL readout (page-1 landing) */
+/* Desktop PNL pill: centered under the tab row (between Income and Covered Calls). */
 .daily-pnl-header{display:none}
 @media(min-width:1024px){
-.site-header{position:fixed} /* already fixed; ensure positioning context */
+.site-header{position:fixed;overflow:visible}
 .daily-pnl-header{
   display:flex;
   position:absolute;
   left:50%;
-  top:28px;
+  top:calc(100% + 6px);
   transform:translateX(-50%);
   z-index:6;
   flex-wrap:nowrap;
@@ -338,6 +338,13 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   max-width:14vw;
 }
 .daily-pnl-header .daily-pnl-face{font-size:1.05em}
+/* Clear the hanging pill so it does not cover page-1 headings. */
+.slide.content-slide{padding-top:48px}
+#holdings-page.slide{padding-top:44px}
+#holdings-page .slide-heading{padding-top:2px}
 /* Free pie space: hide in-panel strip on desktop only. */
 #native-holdings #daily-pnl-strip{display:none}
+}
+@media(min-width:1024px) and (max-height:760px){
+#holdings-page.slide{padding-top:40px}
 }
