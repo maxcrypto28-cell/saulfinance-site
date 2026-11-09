@@ -28,3 +28,96 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 
 /* The shared header uses a local flag image; native labels are desktop-only. */
 .canadian-flag{width:28px;height:14px;object-fit:contain;flex-shrink:0}.donut-ticker{fill:#8cbca0;font-size:26px;font-weight:500}.donut-leader{fill:none;stroke:#4b8060;stroke-width:.8px;vector-effect:non-scaling-stroke}@media(min-width:1024px){.holdings-native{grid-template-columns:minmax(320px,.85fr) minmax(0,1.42fr)}.native-donut{max-width:560px}}@media(min-width:1024px) and (max-width:1150px){.donut-ticker{font-size:32px}}
+
+/* Mobile (<1024px): render the native HTML content at full size, one vertical column per page. Desktop rules above are untouched. */
+@media(max-width:1023px){
+:root{--header-height:116px;--footer-height:92px}
+.site-header{grid-template-rows:58px 38px;padding:6px 12px;gap:6px}
+.site-header .brand-row{gap:8px}
+.brand-row h1{font-size:14px;flex:1 1 auto}
+.brand-row .angular-s{height:1.5em;width:1em}
+.brand-title-stack{gap:4px}
+.canadian-flag{width:28px;height:14px}
+.market-clock{width:auto;max-width:60%;flex-shrink:1;min-width:0}
+.market-clock>span:first-child,.market-clock>span:last-child{font-size:12px;letter-spacing:0}
+.market-clock strong{font-size:20px}
+.brand-row .sff{width:28px;height:28px}
+.topnav{gap:6px}
+.topnav button{font-size:13px;min-height:38px;padding:5px 8px}
+.slide.content-slide{display:block;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y pinch-zoom;padding:14px 12px 22px}
+.slide-heading .eyebrow{font-size:12px;margin:0 0 4px}
+.slide-heading h2{font-size:26px}
+.slide-heading p:last-child{font-size:15px;line-height:1.5}
+#holdings-page .slide-heading{column-gap:12px}
+.page-one-heading-copy{font-size:15px}
+.mobile-art{display:none}
+.desktop-native{display:block;margin-top:14px}
+.native-panel{display:block;padding:14px 12px;margin:0 0 14px}
+.native-panel h3{font-size:21px}
+.native-scroll,.allocation-overview,.sector-scroll{overflow:visible;height:auto;flex:none}
+.allocation-overview .eyebrow{font-size:12px;letter-spacing:.6px}
+.allocation-overview p,.native-note{font-size:15px}
+.muted,.allocation-overview .muted{font-size:14px}
+.native-donut{max-width:340px;margin:8px auto 4px}
+.native-donut .donut-labels{display:none}
+.donut-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px;list-style:none;margin:10px 0 6px;padding:0;font-size:14px;line-height:1.35;font-variant-numeric:tabular-nums}
+.donut-legend li{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}
+.donut-legend i{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.donut-legend b{color:var(--text);font-weight:600}
+.donut-legend span{color:var(--mint);margin-left:auto}
+.native-table-heading{display:block;padding-bottom:8px}
+.native-table-heading>span{display:block;margin-top:4px;font-size:14px}
+.allocation-table,.annual-table{font-size:15px;display:block;width:100%}
+.allocation-table thead,.annual-table thead{display:block;position:static;font-size:13px}
+.allocation-table tbody,.annual-table tbody{display:block}
+.allocation-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"ticker weight" "business capital";column-gap:12px;row-gap:2px;padding:9px 8px;border-bottom:1px solid #1d3827}
+.allocation-table th,.allocation-table td,.annual-table th,.annual-table td{padding:0;border:0;white-space:nowrap}
+.allocation-table tr>:nth-child(1){grid-area:ticker;font-weight:600;font-size:16px}
+.allocation-table tr>:nth-child(2){grid-area:business;white-space:normal;max-width:none;overflow:visible;text-overflow:clip;font-size:14px;text-align:left!important}
+.allocation-table tr>:nth-child(3){grid-area:capital;text-align:right;font-size:14px;align-self:end}
+.allocation-table tr>:nth-child(4){grid-area:weight;text-align:right;font-weight:600;font-size:16px}
+.allocation-table thead tr>*{font-size:13px!important;font-weight:500!important;color:var(--mint)}
+.annual-table tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"year year gain" "gross net value";column-gap:8px;row-gap:3px;padding:9px 8px;border-bottom:1px solid #1d3827}
+.annual-table tr>:nth-child(1){grid-area:year;text-align:left;font-weight:600}
+.annual-table tr>:nth-child(2){grid-area:gross;text-align:left}
+.annual-table tr>:nth-child(3){grid-area:net;text-align:center}
+.annual-table tr>:nth-child(4){grid-area:value;text-align:right}
+.annual-table tr>:nth-child(5){grid-area:gain;text-align:right}
+.annual-table tbody td,.annual-table tbody th{font-size:14px}
+.annual-table thead tr>*{font-size:13px;white-space:normal}
+.annual-result strong{font-size:30px}
+.scenario-tabs button{flex:1;font-size:15px}
+.income-totals strong{font-size:20px;overflow-wrap:anywhere}
+.monthly-row{grid-template-columns:38px minmax(0,1fr) 98px;gap:10px;font-size:15px}
+.monthly-row strong{font-size:15px}
+.path-legend{font-size:14px}
+.native-linechart{overflow:visible}
+.native-linechart text{font-size:24px}
+.path-outcomes{grid-template-columns:minmax(0,1fr)}
+.path-outcomes>div{flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 10px}
+.path-outcomes strong{font-size:18px}
+.outlook-grid{display:block;margin-top:14px}
+.outlook-grid>.graphic-card{display:none}
+.outlook-grid>.annual-native{display:block;margin-top:0}
+.sector-card{display:block;padding:14px 12px}
+.sector-card h3{font-size:21px}
+.sector-scroll .muted{font-size:14px}
+.sector-label{font-size:15px}
+.slide-actions{margin-top:6px;gap:10px}
+.slide-actions button{font-size:14px;min-height:40px;padding:8px 12px}
+.slide-actions>span,.slide-actions>span:not(:empty),.original-outlook{display:block;font-size:14px;line-height:1.5}
+.controls-row button,.controls-row p{font-size:14px}
+.persistent-disclosure{font-size:12px}
+.logo-scene .transition-tip{font-size:13px}
+}
+@media(max-width:380px){
+.brand-row h1{font-size:12px}
+.market-clock>span:first-child,.market-clock>span:last-child{font-size:11px}
+.market-clock strong{font-size:17px}
+.topnav button{font-size:12px}
+.slide.content-slide{padding:12px 10px 20px}
+.slide-actions>span{display:block}
+.donut-legend{grid-template-columns:repeat(2,minmax(0,1fr))}
+.controls-row button,.controls-row p{font-size:13px}
+}
+@media(min-width:1024px){.donut-legend{display:none}}

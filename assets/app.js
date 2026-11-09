@@ -1,5 +1,6 @@
 'use strict';
 const $=id=>document.getElementById(id);
+const MOBILE=window.matchMedia?window.matchMedia('(max-width: 1023px)'):{matches:false,addEventListener(){}};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=(n,c='CAD')=>n==null?'Unavailable':(c==='CAD'?'C$':'US$')+Number(n).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});
 const date=s=>s?new Date(s).toLocaleString('en-CA',{timeZone:'America/Vancouver',dateStyle:'medium',timeStyle:'short'})+' Pacific':'No observation';
@@ -36,6 +37,7 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   deck.style.transform=`translate3d(${-stops[page]*100}%,0,0)`;
   if(instant){void deck.offsetWidth;deck.style.transition=previousTransition||''}
   $('portfolio-deck').scrollLeft=0;$('portfolio-deck').scrollTop=0;
+  if(MOBILE.matches&&!instant)slides[stops[page]].scrollTop=0;
   slides.forEach((slide,i)=>{const active=i===stops[page];slide.inert=!active;slide.setAttribute('aria-hidden',String(!active))});
   nav.forEach(button=>{if(Number(button.dataset.page)===page)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
   $('page-counter').textContent=`Page ${page+1} of ${stops.length}`;
@@ -56,6 +58,8 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
  const viewport=$('portfolio-deck');
  viewport.addEventListener('wheel',event=>{
   if(event.ctrlKey||event.metaKey||dialogOpen()||event.target.closest('[data-scroll-region]'))return;
+  // Mobile pages scroll vertically; only a horizontal wheel/trackpad gesture changes pages there.
+  if(MOBILE.matches&&Math.abs(event.deltaY)>=Math.abs(event.deltaX))return;
   const now=performance.now(),scale=event.deltaMode===1?16:event.deltaMode===2?window.innerHeight:1;
   const delta=(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*scale;if(!delta)return;
   if(now-lastWheel>WHEEL_IDLE_MS)wheelConsumed=false;lastWheel=now;
@@ -66,7 +70,8 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   wheelConsumed=true;goTo(page+Math.sign(delta));
  },{passive:false});
  viewport.addEventListener('touchstart',event=>{
-  if(event.touches.length!==1||moving()||dialogOpen()||event.target.closest('[data-scroll-region],button')){touchStart=null;return}
+  const region=event.target.closest('[data-scroll-region]'),mobileRegion=region&&MOBILE.matches&&region.scrollWidth<=region.clientWidth+1;
+  if(event.touches.length!==1||moving()||dialogOpen()||event.target.closest('button')||(region&&!mobileRegion)){touchStart=null;return}
   touchStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
  },{passive:true});
  viewport.addEventListener('touchend',event=>{
@@ -99,11 +104,16 @@ function allocationLabelGeometry(rows){
  }
  return {width:720,height,cx,cy,radius,labels};
 }
+// Desktop keeps the full labelled viewBox; phones crop to the ring (outside labels hidden, legend shown).
+function fitDonut(){const svg=document.querySelector('#native-holdings .native-donut');if(!svg)return;if(!svg.dataset.full)svg.dataset.full=svg.getAttribute('viewBox');
+ const [,,w,h]=svg.dataset.full.split(' ').map(Number),c=[w/2,h/2],r=215;svg.setAttribute('viewBox',MOBILE.matches?`${c[0]-r} ${c[1]-r} ${2*r} ${2*r}`:svg.dataset.full)}
+MOBILE.addEventListener?.('change',fitDonut);
 function renderDesktop(s){
  const palette=['#00dca6','#49ffd0','#0daa96','#7af5be','#29b9c8','#52d878','#a6dc63','#73bcac','#1bdbb4','#74f3df','#97c7a0','#40f1bc'];
  const sorted=[...s.holdings].sort((a,b)=>b.weight_cad-a.weight_cad),pie=allocationLabelGeometry(sorted),circumference=2*Math.PI*pie.radius;let offset=0;
  const arcs=sorted.map((h,i)=>{const percent=h.weight_cad*100,arc=`<circle cx="${pie.cx}" cy="${pie.cy}" r="${pie.radius}" fill="none" stroke="${palette[i%palette.length]}" stroke-width="46" stroke-dasharray="${h.weight_cad*circumference} ${circumference*(1-h.weight_cad)}" stroke-dashoffset="${-offset*circumference/100}" transform="rotate(-90 ${pie.cx} ${pie.cy})"><title>${esc(h.symbol)} · ${percent.toFixed(2)}%</title></circle>`;offset+=percent;return arc}).join('');
- $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><p class="eyebrow">23 HOLDINGS. EVERY DOLLAR AT WORK.</p><h3>Planned capital</h3><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" role="img" aria-label="Capital-weighted allocation across 23 planned holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('')}</g><text x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD MODEL REFERENCE</text></svg><p class="native-summary"><strong>23 PLANNED</strong> · Not confirmed trades</p><p>Native C$ / US$ allocations.<br>CAD weights use fixed FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p><p class="muted">Original November 6 inputs, prepared November 8, 2026. Not live account values.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The proposed basket</h3><span>23 PLANNED · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all 23 planned holding allocations"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Native capital</th><th scope="col">Weight</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</th><td class="business-name" title="${esc(h.name)}">${esc(h.name)}</td><td>${money(h.planned_capital_native,h.currency)}</td><td>${(h.weight_cad*100).toFixed(2)}%</td></tr>`).join('')}</tbody></table></div></section>`;
+ $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><p class="eyebrow">23 HOLDINGS. EVERY DOLLAR AT WORK.</p><h3>Planned capital</h3><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" role="img" aria-label="Capital-weighted allocation across 23 planned holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('')}</g><text x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD MODEL REFERENCE</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>23 PLANNED</strong> · Not confirmed trades</p><p>Native C$ / US$ allocations.<br>CAD weights use fixed FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p><p class="muted">Original November 6 inputs, prepared November 8, 2026. Not live account values.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The proposed basket</h3><span>23 PLANNED · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all 23 planned holding allocations"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Native capital</th><th scope="col">Weight</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</th><td class="business-name" title="${esc(h.name)}">${esc(h.name)}</td><td>${money(h.planned_capital_native,h.currency)}</td><td>${(h.weight_cad*100).toFixed(2)}%</td></tr>`).join('')}</tbody></table></div></section>`;
+ fitDonut();
  const gross=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[1],0),net=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[2],0),max=Math.max(...MODEL_DISPLAY.monthly.map(r=>r[2]));
  $('native-monthly').innerHTML=`<div class="income-totals"><div><span>Annual gross model</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable proxy</span><strong>${money(net)}</strong></div></div><p class="native-note">Representative monthly net income in C$ · not actual receipts</p><div class="monthly-bars">${MODEL_DISPLAY.monthly.map(r=>`<div class="monthly-row"><span>${esc(r[0])}</span><div class="monthly-track"><span style="width:${r[2]/max*100}%"></span></div><strong>${money(r[2])}</strong></div>`).join('')}</div><p class="native-note">Original rates and fixed FX. Modeled net income is reinvested; payments and tax outcomes are not guaranteed.</p>`;
  const colors={Bearish:'#8bb4a2',Neutral:'#20ed87',Bullish:'#32d2e7'},start=s.valuation.reference_total_cad,low=80000,high=220000,L=88,R=602,T=20,B=286;
@@ -151,3 +161,20 @@ function formatCountdown(ms){const total=Math.max(0,Math.ceil(ms/1000)),days=Mat
  function restart(){if(raf!==null)cancelAnimationFrame(raf);raf=null;if(reduced.matches){draw(0);return}if(!document.hidden)raf=requestAnimationFrame(frame)}
  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{size();restart()},150)});document.addEventListener('visibilitychange',restart);reduced.addEventListener('change',restart);size();restart();
 })();
+// Launch-day pixel firework: once per visitor, only on 2026-11-09 local date, ~2 s at 3 fps, beside the page-one title.
+window.addEventListener('load',()=>setTimeout(()=>{try{
+ const KEY='sff-launch-fireworks-v1',d=new Date(),today=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+ if(today!=='2026-11-09'||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||localStorage.getItem(KEY))return;
+ const title=$('holdings-title'),host=title?.closest('.slide-heading');if(!host)return;localStorage.setItem(KEY,new Date().toISOString());
+ const c=document.createElement('canvas');c.className='launch-firework';c.width=c.height=16;c.setAttribute('aria-hidden','true');
+ const range=document.createRange();range.selectNodeContents(title);const rects=[...range.getClientRects()],last=rects[rects.length-1],box=host.getBoundingClientRect(),size=56;
+ const copy=host.querySelector('.page-one-heading-copy')?.getBoundingClientRect();let left=last.right-box.left+10;
+ if(copy&&copy.width&&left+size>copy.left-box.left-4)left=Math.max(0,copy.left-box.left-size-4);
+ c.style.cssText=`position:absolute;left:${left}px;top:${last.top-box.top+last.height/2-size/2}px;width:${size}px;height:${size}px;pointer-events:none;image-rendering:pixelated;z-index:2`;
+ host.style.position='relative';host.prepend(c);const g=c.getContext('2d'),cols=['#38ff77','#ffd84a','#ff6bb5','#6be8ff'];
+ const frames=[[[8,14,0],[8,13,1]],[[8,9,1],[8,11,0]],[2],[4],[6],[7]];let f=0;
+ const draw=()=>{g.clearRect(0,0,16,16);const fr=frames[f];
+  if(Array.isArray(fr[0]))fr.forEach(([x,y,k])=>{g.fillStyle=cols[k];g.fillRect(x,y,1,1)});
+  else{const r=fr[0];g.globalAlpha=f===5?.45:1;for(let i=0;i<8;i++){const a=i*Math.PI/4;g.fillStyle=cols[i%4];g.fillRect(Math.round(8+r*Math.cos(a)),Math.round(8+r*Math.sin(a)),1,1);if(r>3&&f<5){g.fillRect(Math.round(8+(r-2)*Math.cos(a+.4)),Math.round(8+(r-2)*Math.sin(a+.4)),1,1)}}g.globalAlpha=1;g.fillStyle='#fff';if(f===2)g.fillRect(8,8,1,1)}
+  if(++f<frames.length)setTimeout(draw,333);else setTimeout(()=>c.remove(),333)};draw();
+}catch(e){}},400));
