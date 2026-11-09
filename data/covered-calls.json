@@ -1,4 +1,14 @@
 {
-  "updated_at": "2026-11-09T00:00:00-06:00",
-  "positions": []
+  "updated_at": "2026-11-09T09:13:00-06:00",
+  "positions": [],
+  "eligible_100_share_lots": [
+    "ENB",
+    "PPL",
+    "CNQ",
+    "CU",
+    "SOBO",
+    "O",
+    "NNN"
+  ],
+  "notes": "No open covered calls yet. 100+ share lots that can support one call each: ENB, PPL, CNQ, CU, SOBO, O, NNN. CRT.UN has 250 units but no listed options on the Montreal Exchange."
 }

@@ -1,11 +1,11 @@
 {
   "date": "2026-11-09",
-  "price_as_of": "2026-11-06 close",
-  "day_change_cad": -421.7,
-  "day_change_pct": -0.3722,
-  "basis": "PLANNED model",
-  "generated_at": "2026-11-09T05:05:14.016428-07:00",
-  "session": "pre",
-  "delayed": false,
-  "updated_et": "07:05 ET"
+  "price_as_of": "intraday delayed ~15m \u00b7 updated 10:19 ET",
+  "day_change_cad": 754.31,
+  "day_change_pct": 0.6587,
+  "basis": "ACTUAL",
+  "generated_at": "2026-11-09T08:19:01.983524-07:00",
+  "session": "open",
+  "delayed": true,
+  "updated_et": "10:19 ET"
 }
