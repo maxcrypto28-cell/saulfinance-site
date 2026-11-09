@@ -47,7 +47,7 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   if(event.ctrlKey||event.metaKey||dialogOpen()||event.target.closest('[data-scroll-region]'))return;
   const now=performance.now(),scale=event.deltaMode===1?16:event.deltaMode===2?window.innerHeight:1;
   const delta=(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*scale;if(!delta)return;
-  event.preventDefault();if(now<lockedUntil){lastWheel=now;return}
+  if(event.cancelable)event.preventDefault();if(now<lockedUntil){lastWheel=now;return}
   if(now-lastWheel>220||Math.sign(wheelTotal)!==Math.sign(delta))wheelTotal=0;lastWheel=now;wheelTotal+=delta;
   if(Math.abs(wheelTotal)>=75){goTo(index+Math.sign(wheelTotal));wheelTotal=0;lockedUntil=now+700}
  },{passive:false});
@@ -59,7 +59,7 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
  viewport.addEventListener('touchend',event=>{
   if(!touchStart||event.touches.length||event.changedTouches.length!==1)return;
   const dx=touchStart.x-event.changedTouches[0].clientX,dy=touchStart.y-event.changedTouches[0].clientY;touchStart=null;
-  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25){event.preventDefault();goTo(index+Math.sign(dx))}
+  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25){if(event.cancelable)event.preventDefault();goTo(index+Math.sign(dx))}
  },{passive:false});
  viewport.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
  document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.open).showModal()));
