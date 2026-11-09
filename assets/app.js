@@ -197,16 +197,68 @@ async function renderDesktop(s){
  const line=$('holdings-count-line');
  if(line) line.innerHTML=`<span data-holdings-count>${hc}</span> holdings. Every dollar at work.`;
 
- const gross=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[1],0),net=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[2],0),max=Math.max(...MODEL_DISPLAY.monthly.map(r=>r[2]));
- const monthlyHost=$('native-monthly'); if(monthlyHost) monthlyHost.innerHTML=`<div class="income-totals"><div><span>Annual gross</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable</span><strong>${money(net)}</strong></div></div><div class="monthly-bars">${MODEL_DISPLAY.monthly.map(r=>`<div class="monthly-row"><span>${esc(r[0])}</span><div class="monthly-track"><span style="width:${r[2]/max*100}%"></span></div><strong>${money(r[2])}</strong></div>`).join('')}</div><p class="native-note income-footnote">Net modeled C$ · indicated rates · not receipts</p>`;
- const colors={Bearish:'#8bb4a2',Neutral:'#20ed87',Bullish:'#32d2e7'},start=s.valuation.reference_total_cad,low=80000,high=220000,L=70,R=610,T=12,B=168;
+ const gross=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[1],0),net=MODEL_DISPLAY.monthly.reduce((a,r)=>a+r[2],0),maxNet=Math.max(...MODEL_DISPLAY.monthly.map(r=>r[2]));
+ const fx=s.valuation.fx_cad_per_usd||1.4123;
+ const monthNames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+ const payerPalette=['#00dca6','#49ffd0','#0daa96','#7af5be','#29b9c8','#52d878','#a6dc63','#73bcac','#1bdbb4','#74f3df','#97c7a0','#40f1bc','#2ee6a8','#68c9ff','#9dffb0','#3ad1c2'];
+ // Per-month CAD gross by ticker from published holdings (annual_rate × shares / pay-count; USD×FX).
+ const monthStacks=monthNames.map((name,mi)=>{
+  const month=mi+1; const parts=[];
+  for(const h of (s.holdings||[])){
+   const pays=String(h.pay_months||'').split(',').map(x=>parseInt(x,10)).filter(Boolean);
+   if(!pays.includes(month)) continue;
+   const shares=Number(h.shares??h.starting_shares_theoretical)||0;
+   const rate=Number(h.annual_rate_native)||0;
+   let cad=(rate*shares)/pays.length;
+   if(h.currency==='USD') cad*=fx;
+   const ticker=String(h.symbol||'').replace(/\.TO$/,'').replace('CRT-UN','CRT.UN');
+   if(cad>0) parts.push({ticker,cad});
+  }
+  parts.sort((a,b)=>b.cad-a.cad);
+  const grossM=parts.reduce((a,p)=>a+p.cad,0);
+  const netM=MODEL_DISPLAY.monthly[mi]?.[2]??grossM;
+  return {name,month,parts,gross:grossM,net:netM};
+ });
+ const maxGross=Math.max(...monthStacks.map(m=>m.gross),1);
+ const peakMonths=new Set([...monthStacks].sort((a,b)=>b.gross-a.gross).slice(0,4).map(m=>m.month));
+ function moneyShort(n){return 'C$'+Number(n).toLocaleString('en-CA',{minimumFractionDigits:0,maximumFractionDigits:0});}
+ function moneyFull(n){return money(n);}
+ const monthlyHost=$('native-monthly');
+ if(monthlyHost){
+  if(MOBILE.matches){
+   monthlyHost.innerHTML=`<div class="income-totals"><div><span>Annual gross</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable</span><strong>${money(net)}</strong></div></div><div class="monthly-bars">${MODEL_DISPLAY.monthly.map(r=>`<div class="monthly-row"><span>${esc(r[0])}</span><div class="monthly-track"><span style="width:${r[2]/maxNet*100}%"></span></div><strong>${money(r[2])}</strong></div>`).join('')}</div><p class="native-note income-footnote">Net modeled C$ · indicated rates · not receipts</p>`;
+  }else{
+   const chartH=420, chartW=920, padL=8, padR=8, padT=36, padB=28;
+   const plotW=chartW-padL-padR, plotH=chartH-padT-padB;
+   const gap=10, barW=(plotW-gap*11)/12;
+   let bars='';
+   monthStacks.forEach((m,i)=>{
+    const x=padL+i*(barW+gap);
+    const h=Math.max(2,(m.gross/maxGross)*plotH);
+    const y=padT+plotH-h;
+    let yCursor=padT+plotH;
+    const segs=m.parts.map((p,pi)=>{
+     const segH=Math.max(0.5,(p.cad/maxGross)*plotH);
+     yCursor-=segH;
+     const color=payerPalette[pi%payerPalette.length];
+     return `<rect class="pay-seg" x="${x.toFixed(2)}" y="${yCursor.toFixed(2)}" width="${barW.toFixed(2)}" height="${segH.toFixed(2)}" fill="${color}" rx="1"><title>${esc(p.ticker)} · ${moneyFull(p.cad)} in ${m.name}</title></rect>`;
+    }).join('');
+    const peak=peakMonths.has(m.month);
+    const labelY=y-8;
+    bars+=`<g class="month-bar${peak?' peak':''}">${segs}<text class="bar-val" x="${(x+barW/2).toFixed(2)}" y="${labelY.toFixed(2)}" text-anchor="middle" fill="${peak?'#38ff94':'#e1f3e6'}" font-size="13" font-weight="600">${moneyShort(m.net)}</text><text class="bar-month" x="${(x+barW/2).toFixed(2)}" y="${(padT+plotH+18).toFixed(2)}" text-anchor="middle" fill="#8cbca0" font-size="13">${m.name}</text></g>`;
+   });
+   const payersStrip=monthStacks.map(m=>`<div class="pay-when-row"><span class="pay-when-m">${m.name}</span><span class="pay-when-tickers">${m.parts.map(p=>esc(p.ticker)).join(' · ')}</span></div>`).join('');
+   monthlyHost.innerHTML=`<div class="income-totals"><div><span>Annual gross</span><strong>${money(gross)}</strong></div><div><span>Net reinvestable</span><strong>${money(net)}</strong></div></div><div class="income-chart-wrap"><svg class="income-barchart" viewBox="0 0 ${chartW} ${chartH}" preserveAspectRatio="none" role="img" aria-label="Monthly net dividend calendar from current holdings">${bars}</svg></div><div class="pay-when" aria-label="Who pays when"><div class="pay-when-head">Who pays when</div><div class="pay-when-grid">${payersStrip}</div></div><p class="native-note income-footnote">Bars = indicated monthly CAD (stacked by payer) · labels show net reinvestable · not receipts</p>`;
+  }
+ }
+ const colors={Bearish:'#8bb4a2',Neutral:'#20ed87',Bullish:'#32d2e7'},start=s.valuation.reference_total_cad,low=80000,high=220000,L=70,R=610,T=14,B=250;
  const y=v=>T+(high-v)/(high-low)*(B-T),x=i=>L+i/60*(R-L);
- let svg=`<svg class="native-linechart" viewBox="0 0 630 200" role="img" aria-label="Hypothetical five-year compounding scenarios in Canadian dollars">`;
+ let svg=`<svg class="native-linechart" viewBox="0 0 630 280" preserveAspectRatio="none" role="img" aria-label="Hypothetical five-year compounding scenarios in Canadian dollars">`;
  for(let value=80000;value<=220000;value+=40000)svg+=`<line x1="${L}" y1="${y(value)}" x2="${R}" y2="${y(value)}" stroke="#244331"/><text x="62" y="${y(value)+4}" text-anchor="end" fill="#8cbca0" font-size="16">C$${value/1000}k</text>`;
- for(let year=0;year<=5;year++)svg+=`<text x="${x(year*12)}" y="192" text-anchor="${year===5?'end':'middle'}" fill="#8cbca0" font-size="15">${year===0?'Start':'Y'+year}</text>`;
+ for(let year=0;year<=5;year++)svg+=`<text x="${x(year*12)}" y="272" text-anchor="${year===5?'end':'middle'}" fill="#8cbca0" font-size="15">${year===0?'Start':'Y'+year}</text>`;
  for(const [name,path] of Object.entries(MODEL_DISPLAY.paths)){const values=[start,...path];svg+=`<polyline points="${values.map((v,i)=>`${x(i)},${y(v)}`).join(' ')}" fill="none" stroke="${colors[name]}" stroke-width="2.8"/>`}
  svg+='</svg>';
- const pathsHost=$('native-paths'); if(pathsHost) pathsHost.innerHTML=`<div class="path-legend">${Object.entries(colors).map(([n,c])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')}</div>${svg}<div class="path-outcomes">${['Bearish','Neutral','Bullish'].map(name=>{const a=MODEL_DISPLAY.annual.find(r=>r[0]===name&&r[1]===5);return `<div><span style="color:${colors[name]}">${name}</span><strong>${money(a[4])}</strong><small>${(a[5]*100).toFixed(0)}%</small></div>`}).join('')}</div><p class="native-note">Illustrative · not predictions</p>`;
+ const pathsHost=$('native-paths'); if(pathsHost) pathsHost.innerHTML=`<div class="path-legend">${Object.entries(colors).map(([n,c])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')}</div><div class="path-chart-wrap">${svg}</div><div class="path-outcomes">${['Bearish','Neutral','Bullish'].map(name=>{const a=MODEL_DISPLAY.annual.find(r=>r[0]===name&&r[1]===5);return `<div><span style="color:${colors[name]}">${name}</span><strong>${money(a[4])}</strong><small>${(a[5]*100).toFixed(0)}%</small></div>`}).join('')}</div><p class="native-note">Illustrative · not predictions</p>`;
  renderAnnual('Neutral');
 }
 function renderAnnual(scenario){

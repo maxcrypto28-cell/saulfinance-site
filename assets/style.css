@@ -350,7 +350,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 #holdings-page.slide{padding-top:40px}
 }
 
-/* Page 2 + 4: desktop no-scroll fit */
+/* Page 2 + 4: desktop no-scroll — income fills with vertical bars; paths chart grows */
 @media(min-width:1024px){
 #income.slide,#outlook.slide{overflow:hidden;gap:8px;padding-top:14px;padding-bottom:8px}
 #income.slide .slide-heading,#outlook.slide .slide-heading{flex-shrink:0}
@@ -362,30 +362,52 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 #income.slide .slide-actions>span,#outlook.slide .slide-actions>span{font-size:12px}
 
 #income.slide .income-native{height:100%;min-height:0;overflow:hidden}
-#income .monthly-panel{height:100%;min-height:0;display:flex;flex-direction:column;padding:14px 16px;overflow:hidden}
-#income .monthly-panel>h3{font-size:18px;margin:0 0 8px}
-#income #native-monthly{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
-#income .income-totals{margin-bottom:10px;gap:10px;flex-shrink:0}
-#income .income-totals div{padding:10px 12px}
-#income .income-totals span{font-size:12px;margin-bottom:2px}
-#income .income-totals strong{font-size:22px}
-#income .monthly-bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px 22px;align-content:start;flex:1;min-height:0}
-#income .monthly-row{margin:5px 0;font-size:14px;grid-template-columns:36px minmax(0,1fr) 96px;gap:8px}
-#income .monthly-track{height:9px}
-#income .monthly-row strong{font-size:14px}
-#income .income-footnote{margin:8px 0 0;font-size:12px;flex-shrink:0}
+#income .monthly-panel{height:100%;min-height:0;display:flex;flex-direction:column;padding:12px 14px;overflow:hidden}
+#income .monthly-panel>h3{font-size:17px;margin:0 0 6px;flex-shrink:0}
+#income #native-monthly{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+#income .income-totals{margin-bottom:0;gap:10px;flex-shrink:0}
+#income .income-totals div{padding:8px 12px}
+#income .income-totals span{font-size:11px;margin-bottom:2px}
+#income .income-totals strong{font-size:clamp(1.15rem,2vw,1.55rem)}
+#income .income-chart-wrap{
+  flex:1 1 auto;min-height:0;
+  display:flex;align-items:stretch;
+  background:linear-gradient(180deg,rgba(10,28,20,.55),rgba(4,14,10,.72));
+  border:1px solid rgba(32,237,135,.16);border-radius:14px;
+  padding:6px 8px 2px;
+}
+#income .income-barchart{width:100%;height:100%;min-height:200px;display:block}
+#income .income-barchart .month-bar.peak .bar-val{filter:drop-shadow(0 0 6px rgba(56,255,148,.55))}
+#income .pay-when{
+  flex:0 0 auto;
+  background:rgba(6,18,12,.72);
+  border:1px solid rgba(32,237,135,.14);
+  border-radius:12px;
+  padding:7px 10px 6px;
+}
+#income .pay-when-head{font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mint);margin-bottom:5px}
+#income .pay-when-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:3px 10px}
+#income .pay-when-row{display:flex;flex-direction:column;gap:1px;min-width:0}
+#income .pay-when-m{font-size:.7rem;font-weight:700;color:var(--green);letter-spacing:.03em}
+#income .pay-when-tickers{font-size:.58rem;color:#9ecbb0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#income .income-footnote{margin:0;font-size:11px;flex-shrink:0;opacity:.8}
+/* legacy monthly-bars kept for mobile branch only — hide 3-col desktop leftover */
+#income .monthly-bars{display:none}
 
 #outlook.slide .outlook-grid{height:100%;min-height:0;overflow:hidden}
 #outlook .path-panel,#outlook .annual-native,#outlook .sector-card{padding:12px 14px}
-#outlook .path-panel>h3,#outlook .annual-native>h3,#outlook .sector-card>h3{font-size:17px;margin:0 0 6px}
-#outlook #native-paths,#outlook #native-annual,#outlook .sector-scroll{flex:1;min-height:0;overflow:hidden}
-#outlook .native-linechart{margin:4px 0;max-height:min(210px,28dvh);width:100%}
-#outlook .path-legend{font-size:12px;gap:12px;margin:0 0 4px}
-#outlook .path-outcomes{gap:6px;margin-top:4px}
+#outlook .path-panel{display:flex;flex-direction:column;min-height:0;height:100%;overflow:hidden}
+#outlook .path-panel>h3,#outlook .annual-native>h3,#outlook .sector-card>h3{font-size:17px;margin:0 0 6px;flex-shrink:0}
+#outlook #native-paths{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:6px}
+#outlook #native-annual,#outlook .sector-scroll{flex:1;min-height:0;overflow:hidden}
+#outlook .path-chart-wrap{flex:1 1 auto;min-height:0;display:flex;align-items:stretch}
+#outlook .native-linechart{margin:0;max-height:none;width:100%;height:100%;min-height:0;flex:1 1 auto;display:block}
+#outlook .path-legend{font-size:12px;gap:12px;margin:0;flex-shrink:0}
+#outlook .path-outcomes{gap:6px;margin-top:0;flex-shrink:0}
 #outlook .path-outcomes>div{padding:7px 8px;gap:2px}
 #outlook .path-outcomes span,#outlook .path-outcomes small{font-size:12px}
 #outlook .path-outcomes strong{font-size:15px}
-#outlook .path-panel .native-note{font-size:11px;margin:4px 0 0;line-height:1.3}
+#outlook .path-panel .native-note{font-size:11px;margin:0;line-height:1.3;flex-shrink:0}
 #outlook .scenario-tabs{gap:6px;margin-bottom:6px}
 #outlook .scenario-tabs button{font-size:13px;min-height:30px;padding:4px 10px}
 #outlook .annual-table{font-size:13px}
@@ -400,17 +422,15 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 }
 @media(min-width:1024px) and (max-height:800px){
 #income.slide .slide-heading h2,#outlook.slide .slide-heading h2{font-size:24px}
-#income .monthly-bars{grid-template-columns:repeat(3,minmax(0,1fr));gap:0 16px}
-#income .monthly-row{margin:3px 0;font-size:13px}
-#income .income-totals strong{font-size:18px}
-#outlook .native-linechart{max-height:min(170px,24dvh)}
+#income .income-totals strong{font-size:1.1rem}
+#income .pay-when-tickers{font-size:.55rem}
+#income .monthly-panel{padding:8px 10px}
 #outlook .annual-result strong{font-size:18px}
 #outlook .path-panel,#outlook .annual-native,#outlook .sector-card{padding:8px 10px}
-#income .monthly-panel{padding:10px 12px}
 }
 @media(min-width:1024px) and (max-width:1400px){
 #outlook.slide .outlook-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(180px,.65fr);gap:10px}
-#income .monthly-bars{gap:2px 14px}
+#income .pay-when-grid{gap:2px 6px}
 }
 @media(max-width:1023px){
 .outlook-grid{display:block;margin-top:14px}
