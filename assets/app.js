@@ -435,29 +435,52 @@ async function loadCoveredCalls(){
 }
 loadCoveredCalls();
 
-// Daily PNL strip: live feed (Render JSON API, no redeploy) with same-origin fallback.
-// Visible only during the regular NYSE+TSX session (same calendar as the close countdown).
+// PNL strip: live feed (Render JSON API, no redeploy) with same-origin fallback.
+// Regular session → Daily PNL. Market closed → Since Nov 9 inception P&L (same spot).
 const PNL_LIVE='https://saulfinance-pnl.onrender.com/daily-pnl.json';
 const PNL_FALLBACK='/data/daily-pnl.json';
+const INCEPTION_FALLBACK='/data/inception.json';
+const INCEPTION_DEFAULT={inception_date:'2026-11-09',label:'Since Nov 9',start_value_cad:114897.09};
+let INCEPTION=INCEPTION_DEFAULT;
 function pnlMarketOpen(now=clockNow()){
   // Reuse findCurrentClose: open when a session is in progress (incl. early closes).
   return !!findCurrentClose(now);
 }
-function setPnlSessionVisible(open){
+function setPnlStripVisible(show){
   const els=[...document.querySelectorAll('.daily-pnl-strip')];
   for(const el of els){
     if(!el)continue;
-    el.hidden=!open;
-    if(!open){
+    el.hidden=!show;
+    if(!show){
       el.classList.remove('pnl-up','pnl-down');
+      const label=el.querySelector('.daily-pnl-label');
       const value=el.querySelector('.daily-pnl-value');
       const face=el.querySelector('.daily-pnl-face');
       const meta=el.querySelector('.daily-pnl-meta');
+      if(label)label.textContent='';
       if(value)value.textContent='';
       if(face)face.innerHTML='';
       if(meta)meta.textContent='';
     }
   }
+}
+async function loadInception(){
+  try{
+    const r=await fetch(`${INCEPTION_FALLBACK}?t=${Date.now()}`,{cache:'no-store'});
+    if(!r.ok)throw Error('HTTP '+r.status);
+    const j=await r.json();
+    if(j&&j.start_value_cad!=null) INCEPTION={...INCEPTION_DEFAULT,...j};
+  }catch(e){ /* keep default */ }
+}
+function sinceFromData(data){
+  if(data&&data.since_cad!=null&&!Number.isNaN(Number(data.since_cad))){
+    return {cad:Number(data.since_cad), pct:data.since_pct!=null?Number(data.since_pct):null};
+  }
+  const start=Number(data?.inception_start_cad ?? INCEPTION.start_value_cad);
+  const mv=data&&data.market_value_cad!=null?Number(data.market_value_cad):null;
+  if(mv==null||!start)return null;
+  const cad=mv-start;
+  return {cad, pct:(cad/start)*100};
 }
 function pnlFace(positive){
   // Inline SVG so fill color is reliable (not emoji).
@@ -489,10 +512,24 @@ async function fetchPnlJson(){
   }
   return null;
 }
-function paintPnl(data){
+function paintPnl(data, mode='daily'){
   const els=[...document.querySelectorAll('.daily-pnl-strip')]; if(!els.length)return;
   let text='—', faceHtml='', metaText='', up=null;
-  if(data&&data.day_change_cad!=null){
+  const labelText=mode==='since'?(INCEPTION.label||'Since Nov 9'):'Daily PNL';
+  if(mode==='since'){
+    const since=sinceFromData(data);
+    if(since){
+      const cad=since.cad; up=cad>=0;
+      text=formatPnl(cad, since.pct);
+      faceHtml=pnlFace(up);
+      const bits=[];
+      if(data&&data.basis&&String(data.basis).toUpperCase().includes('ACTUAL'))bits.push('actual');
+      if(data&&data.basis&&String(data.basis).toUpperCase().includes('PLANNED'))bits.push('model');
+      if(data&&data.price_as_of)bits.push(String(data.price_as_of));
+      else if(data&&data.updated_et)bits.push('updated '+data.updated_et);
+      metaText=bits.join(' · ');
+    }
+  }else if(data&&data.day_change_cad!=null){
     const cad=Number(data.day_change_cad); up=cad>=0;
     text=formatPnl(cad,data.day_change_pct);
     faceHtml=pnlFace(up);
@@ -505,10 +542,12 @@ function paintPnl(data){
     metaText=bits.join(' · ');
   }
   for(const el of els){
+    const label=el.querySelector('.daily-pnl-label');
     const value=el.querySelector('.daily-pnl-value');
     const face=el.querySelector('.daily-pnl-face');
     const meta=el.querySelector('.daily-pnl-meta');
     el.classList.remove('pnl-up','pnl-down');
+    if(label)label.textContent=labelText;
     if(up==null){ if(value)value.textContent='—'; if(face)face.innerHTML=''; if(meta)meta.textContent=''; continue; }
     el.classList.add(up?'pnl-up':'pnl-down');
     if(value)value.textContent=text;
@@ -516,15 +555,34 @@ function paintPnl(data){
     if(meta)meta.textContent=metaText;
   }
 }
+async function fetchFallbackPnl(){
+  try{
+    const r=await fetch(`${PNL_FALLBACK}?t=${Date.now()}`,{cache:'no-store'});
+    if(!r.ok)throw Error('HTTP '+r.status);
+    return await r.json();
+  }catch(e){return null}
+}
 async function loadDailyPnl(){
   const open=pnlMarketOpen();
-  setPnlSessionVisible(open);
-  if(open) paintPnl(await fetchPnlJson());
+  setPnlStripVisible(true);
+  let data=await fetchPnlJson();
+  // If the live API is a stale pre-market seed without inception fields, prefer same-origin close snapshot.
+  if(!open){
+    const since=sinceFromData(data);
+    if(!since){
+      const fb=await fetchFallbackPnl();
+      if(sinceFromData(fb)) data=fb;
+    }
+  }else if(!data||data.day_change_cad==null){
+    const fb=await fetchFallbackPnl();
+    if(fb&&fb.day_change_cad!=null) data=fb;
+  }
+  paintPnl(data, open?'daily':'since');
 }
 (()=>{
   const tick=()=>{loadDailyPnl();};
   // After native holdings render, strip exists; re-check ~30s so open/close flip without reload.
-  const boot=()=>{tick();};
+  const boot=async()=>{await loadInception(); tick();};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
   setInterval(()=>{if(document.hidden)return; tick();},30*1000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});

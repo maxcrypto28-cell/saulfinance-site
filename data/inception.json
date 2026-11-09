@@ -1,0 +1,15 @@
+{
+  "inception_date": "2026-11-09",
+  "label": "Since Nov 9",
+  "start_value_cad": 114897.09,
+  "currency": "CAD",
+  "scope": "public_actual_holdings",
+  "excludes": [
+    "CTGO",
+    "VGFCQ"
+  ],
+  "method": "public_close_mv_minus_day_change",
+  "source_snapshot": "dividend_research/daily_pnl/snapshots/2026-11-09.json",
+  "source_generated_at": "2026-11-09T14:05:27.466480-07:00",
+  "notes": "Baseline is the Nov 9 2026 prior-close market value of the 26 public ACTUAL TFSA holdings (exclude CTGO leftover and VGFCQ), derived as public close MV (116236.33) minus public day change (+1339.24) from the 16:05 ET close snapshot. Same denominator as the published +1.1656% day change. Not the C$113,279.35 pre-execution model plan, not the C$115,513 TFSA cash balance after the CTGO sale, and not morning Price_shown 'cost' (true broker fills unavailable)."
+}

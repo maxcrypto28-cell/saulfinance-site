@@ -18,6 +18,11 @@ DEFAULT = {
     "price_as_of": None,
     "day_change_cad": None,
     "day_change_pct": None,
+    "market_value_cad": None,
+    "since_cad": None,
+    "since_pct": None,
+    "inception_date": "2026-11-09",
+    "inception_start_cad": 114897.09,
     "basis": "PLANNED model",
     "generated_at": None,
     "session": "closed",
@@ -116,6 +121,11 @@ class Handler(BaseHTTPRequestHandler):
             "price_as_of",
             "day_change_cad",
             "day_change_pct",
+            "market_value_cad",
+            "since_cad",
+            "since_pct",
+            "inception_date",
+            "inception_start_cad",
             "basis",
             "generated_at",
             "session",
@@ -138,7 +148,9 @@ class Handler(BaseHTTPRequestHandler):
 
 def _apply_seed(data: dict, source: str) -> bool:
     """Write seed payload. Boot is single-threaded; do not take LOCK here."""
-    if not isinstance(data, dict) or data.get("day_change_cad") is None:
+    if not isinstance(data, dict):
+        return False
+    if data.get("day_change_cad") is None and data.get("since_cad") is None and data.get("market_value_cad") is None:
         return False
     save_state({k: data.get(k) for k in DEFAULT.keys()})
     print("seeded from", source, flush=True)
@@ -148,9 +160,22 @@ def _apply_seed(data: dict, source: str) -> bool:
 def seed_state() -> None:
     """Best-effort seed so a fresh deploy is not empty until the box loop POSTs.
 
-    Must never nest LOCK: threading.Lock is not reentrant, and holding LOCK
-    while seeding previously deadlocked boot so Render never saw an open port.
+    Prefer the pnl-data branch snapshot (latest published close) over the possibly
+    stale file baked into the deploy image. Must never nest LOCK: threading.Lock
+    is not reentrant, and holding LOCK while seeding previously deadlocked boot.
     """
+    url = os.environ.get(
+        "PNL_SEED_URL",
+        "https://raw.githubusercontent.com/maxcrypto28-cell/saulfinance-site/pnl-data/data/daily-pnl.json",
+    )
+    try:
+        req = __import__("urllib.request").request.Request(url, headers={"User-Agent": "saul-pnl-seed/1"})
+        with __import__("urllib.request").request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode())
+        if _apply_seed(data, url):
+            return
+    except Exception as e:
+        print("remote seed skipped:", e, flush=True)
     local = Path(__file__).resolve().parent.parent / "data" / "daily-pnl.json"
     if local.exists():
         try:
@@ -158,17 +183,6 @@ def seed_state() -> None:
                 return
         except Exception as e:
             print("local seed skipped:", e, flush=True)
-    url = os.environ.get(
-        "PNL_SEED_URL",
-        "https://raw.githubusercontent.com/maxcrypto28-cell/saulfinance-site/pnl-data/data/daily-pnl.json",
-    )
-    try:
-        req = __import__("urllib.request").request.Request(url, headers={"User-Agent": "saul-pnl-seed/1"})
-        with __import__("urllib.request").request.urlopen(req, timeout=5) as resp:
-            data = json.loads(resp.read().decode())
-        _apply_seed(data, url)
-    except Exception as e:
-        print("remote seed skipped:", e, flush=True)
 
 
 def main() -> None:
