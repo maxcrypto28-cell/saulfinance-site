@@ -12,3 +12,6 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 
 /* Reset inherited flex alignment: a single grid column must stretch across the header. */
 .site-header{grid-template-columns:minmax(0,1fr);justify-content:stretch;align-items:stretch}.brand-row,.topnav{width:100%;justify-self:stretch}@media(min-width:1024px){.site-header .brand-row{display:grid;grid-template-columns:minmax(0,1fr) 240px 43px;align-items:center;gap:16px;width:100%;max-width:none;margin:0}.site-header .market-clock{width:240px;justify-self:end;margin-left:auto}.site-header .brand-row .sff{justify-self:end;margin-left:0}.site-header .topnav{justify-self:stretch}}
+
+/* Logo panels are passed through in one committed glide, never a resting page. */
+.deck{transition-duration:900ms;transition-timing-function:cubic-bezier(.4,0,.6,1)}@media(prefers-reduced-motion:reduce){.deck{transition:none}}

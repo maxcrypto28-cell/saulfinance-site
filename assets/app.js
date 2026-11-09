@@ -18,54 +18,69 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
-// Five physical slides, three content pages; portfolio data stays read-only.
+// Five physical panels; ONLY the three content panels are navigation destinations.
 (()=>{
- const slides=[...document.querySelectorAll('.slide')],deck=$('deck');
- const nav=[...document.querySelectorAll('[data-page]')],ids=slides.map(s=>s.id);
- let index=0,wheelTotal=0,lastWheel=0,lockedUntil=0,touchStart=null;
+ const slides=[...document.querySelectorAll('.slide')],deck=$('deck'),stops=[0,2,4];
+ const nav=[...document.querySelectorAll('[data-page]')],ids=stops.map(i=>slides[i].id);
+ const motion=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):{matches:false};
+ const GLIDE_MS=900,WHEEL_IDLE_MS=260,MIN_WHEEL_PX=4;
+ let page=0,lockedUntil=0,lastWheel=-Infinity,wheelConsumed=false,touchStart=null;
  const dialogOpen=()=>!!document.querySelector('dialog[open]');
- function goTo(value){
-  const next=Math.max(0,Math.min(slides.length-1,Number(value)));if(!Number.isInteger(next))return;
-  const old=slides[index],moveFocus=old?.contains(document.activeElement);index=next;
-  deck.style.transform=`translate3d(${-index*100}%,0,0)`;
+ const moving=()=>!motion.matches&&performance.now()<lockedUntil;
+ function goTo(value,instant=false){
+  const next=Math.max(0,Math.min(stops.length-1,Number(value)));if(!Number.isInteger(next)||(!instant&&moving()))return false;
+  if(!instant&&next===page)return false;
+  const old=slides[stops[page]],moveFocus=old?.contains(document.activeElement);page=next;
+  lockedUntil=performance.now()+(instant||motion.matches?0:GLIDE_MS);
+  const previousTransition=deck.style.transition;if(instant)deck.style.transition='none';
+  deck.style.transform=`translate3d(${-stops[page]*100}%,0,0)`;
+  if(instant){void deck.offsetWidth;deck.style.transition=previousTransition||''}
   $('portfolio-deck').scrollLeft=0;$('portfolio-deck').scrollTop=0;
-  slides.forEach((slide,i)=>{slide.inert=i!==index;slide.setAttribute('aria-hidden',String(i!==index))});
-  nav.forEach(button=>{if(Number(button.dataset.page)===index)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
-  const content=[0,2,4].indexOf(index),position=`Slide ${index+1} of ${slides.length}`;
-  $('page-counter').textContent=content>=0?`Page ${content+1} of 3 · ${position}`:`Logo transition ${index===1?'1 → 2':'2 → 3'} · ${position}`;
-  $('previous-slide').disabled=index===0;$('next-slide').disabled=index===slides.length-1;
-  history.replaceState(null,'',`#${ids[index]}`);
-  if(moveFocus)slides[index].querySelector('h2')?.focus({preventScroll:true});
+  slides.forEach((slide,i)=>{const active=i===stops[page];slide.inert=!active;slide.setAttribute('aria-hidden',String(!active))});
+  nav.forEach(button=>{if(Number(button.dataset.page)===page)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
+  $('page-counter').textContent=`Page ${page+1} of ${stops.length}`;
+  $('previous-slide').disabled=page===0;$('next-slide').disabled=page===stops.length-1;
+  history.replaceState(null,'',`#${ids[page]}`);
+  if(moveFocus)slides[stops[page]].querySelector('h2')?.focus({preventScroll:true});
+  return true;
  }
  nav.forEach(button=>button.addEventListener('click',()=>goTo(button.dataset.page)));
- $('previous-slide').addEventListener('click',()=>goTo(index-1));$('next-slide').addEventListener('click',()=>goTo(index+1));
+ $('previous-slide').addEventListener('click',()=>goTo(page-1));$('next-slide').addEventListener('click',()=>goTo(page+1));
  document.addEventListener('keydown',event=>{
   if(dialogOpen()||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||event.target.closest('input,textarea,select,[contenteditable="true"]'))return;
-  if(['ArrowRight','ArrowLeft','Home','End'].includes(event.key)){event.preventDefault();goTo(event.key==='Home'?0:event.key==='End'?slides.length-1:index+(event.key==='ArrowRight'?1:-1))}
+  if(['ArrowRight','ArrowLeft','Home','End'].includes(event.key)){
+   if(event.cancelable)event.preventDefault();
+   if(!event.repeat)goTo(event.key==='Home'?0:event.key==='End'?stops.length-1:page+(event.key==='ArrowRight'?1:-1));
+  }
  });
- $('portfolio-deck').addEventListener('wheel',event=>{
+ const viewport=$('portfolio-deck');
+ viewport.addEventListener('wheel',event=>{
   if(event.ctrlKey||event.metaKey||dialogOpen()||event.target.closest('[data-scroll-region]'))return;
   const now=performance.now(),scale=event.deltaMode===1?16:event.deltaMode===2?window.innerHeight:1;
   const delta=(Math.abs(event.deltaX)>Math.abs(event.deltaY)?event.deltaX:event.deltaY)*scale;if(!delta)return;
-  if(event.cancelable)event.preventDefault();if(now<lockedUntil){lastWheel=now;return}
-  if(now-lastWheel>220||Math.sign(wheelTotal)!==Math.sign(delta))wheelTotal=0;lastWheel=now;wheelTotal+=delta;
-  if(Math.abs(wheelTotal)>=75){goTo(index+Math.sign(wheelTotal));wheelTotal=0;lockedUntil=now+700}
+  if(now-lastWheel>WHEEL_IDLE_MS)wheelConsumed=false;lastWheel=now;
+  if(event.cancelable)event.preventDefault();
+  if(moving()){wheelConsumed=true;return}
+  if(wheelConsumed||Math.abs(delta)<MIN_WHEEL_PX)return;
+  // A single ordinary wheel event commits a complete page glide. Momentum cannot add a second page.
+  wheelConsumed=true;goTo(page+Math.sign(delta));
  },{passive:false});
- const viewport=$('portfolio-deck');
  viewport.addEventListener('touchstart',event=>{
-  if(event.touches.length!==1||dialogOpen()||event.target.closest('[data-scroll-region],button')){touchStart=null;return}
+  if(event.touches.length!==1||moving()||dialogOpen()||event.target.closest('[data-scroll-region],button')){touchStart=null;return}
   touchStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
  },{passive:true});
  viewport.addEventListener('touchend',event=>{
-  if(!touchStart||event.touches.length||event.changedTouches.length!==1)return;
-  const dx=touchStart.x-event.changedTouches[0].clientX,dy=touchStart.y-event.changedTouches[0].clientY;touchStart=null;
-  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25){if(event.cancelable)event.preventDefault();goTo(index+Math.sign(dx))}
+  const start=touchStart;touchStart=null;
+  if(!start||event.touches.length||event.changedTouches.length!==1)return;
+  const dx=start.x-event.changedTouches[0].clientX,dy=start.y-event.changedTouches[0].clientY;
+  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25){if(event.cancelable)event.preventDefault();goTo(page+Math.sign(dx))}
  },{passive:false});
  viewport.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
  document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.open).showModal()));
  document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
- window.addEventListener('hashchange',()=>{const found=ids.indexOf(location.hash.slice(1));if(found>=0)goTo(found)});
- goTo(Math.max(0,ids.indexOf(location.hash.slice(1))));
+ function pageForHash(){const hash=location.hash.slice(1),found=ids.indexOf(hash);if(found>=0)return found;const physical=slides.findIndex(s=>s.id===hash);return physical>=0?Math.min(stops.length-1,Math.ceil(physical/2)):0}
+ window.addEventListener('hashchange',()=>{if(!goTo(pageForHash()))history.replaceState(null,'',`#${ids[page]}`)});
+ goTo(pageForHash(),true);
 })();
 
 const MODEL_DISPLAY={"monthly":[["Jan",211.07783924999998,196.15916336249998],["Feb",157.1272639189189,144.81719966891893],["Mar",467.87386045127255,439.28181358636687],["Apr",178.45037925,164.4208223625],["May",196.05265016891892,181.90877798141892],["Jun",467.87386045127255,439.28181358636687],["Jul",192.92499299999997,180.72924404999998],["Aug",157.1272639189189,144.81719966891893],["Sep",480.0992467012726,449.67339189886695],["Oct",192.92499299999997,180.72924404999998],["Nov",157.1272639189189,144.81719966891893],["Dec",461.94640045127255,434.2434725863669]],"annual":[["Bearish",1,3040.922312061721,2843.1683072530604,98839.81792042643,-0.12746834533183193],["Bearish",2,3135.3978049698617,2936.7928705980858,102037.51920783415,-0.099239887872687],["Bearish",3,3294.4450379248146,3086.1052225413086,108053.3187271208,-0.04613400788269173],["Bearish",4,3464.522074094691,3248.482715009007,115161.67933226643,0.01661671112186003],["Bearish",5,3668.391141871632,3437.7345760516055,121755.71541309974,0.07482710986200236],["Neutral",1,3528.2542293332426,3292.014024319578,122337.4077015088,0.07996213485083703],["Neutral",2,3772.05028301782,3523.5326540417354,132367.13586383127,0.1685019105552863],["Neutral",3,4023.747231034638,3758.9522229503427,142576.36341694836,0.25862625919559457],["Neutral",4,4272.717506040086,3991.7368564620465,154132.20001645316,0.3606381147552473],["Neutral",5,4559.018826643058,4258.935779925718,165718.89420769038,0.46292237293703975],["Bullish",1,3623.259993775615,3381.5533356662913,128184.55499242317,0.1315791977731644],["Bullish",2,3991.125703344346,3729.7644671796525,145142.0809183089,0.28127573168526965],["Bullish",3,4382.258816573044,4097.181338642599,163575.20286470393,0.4439984352573929],["Bullish",4,4786.969511313348,4475.3172536226,184785.31124060167,0.6312356372908119],["Bullish",5,5254.653753414544,4912.888654963636,207616.47451287173,0.8327830812975456]],"paths":{"Bearish":[112146.34043553405,110811.98826531622,109443.52623834036,108357.12722106269,107043.46953132116,105753.87793726262,104714.58587273868,103472.32179521224,102204.90979167879,101233.13092697781,100049.66947567399,98839.81792042643,99249.74312022806,99462.51938709,99621.02897571678,100045.69592686219,100240.88708896196,100445.93398485154,100875.90502458808,101090.88987240999,101263.29304667209,101693.38454648253,101892.1919306601,102037.51920783415,102687.66034656546,103133.60700621636,103511.99710646935,104148.74469234332,104559.53353301098,104968.85859609437,105609.33541486792,106054.95458342046,106453.61099831463,107136.03515219211,107616.75613333269,108053.3187271208,108772.36407751842,109312.7842540555,109790.09433262672,110549.38701884501,111085.00886913866,111621.3914183213,112391.98133329277,112942.98898558751,113425.86924348302,114192.14646445512,114714.20118613158,115161.67933226643,115886.12416257644,116382.7334214197,116795.53786256225,117492.20936618521,117932.19255772805,118376.01588250037,119076.7819400763,119555.71537001629,119988.41103236479,120738.91190599003,121267.3000989456,121755.71541309974],"Neutral":[114192.47641390325,114857.1292536101,115472.84730102375,116395.33670329864,117038.71167365547,117706.57239936953,118645.60238829051,119326.29203285345,119977.30697188497,120950.30640375972,121661.64250290592,122337.4077015088,123341.48541821392,124098.95291787418,124803.87562076125,125835.2681515727,126567.86088125597,127328.3076585841,128371.17358547816,129132.54810866414,129847.33161352799,130904.46162981716,131660.82979432226,132367.13586383127,133424.09314811337,134180.95515435725,134868.47062276033,135904.99594929052,136615.49621767833,137349.22973941662,138395.11725476474,139159.96009008918,139880.75149843202,140982.99266168333,141805.14886022787,142576.36341694836,143750.37671601004,144612.5485475213,145418.45463218106,146607.34494468174,147463.52513693922,148332.91169603166,149535.54140806114,150421.92840343493,151239.37981362955,152453.8640648636,153329.88674436262,154132.20001645316,155355.4379678854,156203.50947413102,156974.2406085563,158149.36692862972,158960.77460698338,159777.47978095018,160961.16244848934,161833.26942777468,162641.01348719827,163893.79469193393,164838.99512150904,165718.89420769038],"Bullish":[114647.2950651813,115766.1869328458,116837.99927017845,118233.9732773308,119350.95883251134,120501.43848126831,121933.86057934118,123110.05047504752,124265.38820656175,125754.61916802434,126982.43477571166,128184.55499242317,129741.80098402286,131038.94241063284,132287.8028994177,133883.73419925052,135173.1919491179,136500.92376860895,138131.0174218621,139474.5455353485,140779.39888310793,142451.3372165944,143817.5160288573,145142.0809183089,146860.7149563469,148269.68630746132,149614.0339928677,151342.92310872045,152718.6386218889,154128.40105859912,155881.00435773132,157328.41668544838,158736.80028358684,160564.20172150314,162089.16674305932,163575.20286470393,165522.5542449971,167126.75490464683,168680.913374096,170670.5461359096,172297.30021078934,173953.39290579606,175991.59852013772,177687.14019554647,179321.5432681036,181410.0279374556,183131.21212540194,184785.31124060167,186943.24960527485,188677.06438466645,190335.2290422559,192465.02332601554,194179.78056454932,195911.40480939602,198069.63197993423,199871.5613785776,201610.2092169194,203866.12775594447,205772.1043448722,207616.47451287173]},"source_note":"Original v3 model inputs Nov 6, prepared Nov 8 2026; hypothetical, unchanged."};
