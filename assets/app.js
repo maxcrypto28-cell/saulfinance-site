@@ -14,20 +14,14 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
  $('fx').textContent=v.fx_cad_per_usd==null?'Unavailable':v.fx_cad_per_usd.toFixed(5);$('fx-basis').textContent=live?(v.fx_quote?`Observed bar: ${date(v.fx_quote.market_bar_start)}${v.fx_quote.stale?' · STALE':''}`:'Observed FX missing'):'Snapshot FX (live USDCAD at publish) · not continuously refreshed';$('reference').textContent=money(v.reference_total_cad);
  $('holdings').innerHTML=s.holdings.map(h=>`<article class="holding"><h3>${esc(h.symbol)} <small class="status">${esc(h.status)}</small></h3><p class="name">${esc(h.name)}<br>${esc(h.sector)}</p><p class="fine">${live?'Observed position value':'Snapshot market value · Nov 9, 2026'}</p><div class="quote">${money(h.value_native,h.currency)}</div><div class="row-metrics"><span>CAD equivalent: ${money(h.value_cad)}</span><span>Weight: ${h.weight_cad==null?'—':(h.weight_cad*100).toFixed(2)+'%'}</span></div>${live?`<p class="quote-state">${h.quote?(h.quote.stale?'STALE cached observation':'Observed bar, possibly delayed'):'UNAVAILABLE'}<br>Market bar start: ${esc(date(h.quote?.market_bar_start))}<br>Last fetch: ${esc(date(h.quote?.fetched_at))}</p>`:'<p class="fine">Wealthsimple TFSA snapshot · not a live quote</p>'}</article>`).join('');
  $('sector-note').textContent=v.complete?(live?'CAD weights use the observed prices/FX above, including any flagged stale values.':'CAD weights use Nov 9, 2026 snapshot market values and publish-time FX. Custom mutually exclusive business categories sum to 100%.'):'Weights hidden until all required observations are available.';
- const bySector={};for(const h of s.holdings){(bySector[h.sector]=bySector[h.sector]||[]).push(h)}
- $('sector-rows').innerHTML=Object.entries(s.sectors).sort((a,b)=>b[1]-a[1]).map(([name,w])=>{
-  const members=(bySector[name]||[]).slice().sort((a,b)=>(b.weight_cad||0)-(a.weight_cad||0));
-  const tickers=members.map(h=>{const t=String(h.symbol||'').replace(/\.TO$/,'').replace('CRT-UN','CRT.UN');const pct=h.weight_cad==null?'':` · ${(h.weight_cad*100).toFixed(1)}%`;return `<span class="sector-ticker">${esc(t)}${pct}</span>`}).join('');
-  const count=members.length;
-  return `<article class="sector"><div class="sector-label"><span>${esc(name)}</span><span>${(w*100).toFixed(2)}%</span></div><div class="bar"><span style="width:${Math.max(0,Math.min(100,w*100))}%"></span></div><div class="sector-holdings" aria-label="${esc(name)} holdings">${tickers||'<span class="muted">No holdings</span>'}</div><p class="sector-count">${count} holding${count===1?'':'s'}</p></article>`;
- }).join('');
+ $('sectors').innerHTML=Object.entries(s.sectors).sort((a,b)=>b[1]-a[1]).map(([name,w])=>`<div class="sector"><div class="sector-label"><span>${esc(name)}</span><span>${(w*100).toFixed(2)}%</span></div><div class="bar"><span style="width:${Math.max(0,Math.min(100,w*100))}%"></span></div></div>`).join('');
  await renderDesktop(s);clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
-// Nine physical panels; ONLY the five content panels are navigation destinations.
+// Seven physical panels; ONLY the four content panels are navigation destinations.
 (()=>{
- const slides=[...document.querySelectorAll('.slide')],deck=$('deck'),stops=[0,2,4,6,8];
+ const slides=[...document.querySelectorAll('.slide')],deck=$('deck'),stops=[0,2,4,6];
  const nav=[...document.querySelectorAll('[data-page]')],ids=stops.map(i=>slides[i].id);
  const motion=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):{matches:false};
  const GLIDE_MS=900,WHEEL_IDLE_MS=260,MIN_WHEEL_PX=4;
