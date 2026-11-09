@@ -1,7 +1,7 @@
 {
   "source": "allocation_v3.csv Starting shares theoretical (saul_finance_fund_v3 Nov 6 model / prepared Nov 8)",
   "shares": {
-    "ENB.TO": 100.0,
+    "ENB.TO": 116.0,
     "PPL.TO": 100.0,
     "H.TO": 115.0,
     "RY.TO": 30.90350506756757,
@@ -12,10 +12,10 @@
     "CRT-UN.TO": 150.0,
     "CNQ.TO": 60.0,
     "O": 100.0,
-    "NNN": 50.0,
+    "NNN": 100.0,
     "KO": 5.0,
-    "V": 13.089814267124098,
-    "WM": 21.949631761618555,
+    "V": 9.736843393686334,
+    "WM": 15.949631761618555,
     "RTX": 12.0,
     "NOC": 5.0,
     "IRM": 20.0,

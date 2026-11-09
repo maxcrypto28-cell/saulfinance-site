@@ -190,13 +190,13 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .allocation-table{font-size:15px}
 .allocation-table th,.allocation-table td{padding:7px 8px}
 .business-name{max-width:200px}
-.shares-cell,.cc-yield{font-variant-numeric:tabular-nums}
-.cc-yield-note{margin:8px 0 0;padding:0 2px}
+.shares-cell,.div-yield,.cc-yield{font-variant-numeric:tabular-nums}
+.div-yield-note,.cc-yield-note{margin:8px 0 0;padding:0 2px}
 }
 @media(max-width:1023px){
 .native-donut{max-width:100%;width:100%}
 .donut-labels-mobile{display:block}
-.cc-yield-note{font-size:12px;margin-top:8px;line-height:1.45}
+.div-yield-note,.cc-yield-note{font-size:12px;margin-top:8px;line-height:1.45}
 .allocation-table tr>:nth-child(3)::before,.allocation-table tr>:nth-child(4)::before,.allocation-table tr>:nth-child(6)::before{content:none}
 .shares-cell{color:var(--text)}
 }
@@ -255,11 +255,6 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   min-height:0;
   overflow:hidden;
   padding:10px 12px;
-}
-#holdings-page .allocation-overview>.eyebrow{
-  align-self:stretch;
-  margin:0 0 2px;
-  font-size:11px;
 }
 #holdings-page .daily-pnl-strip{
   align-self:stretch;
@@ -345,5 +340,4 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .daily-pnl-header .daily-pnl-face{font-size:1.05em}
 /* Free pie space: hide in-panel strip on desktop only. */
 #native-holdings #daily-pnl-strip{display:none}
-#holdings-page .allocation-overview>.eyebrow{margin-bottom:6px}
 }
