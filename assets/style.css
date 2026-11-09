@@ -200,3 +200,110 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .allocation-table tr>:nth-child(3)::before,.allocation-table tr>:nth-child(4)::before,.allocation-table tr>:nth-child(6)::before{content:none}
 .shares-cell{color:var(--text)}
 }
+
+/* Laptop landing: raise pie, green PNL text, compact holdings actions */
+.daily-pnl-value{color:var(--green)}
+.daily-pnl-strip.pnl-up .daily-pnl-value,
+.daily-pnl-strip.pnl-down .daily-pnl-value{color:var(--green)}
+.daily-pnl-strip.pnl-up .daily-pnl-face{color:var(--green)}
+.daily-pnl-strip.pnl-down .daily-pnl-face{color:#ff5b5b}
+
+@media(min-width:1024px){
+/* Raise page-1 content into the unused band under the title; mobile untouched. */
+#holdings-page.slide{
+  gap:4px;
+  padding-top:6px;
+  padding-bottom:6px;
+  grid-template-rows:auto minmax(0,1fr) auto;
+}
+#holdings-page .slide-heading{margin:0}
+#holdings-page .slide-heading .eyebrow{margin:0 0 1px;font-size:11px}
+#holdings-page .slide-heading h2{margin:0 0 1px;font-size:clamp(26px,2.4vw,32px);line-height:1.1}
+#holdings-page .slide-heading>p:last-child{font-size:13px;line-height:1.3}
+#holdings-page .page-one-heading-copy{font-size:clamp(13px,1.2vw,17px);line-height:1.2;gap:1px}
+
+/* Compact, centered holdings action strip (button kept; artwork line removed in HTML). */
+#holdings-page .slide-actions{
+  justify-content:center;
+  align-items:center;
+  gap:0;
+  margin:0;
+  padding:0;
+  min-height:0;
+}
+#holdings-page .slide-actions button{
+  min-height:26px;
+  padding:3px 12px;
+  font-size:12px;
+  line-height:1.15;
+}
+
+/* Left column: pack PNL + pie to the top; size pie by remaining height. */
+#holdings-page .holdings-native{
+  align-items:stretch;
+  align-content:start;
+  gap:10px;
+  min-height:0;
+  margin-top:0;
+}
+#holdings-page .allocation-overview{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  height:100%;
+  min-height:0;
+  overflow:hidden;
+  padding:10px 12px;
+}
+#holdings-page .allocation-overview>.eyebrow{
+  align-self:stretch;
+  margin:0 0 2px;
+  font-size:11px;
+}
+#holdings-page .daily-pnl-strip{
+  align-self:stretch;
+  margin:0 0 4px;
+  gap:4px 8px;
+}
+#holdings-page .daily-pnl-label{font-size:11px}
+#holdings-page .daily-pnl-value{font-size:clamp(18px,2vw,24px)}
+#holdings-page .daily-pnl-meta{font-size:11px;margin:0}
+#holdings-page .native-donut{
+  flex:0 1 auto;
+  width:min(100%,560px);
+  max-width:min(560px,100%);
+  height:auto;
+  max-height:min(560px, calc(100dvh - var(--header-height) - var(--footer-height) - 168px));
+  margin:0 auto;
+  display:block;
+}
+#holdings-page .allocation-overview>.native-summary,
+#holdings-page .allocation-overview>p:not(.eyebrow){
+  align-self:stretch;
+  margin:3px 0 0;
+  font-size:12px;
+  line-height:1.3;
+}
+#holdings-page .allocation-overview>.muted{font-size:11px;margin-top:1px}
+}
+
+@media(min-width:1024px) and (max-height:820px){
+#holdings-page .native-donut{
+  max-height:min(520px, calc(100dvh - var(--header-height) - var(--footer-height) - 150px));
+}
+#holdings-page .allocation-overview>.native-summary,
+#holdings-page .allocation-overview>p:not(.eyebrow){font-size:11px;margin-top:2px}
+}
+@media(min-width:1024px) and (max-height:760px){
+#holdings-page.slide{gap:3px;padding-top:4px;padding-bottom:4px}
+#holdings-page .slide-heading h2{font-size:24px}
+#holdings-page .slide-heading>p:last-child{font-size:12px}
+#holdings-page .page-one-heading-copy{font-size:13px}
+#holdings-page .allocation-overview{padding:8px 10px}
+#holdings-page .native-donut{
+  max-height:calc(100dvh - var(--header-height) - var(--footer-height) - 140px);
+}
+#holdings-page .allocation-overview>.native-summary,
+#holdings-page .allocation-overview>p:not(.eyebrow){display:none}
+}
