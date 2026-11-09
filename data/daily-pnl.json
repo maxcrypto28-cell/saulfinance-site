@@ -1,0 +1,511 @@
+{
+  "date": "2026-11-21",
+  "price_as_of": "2026-11-20 close",
+  "day_change_cad": -111.27,
+  "day_change_pct": -0.097,
+  "market_value_cad": 114538.68,
+  "since_cad": -374.31,
+  "since_pct": -0.3255,
+  "inception_date": "2026-11-09",
+  "inception_start_cad": 115008.9,
+  "holdings_day_pct": [
+    {
+      "symbol": "BNS",
+      "pct": -2.8678
+    },
+    {
+      "symbol": "CM",
+      "pct": -3.2372
+    },
+    {
+      "symbol": "CNQ",
+      "pct": -0.5616
+    },
+    {
+      "symbol": "CNR",
+      "pct": -1.8359
+    },
+    {
+      "symbol": "CRT.UN",
+      "pct": 0.1092
+    },
+    {
+      "symbol": "CU",
+      "pct": 0.8067
+    },
+    {
+      "symbol": "EIF",
+      "pct": -3.6097
+    },
+    {
+      "symbol": "ENB",
+      "pct": -0.6819
+    },
+    {
+      "symbol": "H",
+      "pct": 0.755
+    },
+    {
+      "symbol": "IRM",
+      "pct": -6.0305
+    },
+    {
+      "symbol": "JNJ",
+      "pct": 1.2465
+    },
+    {
+      "symbol": "KO",
+      "pct": 0.9366
+    },
+    {
+      "symbol": "LMT",
+      "pct": -1.1104
+    },
+    {
+      "symbol": "MCD",
+      "pct": 0.3268
+    },
+    {
+      "symbol": "NNN",
+      "pct": 0.2238
+    },
+    {
+      "symbol": "NOC",
+      "pct": -1.4752
+    },
+    {
+      "symbol": "O",
+      "pct": 0.6417
+    },
+    {
+      "symbol": "PEP",
+      "pct": 1.1079
+    },
+    {
+      "symbol": "POW",
+      "pct": -2.9913
+    },
+    {
+      "symbol": "PPL",
+      "pct": -1.3006
+    },
+    {
+      "symbol": "RTX",
+      "pct": -1.6904
+    },
+    {
+      "symbol": "RY",
+      "pct": -2.3752
+    },
+    {
+      "symbol": "SOBO",
+      "pct": -1.1295
+    },
+    {
+      "symbol": "V",
+      "pct": -0.0945
+    },
+    {
+      "symbol": "WM",
+      "pct": 0.4022
+    },
+    {
+      "symbol": "WMT",
+      "pct": 1.5154
+    },
+    {
+      "symbol": "PZA",
+      "pct": -0.9717
+    }
+  ],
+  "holdings_cad": [
+    {
+      "symbol": "BNS",
+      "market_value_cad": 2997.5,
+      "all_time_pnl_cad": -241.32,
+      "all_time_pnl_pct": -7.4509
+    },
+    {
+      "symbol": "CM",
+      "market_value_cad": 3684.0,
+      "all_time_pnl_cad": -383.65,
+      "all_time_pnl_pct": -9.4317
+    },
+    {
+      "symbol": "CNQ",
+      "market_value_cad": 6374.0,
+      "all_time_pnl_cad": -441.72,
+      "all_time_pnl_pct": -6.4478
+    },
+    {
+      "symbol": "CNR",
+      "market_value_cad": 2455.32,
+      "all_time_pnl_cad": 2.14,
+      "all_time_pnl_pct": 0.0872
+    },
+    {
+      "symbol": "CRT.UN",
+      "market_value_cad": 4582.5,
+      "all_time_pnl_cad": 57.05,
+      "all_time_pnl_pct": 1.2606
+    },
+    {
+      "symbol": "CU",
+      "market_value_cad": 5498.0,
+      "all_time_pnl_cad": 291.44,
+      "all_time_pnl_pct": 5.5837
+    },
+    {
+      "symbol": "EIF",
+      "market_value_cad": 4121.6,
+      "all_time_pnl_cad": -29.11,
+      "all_time_pnl_pct": -0.7013
+    },
+    {
+      "symbol": "ENB",
+      "market_value_cad": 8544.59,
+      "all_time_pnl_cad": -75.12,
+      "all_time_pnl_pct": -0.8711
+    },
+    {
+      "symbol": "H",
+      "market_value_cad": 6598.7,
+      "all_time_pnl_cad": -27.2,
+      "all_time_pnl_pct": -0.41
+    },
+    {
+      "symbol": "IRM",
+      "market_value_cad": 2931.67,
+      "all_time_pnl_cad": -76.13,
+      "all_time_pnl_pct": -2.5311
+    },
+    {
+      "symbol": "JNJ",
+      "market_value_cad": 3878.54,
+      "all_time_pnl_cad": -21.27,
+      "all_time_pnl_pct": -0.5454
+    },
+    {
+      "symbol": "KO",
+      "market_value_cad": 695.42,
+      "all_time_pnl_cad": 20.06,
+      "all_time_pnl_pct": 2.9703
+    },
+    {
+      "symbol": "LMT",
+      "market_value_cad": 4054.63,
+      "all_time_pnl_cad": 51.47,
+      "all_time_pnl_pct": 1.2857
+    },
+    {
+      "symbol": "MCD",
+      "market_value_cad": 2048.27,
+      "all_time_pnl_cad": 7.43,
+      "all_time_pnl_pct": 0.3641
+    },
+    {
+      "symbol": "NNN",
+      "market_value_cad": 5779.02,
+      "all_time_pnl_cad": -26.5,
+      "all_time_pnl_pct": -0.4565
+    },
+    {
+      "symbol": "NOC",
+      "market_value_cad": 3831.0,
+      "all_time_pnl_cad": 124.82,
+      "all_time_pnl_pct": 3.3679
+    },
+    {
+      "symbol": "O",
+      "market_value_cad": 10401.88,
+      "all_time_pnl_cad": -10.42,
+      "all_time_pnl_pct": -0.1
+    },
+    {
+      "symbol": "PEP",
+      "market_value_cad": 5116.21,
+      "all_time_pnl_cad": 50.35,
+      "all_time_pnl_pct": 0.9939
+    },
+    {
+      "symbol": "POW",
+      "market_value_cad": 3619.2,
+      "all_time_pnl_cad": -35.56,
+      "all_time_pnl_pct": -0.973
+    },
+    {
+      "symbol": "PPL",
+      "market_value_cad": 7941.9,
+      "all_time_pnl_cad": 118.69,
+      "all_time_pnl_pct": 1.5141
+    },
+    {
+      "symbol": "RTX",
+      "market_value_cad": 3279.67,
+      "all_time_pnl_cad": 61.23,
+      "all_time_pnl_pct": 1.9025
+    },
+    {
+      "symbol": "RY",
+      "market_value_cad": 1459.19,
+      "all_time_pnl_cad": -116.45,
+      "all_time_pnl_pct": -7.3906
+    },
+    {
+      "symbol": "SOBO",
+      "market_value_cad": 4552.0,
+      "all_time_pnl_cad": 173.53,
+      "all_time_pnl_pct": 3.9516
+    },
+    {
+      "symbol": "V",
+      "market_value_cad": 2305.13,
+      "all_time_pnl_cad": -81.74,
+      "all_time_pnl_pct": -3.4246
+    },
+    {
+      "symbol": "WM",
+      "market_value_cad": 5498.07,
+      "all_time_pnl_cad": 161.05,
+      "all_time_pnl_pct": 3.0176
+    },
+    {
+      "symbol": "WMT",
+      "market_value_cad": 2201.76,
+      "all_time_pnl_cad": 75.18,
+      "all_time_pnl_pct": 3.5353
+    },
+    {
+      "symbol": "PZA",
+      "market_value_cad": 88.91,
+      "all_time_pnl_cad": -2.56,
+      "all_time_pnl_pct": -2.7987
+    }
+  ],
+  "all_time_pnl_cad": -374.31,
+  "holdings_price_native": [
+    {
+      "symbol": "BNS",
+      "price": 119.9,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "CM",
+      "price": 147.36,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "CNQ",
+      "price": 63.74,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "CNR",
+      "price": 175.38,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "CRT.UN",
+      "price": 18.33,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "CU",
+      "price": 54.98,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "EIF",
+      "price": 117.76,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "ENB",
+      "price": 65.54,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "H",
+      "price": 57.38,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "IRM",
+      "price": 102.22,
+      "currency": "USD"
+    },
+    {
+      "symbol": "JNJ",
+      "price": 270.47,
+      "currency": "USD"
+    },
+    {
+      "symbol": "KO",
+      "price": 96.99,
+      "currency": "USD"
+    },
+    {
+      "symbol": "LMT",
+      "price": 565.5,
+      "currency": "USD"
+    },
+    {
+      "symbol": "MCD",
+      "price": 273.24,
+      "currency": "USD"
+    },
+    {
+      "symbol": "NNN",
+      "price": 40.3,
+      "currency": "USD"
+    },
+    {
+      "symbol": "NOC",
+      "price": 534.31,
+      "currency": "USD"
+    },
+    {
+      "symbol": "O",
+      "price": 58.03,
+      "currency": "USD"
+    },
+    {
+      "symbol": "PEP",
+      "price": 140.54,
+      "currency": "USD"
+    },
+    {
+      "symbol": "POW",
+      "price": 90.48,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "PPL",
+      "price": 69.06,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "RTX",
+      "price": 190.17,
+      "currency": "USD"
+    },
+    {
+      "symbol": "RY",
+      "price": 263.05,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "SOBO",
+      "price": 45.52,
+      "currency": "CAD"
+    },
+    {
+      "symbol": "V",
+      "price": 401.87,
+      "currency": "USD"
+    },
+    {
+      "symbol": "WM",
+      "price": 239.63,
+      "currency": "USD"
+    },
+    {
+      "symbol": "WMT",
+      "price": 127.95,
+      "currency": "USD"
+    },
+    {
+      "symbol": "PZA",
+      "price": 11.21,
+      "currency": "CAD"
+    }
+  ],
+  "best_performer": {
+    "symbol": "WMT",
+    "pct": 1.5154,
+    "as_of": "2026-11-20 close",
+    "session_date": "2026-11-21"
+  },
+  "indexes": [
+    {
+      "symbol": "^IXIC",
+      "label": "NASDAQ",
+      "last": 22617.73,
+      "change_pct": -5.2827,
+      "as_of": "close"
+    },
+    {
+      "symbol": "^GSPC",
+      "label": "S&P",
+      "last": 6910.39,
+      "change_pct": -3.6991,
+      "as_of": "close"
+    },
+    {
+      "symbol": "^DJI",
+      "label": "DOW",
+      "last": 48147.33,
+      "change_pct": -1.9344,
+      "as_of": "close"
+    }
+  ],
+  "basis": "ACTUAL",
+  "generated_at": "2026-11-20T23:05:51.588660-07:00",
+  "session": "closed",
+  "delayed": false,
+  "updated_et": "01:05 ET",
+  "fx_cad_per_usd": 1.434,
+  "fx_source": "yfinance:CADUSD=X",
+  "fx_as_of": "2026-11-21 close",
+  "win_streak": 0,
+  "closed_days": [
+    {
+      "date": "2026-11-09",
+      "day_change_cad": 1339.24,
+      "day_change_pct": 1.1656,
+      "as_of": "2026-11-09 close"
+    },
+    {
+      "date": "2026-11-10",
+      "day_change_cad": 1268.35,
+      "day_change_pct": 1.0913,
+      "as_of": "2026-11-10 close"
+    },
+    {
+      "date": "2026-11-11",
+      "day_change_cad": 917.26,
+      "day_change_pct": 0.7807,
+      "as_of": "2026-11-11 close"
+    },
+    {
+      "date": "2026-11-12",
+      "day_change_cad": -78.34,
+      "day_change_pct": -0.0662,
+      "as_of": "2026-11-12 close"
+    },
+    {
+      "date": "2026-11-13",
+      "day_change_cad": 352.12,
+      "day_change_pct": 0.2974,
+      "as_of": "2026-11-13 close"
+    },
+    {
+      "date": "2026-11-16",
+      "day_change_cad": -462.46,
+      "day_change_pct": -0.3895,
+      "as_of": "2026-11-16 close"
+    },
+    {
+      "date": "2026-11-19",
+      "day_change_cad": -1244.54,
+      "day_change_pct": -1.0676,
+      "as_of": "2026-11-19 close"
+    },
+    {
+      "date": "2026-11-20",
+      "day_change_cad": -696.41,
+      "day_change_pct": -0.6038,
+      "as_of": "2026-11-20 close"
+    }
+  ]
+}
