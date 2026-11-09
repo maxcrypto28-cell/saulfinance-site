@@ -15,3 +15,6 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 
 /* Logo panels are passed through in one committed glide, never a resting page. */
 .deck{transition-duration:900ms;transition-timing-function:cubic-bezier(.4,0,.6,1)}@media(prefers-reduced-motion:reduce){.deck{transition:none}}
+
+/* Owner-provided page-one tagline; existing title and disclosures stay unchanged. */
+.page-one-heading-row{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;min-width:0}.page-one-heading-row>h2{flex-shrink:0}.page-one-heading-copy{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;margin-left:auto;color:var(--green);font-family:inherit;font-weight:700;font-size:clamp(14px,1.4vw,20px);line-height:1.25;max-width:100%}.page-one-heading-copy>span{display:block;white-space:nowrap}@media(min-width:1024px){.page-one-heading-row{flex-wrap:nowrap}}
