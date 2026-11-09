@@ -436,17 +436,28 @@ async function loadCoveredCalls(){
 loadCoveredCalls();
 
 // Daily PNL strip: live feed (Render JSON API, no redeploy) with same-origin fallback.
+// Visible only during the regular NYSE+TSX session (same calendar as the close countdown).
 const PNL_LIVE='https://saulfinance-pnl.onrender.com/daily-pnl.json';
 const PNL_FALLBACK='/data/daily-pnl.json';
-const NYSE_HOLIDAYS_2026=new Set(['2026-01-01','2026-01-19','2026-02-16','2026-04-03','2026-05-25','2026-06-19','2026-07-03','2026-09-07','2026-11-26','2026-12-25']);
-function pnlMarketOpen(d=new Date()){
-  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(d);
-  const g=t=>parts.find(p=>p.type===t)?.value;
-  const date=`${g('year')}-${g('month')}-${g('day')}`;
-  if(NYSE_HOLIDAYS_2026.has(date))return false;
-  const wd=g('weekday'); if(wd==='Sat'||wd==='Sun')return false;
-  const mins=(+g('hour'))*60+(+g('minute'));
-  return mins>=9*60+30 && mins<16*60;
+function pnlMarketOpen(now=clockNow()){
+  // Reuse findCurrentClose: open when a session is in progress (incl. early closes).
+  return !!findCurrentClose(now);
+}
+function setPnlSessionVisible(open){
+  const els=[...document.querySelectorAll('.daily-pnl-strip')];
+  for(const el of els){
+    if(!el)continue;
+    el.hidden=!open;
+    if(!open){
+      el.classList.remove('pnl-up','pnl-down');
+      const value=el.querySelector('.daily-pnl-value');
+      const face=el.querySelector('.daily-pnl-face');
+      const meta=el.querySelector('.daily-pnl-meta');
+      if(value)value.textContent='';
+      if(face)face.innerHTML='';
+      if(meta)meta.textContent='';
+    }
+  }
 }
 function pnlFace(positive){
   // Inline SVG so fill color is reliable (not emoji).
@@ -505,13 +516,17 @@ function paintPnl(data){
     if(meta)meta.textContent=metaText;
   }
 }
-async function loadDailyPnl(){paintPnl(await fetchPnlJson())}
+async function loadDailyPnl(){
+  const open=pnlMarketOpen();
+  setPnlSessionVisible(open);
+  if(open) paintPnl(await fetchPnlJson());
+}
 (()=>{
   const tick=()=>{loadDailyPnl();};
-  // After native holdings render, strip exists; also poll.
+  // After native holdings render, strip exists; re-check ~30s so open/close flip without reload.
   const boot=()=>{tick();};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot); else boot();
-  setInterval(()=>{if(document.hidden)return; if(pnlMarketOpen())tick();},60*1000);
+  setInterval(()=>{if(document.hidden)return; tick();},30*1000);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
 })();
 

@@ -132,6 +132,8 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .daily-pnl-meta{flex-basis:100%;font-size:12px;color:var(--dim);line-height:1.4}
 .daily-pnl-strip.pnl-up .daily-pnl-value,.daily-pnl-strip.pnl-up .daily-pnl-face{color:var(--green)}
 .daily-pnl-strip.pnl-down .daily-pnl-value,.daily-pnl-strip.pnl-down .daily-pnl-face{color:#ff5b5b}
+/* Session gate: [hidden] must beat desktop display:flex on .daily-pnl-header */
+.daily-pnl-strip[hidden]{display:none!important}
 @media(max-width:1023px){
 .daily-pnl-strip{margin:2px 0 10px}
 .daily-pnl-value{font-size:22px}
