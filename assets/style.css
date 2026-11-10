@@ -168,6 +168,23 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .index-item.index-up .index-pct,.index-item.index-up .index-last{color:var(--green)}
 .index-item.index-down .index-pct,.index-item.index-down .index-last{color:#ff5b5b}
 .index-asof{font-size:9px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;padding-right:2px}
+.index-kicker{font-size:9px;letter-spacing:.4px;color:var(--mint);text-transform:uppercase;flex-shrink:0;padding-right:2px}
+.index-items{display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:space-between;gap:6px 8px;min-width:0;flex:1 1 auto}
+.vs-badge{display:inline-flex;align-items:baseline;gap:4px;flex-shrink:0;padding:1px 7px;border:1px solid var(--edge);border-radius:999px;line-height:1.2;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.vs-label{font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:var(--mint);font-weight:600}
+.vs-value{font-size:12px;font-weight:700;color:var(--text)}
+.vs-badge.vs-up .vs-value{color:var(--green)}
+.vs-badge.vs-down .vs-value{color:#ff5b5b}
+.vs-badge.vs-flat .vs-value{color:var(--text)}
+@media(max-width:1023px){
+.index-strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px}
+.index-kicker{order:1}
+.index-asof{order:2}
+.vs-badge{order:3;margin-left:auto}
+.index-items{order:4;flex:1 1 100%;width:100%}
+.vs-badge .vs-value{font-size:11px}
+.vs-label{font-size:8px}
+}
 .header-market-stack{display:none}
 @media(max-width:1023px){
 .daily-pnl-strip{margin:2px 0 10px}
@@ -393,12 +410,18 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   background:#07140ef2;
   border:1px solid var(--edge);
   border-radius:999px;
-  gap:10px 14px;
+  gap:8px 10px;
   justify-content:center;
+  flex-wrap:nowrap;
+  align-items:center;
 }
 .index-strip-header .index-label{font-size:9px}
 .index-strip-header .index-last{font-size:13px}
 .index-strip-header .index-pct{font-size:12px}
+.index-strip-header .index-kicker{font-size:9px}
+.index-strip-header .vs-badge{padding:0 8px;border-color:#2a4a36}
+.index-strip-header .vs-value{font-size:13px}
+.index-strip-header .index-items{flex:1 1 auto;gap:10px 14px}
 #native-holdings #index-strip{display:none}
 .daily-pnl-header:has(.daily-pnl-hot:not([hidden])){
   flex-wrap:wrap;

@@ -600,6 +600,30 @@ function paintDayPct(data=lastPnlData){
   }
 }
 
+function indexAveragePct(data){
+  const rows=data&&Array.isArray(data.indexes)?data.indexes:[];
+  const pcts=[];
+  for(const r of rows){
+    const p=Number(r&&r.change_pct);
+    if(Number.isFinite(p))pcts.push(p);
+  }
+  if(!pcts.length)return null;
+  return pcts.reduce((a,b)=>a+b,0)/pcts.length;
+}
+function formatVsSpread(n){
+  if(!Number.isFinite(n))return '';
+  return (n>0?'+':n<0?'':'')+n.toFixed(2)+'%';
+}
+function vsCompare(data){
+  // Always day % vs the average of the index day %s, even after the close
+  // when the middle card shows Since Nov 9. Apples to apples.
+  const day=data&&data.day_change_pct!=null?Number(data.day_change_pct):NaN;
+  const avg=indexAveragePct(data);
+  if(!Number.isFinite(day)||avg==null||!Number.isFinite(avg))return null;
+  const spread=day-avg;
+  const dir=spread>0?'up':spread<0?'down':'flat';
+  return {day,avg,spread,dir};
+}
 function paintIndexes(data){
   const els=[...document.querySelectorAll('.index-strip')];
   if(!els.length)return;
@@ -616,14 +640,25 @@ function paintIndexes(data){
     const pctText=formatIndexPct(pct);
     return `<div class="index-item${dir?' index-'+dir:''}"><span class="index-label">${esc(r.label)}</span><span class="index-last">${esc(formatIndexLevel(r.last,r.label))}</span><span class="index-pct">${esc(pctText)}</span></div>`;
   });
+  const vs=vsCompare(data);
+  let vsHtml='';
+  let vsPhrase='';
+  if(vs){
+    const tip=`Daily P&L ${formatIndexPct(vs.day)} vs index average ${formatIndexPct(vs.avg)}`;
+    const beat=vs.dir==='up'?'beating':vs.dir==='down'?'behind':'even with';
+    vsPhrase=` Daily P&L ${beat} the index average by ${formatVsSpread(Math.abs(vs.spread)).replace(/^\+/,'')} (${tip}).`;
+    vsHtml=`<span class="vs-badge vs-${vs.dir}" title="${esc(tip)}"><span class="vs-label">VS</span><span class="vs-value">${esc(formatVsSpread(vs.spread))}</span></span>`;
+  }
   const note=closed?'<span class="index-asof">Close</span>':'';
-  const html=note+parts.join('');
+  const html=`<span class="index-kicker">Indexes</span>${vsHtml}${note}<div class="index-items">${parts.join('')}</div>`;
+  const aria=(closed?'Index levels at the close':'Index levels')+vsPhrase;
   for(const el of els){
     if(!el)continue;
     el.hidden=false;
     el.innerHTML=html;
     el.classList.toggle('index-strip-close', !!closed);
-    el.setAttribute('aria-label', closed?'Index levels at the close':'Index levels');
+    el.classList.toggle('has-vs', !!vs);
+    el.setAttribute('aria-label', aria);
   }
 }
 
