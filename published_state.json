@@ -1,11 +1,11 @@
 {
   "snapshot": {
-    "label": "Actual Wealthsimple TFSA holdings \u2014 Nov 9, 2026 market snapshot",
+    "label": "Actual Wealthsimple TFSA holdings",
     "model_reference_date": "2026-11-09",
     "prepared_date": "2026-11-09"
   },
   "mode": "snapshot_only",
-  "feed_notice": "Public quote feed disabled: Yahoo Finance explicitly prohibits redistribution without appropriate permission. Figures below are the owner's Wealthsimple TFSA holdings as of a Nov 9, 2026 market snapshot\u2014not a live quote feed.",
+  "feed_notice": "Actual Wealthsimple TFSA holdings. Daily PNL, fund total and index levels on the holdings page come from the live public feed.",
   "market": {
     "enabled": false,
     "refreshing": false,
@@ -19,7 +19,7 @@
   },
   "valuation": {
     "basis": "ACTUAL_MARKET_SNAPSHOT",
-    "label": "Actual holdings \u00b7 Nov 9, 2026 market snapshot",
+    "label": "Holdings capital",
     "total_cad": 115664.090153,
     "reference_total_cad": 115664.090153,
     "complete": true,
@@ -279,7 +279,7 @@
     },
     {
       "symbol": "MCD",
-      "name": "McDonald\u2019s Corporation",
+      "name": "McDonald’s Corporation",
       "sector": "Restaurants / discretionary",
       "status": "ACTUAL",
       "currency": "USD",
