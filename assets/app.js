@@ -638,7 +638,7 @@ function paintIndexes(data){
     const pct=Number(r.change_pct);
     const dir=!Number.isFinite(pct)?'':(pct>0?'up':pct<0?'down':'flat');
     const pctText=formatIndexPct(pct);
-    return `<div class="index-item${dir?' index-'+dir:''}"><span class="index-label">${esc(r.label)}</span><span class="index-last">${esc(formatIndexLevel(r.last,r.label))}</span><span class="index-pct">${esc(pctText)}</span></div>`;
+    return `<div class="index-item${dir?' index-'+dir:''}"><span class="index-main"><span class="index-label">${esc(r.label)}</span><span class="index-last">${esc(formatIndexLevel(r.last,r.label))}</span></span><span class="index-pct">${esc(pctText)}</span></div>`;
   });
   const vs=vsCompare(data);
   let vsHtml='';

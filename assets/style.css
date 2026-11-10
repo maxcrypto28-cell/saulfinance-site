@@ -161,15 +161,16 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 
 .index-strip{display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:space-between;gap:6px 8px;margin:0 0 8px;padding:4px 2px 2px;min-width:0;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
 .index-strip[hidden]{display:none!important}
-.index-item{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 5px;min-width:0;justify-content:center;flex:1}
+.index-item{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:center;justify-content:center;gap:0;min-width:0;flex:1}
+.index-main{display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:center;gap:2px 5px;white-space:nowrap}
 .index-label{font-size:9px;letter-spacing:.4px;color:var(--mint);text-transform:uppercase}
 .index-last{font-size:12px;font-weight:600;color:var(--text)}
-.index-pct{font-size:11px;font-weight:600}
+.index-pct{display:block;font-size:11px;font-weight:600;line-height:1.2;text-align:center}
 .index-item.index-up .index-pct,.index-item.index-up .index-last{color:var(--green)}
 .index-item.index-down .index-pct,.index-item.index-down .index-last{color:#ff5b5b}
 .index-asof{font-size:9px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;padding-right:2px}
 .index-kicker{font-size:9px;letter-spacing:.4px;color:var(--mint);text-transform:uppercase;flex-shrink:0;padding-right:2px}
-.index-items{display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:space-between;gap:6px 8px;min-width:0;flex:1 1 auto}
+.index-items{display:flex;flex-wrap:nowrap;align-items:flex-start;justify-content:space-between;gap:6px 8px;min-width:0;flex:1 1 auto}
 .vs-badge{display:inline-flex;align-items:baseline;gap:4px;flex-shrink:0;padding:1px 7px;border:1px solid var(--edge);border-radius:999px;line-height:1.2;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
 .vs-label{font-size:9px;letter-spacing:.4px;text-transform:uppercase;color:var(--mint);font-weight:600}
 .vs-value{font-size:12px;font-weight:700;color:var(--text)}
