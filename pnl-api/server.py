@@ -29,6 +29,7 @@ DEFAULT = {
     "delayed": False,
     "updated_et": None,
     "holdings_day_pct": None,
+    "indexes": None,
 }
 
 
@@ -133,6 +134,7 @@ class Handler(BaseHTTPRequestHandler):
             "delayed",
             "updated_et",
             "holdings_day_pct",
+            "indexes",
         }
         clean = {k: data.get(k) for k in allowed}
         with LOCK:

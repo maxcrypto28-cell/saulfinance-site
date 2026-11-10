@@ -141,12 +141,26 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .hot-otd{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font:600 10px/1.2 ui-monospace,monospace;color:var(--green);white-space:nowrap;vertical-align:middle}
 .hot-otd-label{letter-spacing:.3px}
 .sector-holdings .hot-otd,.sector-ticker .hot-otd{margin-left:3px;font-size:11px}
+.index-strip{display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:space-between;gap:6px 8px;margin:0 0 8px;padding:4px 2px 2px;min-width:0;font-family:ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.index-strip[hidden]{display:none!important}
+.index-item{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 5px;min-width:0;justify-content:center;flex:1}
+.index-label{font-size:9px;letter-spacing:.4px;color:var(--mint);text-transform:uppercase}
+.index-last{font-size:12px;font-weight:600;color:var(--text)}
+.index-pct{font-size:11px;font-weight:600}
+.index-item.index-up .index-pct,.index-item.index-up .index-last{color:var(--green)}
+.index-item.index-down .index-pct,.index-item.index-down .index-last{color:#ff5b5b}
+.index-asof{font-size:9px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;padding-right:2px}
+.header-market-stack{display:none}
 @media(max-width:1023px){
 .daily-pnl-strip{margin:2px 0 10px}
 .daily-pnl-value{font-size:22px}
 .daily-pnl-meta{font-size:12px}
 .daily-pnl-hot-line{font-size:12px}
 .daily-pnl-hot-sub{font-size:9px}
+.index-strip{margin:0 0 8px}
+.index-last{font-size:11px}
+.index-pct{font-size:10px}
+.index-label{font-size:8px}
 }
 
 
@@ -303,7 +317,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 #holdings-page .allocation-overview>p:not(.eyebrow){font-size:11px;margin-top:2px}
 }
 @media(min-width:1024px) and (max-height:760px){
-#holdings-page.slide{gap:3px;padding-top:40px;padding-bottom:4px}
+#holdings-page.slide{gap:3px;padding-top:88px;padding-bottom:4px}
 #holdings-page .slide-heading h2{font-size:24px}
 #holdings-page .slide-heading>p:last-child{font-size:12px}
 #holdings-page .page-one-heading-copy{font-size:13px}
@@ -319,12 +333,25 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .daily-pnl-header{display:none}
 @media(min-width:1024px){
 .site-header{position:fixed;overflow:visible}
-.daily-pnl-header{
+.header-market-stack{
   display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
   position:absolute;
   left:50%;
   top:calc(100% + 6px);
   transform:translateX(-50%);
+  z-index:6;
+  pointer-events:none;
+  width:min(560px,48vw);
+}
+.daily-pnl-header{
+  display:flex;
+  position:static;
+  left:auto;
+  top:auto;
+  transform:none;
   z-index:6;
   flex-wrap:nowrap;
   align-items:center;
@@ -332,13 +359,29 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   gap:6px 10px;
   margin:0;
   padding:4px 12px;
-  max-width:min(520px,42vw);
+  max-width:100%;
+  width:auto;
   background:#07140ef2;
   border:1px solid var(--edge);
   border-radius:999px;
   line-height:1.2;
   pointer-events:none;
 }
+.index-strip-header{
+  margin:0;
+  padding:4px 12px;
+  width:auto;
+  max-width:100%;
+  background:#07140ef2;
+  border:1px solid var(--edge);
+  border-radius:999px;
+  gap:10px 14px;
+  justify-content:center;
+}
+.index-strip-header .index-label{font-size:9px}
+.index-strip-header .index-last{font-size:13px}
+.index-strip-header .index-pct{font-size:12px}
+#native-holdings #index-strip{display:none}
 .daily-pnl-header:has(.daily-pnl-hot:not([hidden])){
   flex-wrap:wrap;
   gap:2px 10px;
@@ -358,8 +401,8 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 }
 .daily-pnl-header .daily-pnl-face{font-size:1.05em}
 /* Clear the hanging pill so it does not cover page-1 headings. */
-.slide.content-slide{padding-top:62px}
-#holdings-page.slide{padding-top:58px}
+.slide.content-slide{padding-top:122px}
+#holdings-page.slide{padding-top:118px}
 .daily-pnl-header .daily-pnl-hot{flex-basis:100%;justify-content:center;text-align:center}
 .daily-pnl-header .daily-pnl-hot-line{font-size:12px}
 .daily-pnl-header .daily-pnl-hot-sub{font-size:9px}
