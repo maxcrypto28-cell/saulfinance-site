@@ -38,7 +38,7 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
   const count=members.length;
   return `<article class="sector"><div class="sector-label"><span>${esc(name)}</span><span>${(w*100).toFixed(2)}%</span></div><div class="bar"><span style="width:${Math.max(0,Math.min(100,w*100))}%"></span></div><div class="sector-holdings" aria-label="${esc(name)} holdings">${tickers||'<span class="muted">No holdings</span>'}</div><p class="sector-count">${count} holding${count===1?'':'s'}</p></article>`;
  }).join('');
- await renderDesktop(s);if(typeof paintHotOtd==='function')paintHotOtd();clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
+ await renderDesktop(s);if(typeof paintHotOtd==='function')paintHotOtd();if(typeof paintDayPct==='function')paintDayPct();clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
@@ -210,7 +210,7 @@ async function renderDesktop(s){
  const deskLabels=pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
  const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle" font-size="28">${esc(label.ticker)}</text>`).join('');
   const n=sorted.length;
- $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span><span class="daily-pnl-hot" hidden></span></div><div class="index-strip" id="index-strip" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span>${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(displayTicker(h.symbol))}</th><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td data-label="Weight">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
+ $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span><span class="daily-pnl-hot" hidden></span></div><div class="index-strip" id="index-strip" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span>${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX ${s.valuation.fx_cad_per_usd.toFixed(4)}.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span>${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col" class="day-pct-col"><span class="day-pct-line">daily</span><span class="day-pct-line">percent</span></th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(displayTicker(h.symbol))}</th><td class="day-pct" data-day-pct-symbol="${esc(displayTicker(h.symbol))}" data-label="Daily percent"></td><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td data-label="Weight">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
  fitDonut(); loadDailyPnl();
  // Keep every visible holdings-count label in sync with the published model.
  const hc=(s.holdings||[]).length || (s.valuation&&s.valuation.holding_count) || 0;
@@ -562,6 +562,44 @@ function formatIndexPct(p){
   if(!Number.isFinite(n))return '';
   return (n>0?'+':n<0?'':'')+n.toFixed(2)+'%';
 }
+
+function paintDayPct(data=lastPnlData){
+  const cells=[...document.querySelectorAll('.day-pct[data-day-pct-symbol]')];
+  if(!cells.length)return;
+  const rows=data&&Array.isArray(data.holdings_day_pct)?data.holdings_day_pct:[];
+  const bySym=new Map();
+  for(const r of rows){
+    const s=displayTicker(r&&r.symbol);
+    const p=Number(r&&r.pct);
+    if(!s||!Number.isFinite(p))continue;
+    bySym.set(s,p);
+  }
+  const winners=new Set(bestPerformers(data).map(w=>w.symbol));
+  for(const el of cells){
+    if(!el)continue;
+    el.classList.remove('day-pct-up','day-pct-down','day-pct-flat','day-pct-hot');
+    el.removeAttribute('title');
+    el.removeAttribute('aria-label');
+    const sym=el.getAttribute('data-day-pct-symbol');
+    if(winners.has(sym)){
+      el.textContent='–';
+      el.classList.add('day-pct-hot');
+      el.title='Best performer OTD';
+      el.setAttribute('aria-label','Best performer OTD');
+      continue;
+    }
+    if(!bySym.has(sym)){
+      el.textContent='–';
+      continue;
+    }
+    const p=bySym.get(sym);
+    el.textContent=formatHotPct(p);
+    if(p>0)el.classList.add('day-pct-up');
+    else if(p<0)el.classList.add('day-pct-down');
+    else el.classList.add('day-pct-flat');
+  }
+}
+
 function paintIndexes(data){
   const els=[...document.querySelectorAll('.index-strip')];
   if(!els.length)return;
@@ -712,6 +750,7 @@ async function loadDailyPnl(){
   paintDonutTotal(data);
   paintHotOtd(data, open);
   paintIndexes(data);
+  paintDayPct(data);
 }
 (()=>{
   const tick=()=>{loadDailyPnl();};
