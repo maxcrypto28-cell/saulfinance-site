@@ -579,6 +579,20 @@ async function fetchFallbackPnl(){
     return await r.json();
   }catch(e){return null}
 }
+function liveMarketValue(data){
+  if(!data||data.market_value_cad==null)return null;
+  const n=Number(data.market_value_cad);
+  return Number.isFinite(n)?n:null;
+}
+function paintDonutTotal(data){
+  // Same public CAD total as the PNL feed (excludes CTGO / VGFCQ). Keep snapshot text if the feed has no MV.
+  const els=[...document.querySelectorAll('.donut-center-value')];
+  if(!els.length)return;
+  const mv=liveMarketValue(data);
+  if(mv==null)return;
+  const text=money(mv);
+  for(const el of els){ if(el) el.textContent=text; }
+}
 async function loadDailyPnl(){
   const open=pnlMarketOpen();
   setPnlStripVisible(true);
@@ -594,7 +608,14 @@ async function loadDailyPnl(){
     const fb=await fetchFallbackPnl();
     if(fb&&fb.day_change_cad!=null) data=fb;
   }
+  if(liveMarketValue(data)==null){
+    const fb=await fetchFallbackPnl();
+    if(liveMarketValue(fb)!=null){
+      data=data?{...data,...fb}:fb;
+    }
+  }
   paintPnl(data, open?'daily':'since');
+  paintDonutTotal(data);
 }
 (()=>{
   const tick=()=>{loadDailyPnl();};
