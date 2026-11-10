@@ -134,10 +134,19 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .daily-pnl-strip.pnl-down .daily-pnl-value,.daily-pnl-strip.pnl-down .daily-pnl-face{color:#ff5b5b}
 /* Session gate: [hidden] must beat desktop display:flex on .daily-pnl-header */
 .daily-pnl-strip[hidden]{display:none!important}
+.daily-pnl-hot{flex-basis:100%;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0;line-height:1.25}
+.daily-pnl-hot[hidden]{display:none!important}
+.daily-pnl-hot-line{font:600 13px/1.25 ui-monospace,monospace;color:var(--green);font-variant-numeric:tabular-nums}
+.daily-pnl-hot-sub{font:10px/1.25 ui-monospace,monospace;color:var(--mint);letter-spacing:.4px;text-transform:uppercase}
+.hot-otd{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font:600 10px/1.2 ui-monospace,monospace;color:var(--green);white-space:nowrap;vertical-align:middle}
+.hot-otd-label{letter-spacing:.3px}
+.sector-holdings .hot-otd,.sector-ticker .hot-otd{margin-left:3px;font-size:11px}
 @media(max-width:1023px){
 .daily-pnl-strip{margin:2px 0 10px}
 .daily-pnl-value{font-size:22px}
 .daily-pnl-meta{font-size:12px}
+.daily-pnl-hot-line{font-size:12px}
+.daily-pnl-hot-sub{font-size:9px}
 }
 
 
@@ -330,6 +339,13 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   line-height:1.2;
   pointer-events:none;
 }
+.daily-pnl-header:has(.daily-pnl-hot:not([hidden])){
+  flex-wrap:wrap;
+  gap:2px 10px;
+  padding:5px 14px 6px;
+  max-width:min(560px,48vw);
+  border-radius:16px;
+}
 .daily-pnl-header .daily-pnl-label{font-size:11px;letter-spacing:.7px}
 .daily-pnl-header .daily-pnl-value{font-size:clamp(16px,1.6vw,22px)}
 .daily-pnl-header .daily-pnl-meta{
@@ -342,8 +358,11 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 }
 .daily-pnl-header .daily-pnl-face{font-size:1.05em}
 /* Clear the hanging pill so it does not cover page-1 headings. */
-.slide.content-slide{padding-top:48px}
-#holdings-page.slide{padding-top:44px}
+.slide.content-slide{padding-top:62px}
+#holdings-page.slide{padding-top:58px}
+.daily-pnl-header .daily-pnl-hot{flex-basis:100%;justify-content:center;text-align:center}
+.daily-pnl-header .daily-pnl-hot-line{font-size:12px}
+.daily-pnl-header .daily-pnl-hot-sub{font-size:9px}
 #holdings-page .slide-heading{padding-top:2px}
 /* Free pie space: hide in-panel strip on desktop only. */
 #native-holdings #daily-pnl-strip{display:none}

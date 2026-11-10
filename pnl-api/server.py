@@ -28,6 +28,7 @@ DEFAULT = {
     "session": "closed",
     "delayed": False,
     "updated_et": None,
+    "holdings_day_pct": None,
 }
 
 
@@ -131,6 +132,7 @@ class Handler(BaseHTTPRequestHandler):
             "session",
             "delayed",
             "updated_et",
+            "holdings_day_pct",
         }
         clean = {k: data.get(k) for k in allowed}
         with LOCK:
