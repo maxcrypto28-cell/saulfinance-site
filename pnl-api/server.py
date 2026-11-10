@@ -30,6 +30,9 @@ DEFAULT = {
     "updated_et": None,
     "holdings_day_pct": None,
     "indexes": None,
+    "fx_cad_per_usd": None,
+    "fx_source": None,
+    "fx_as_of": None,
 }
 
 
@@ -135,6 +138,9 @@ class Handler(BaseHTTPRequestHandler):
             "updated_et",
             "holdings_day_pct",
             "indexes",
+            "fx_cad_per_usd",
+            "fx_source",
+            "fx_as_of",
         }
         clean = {k: data.get(k) for k in allowed}
         with LOCK:
