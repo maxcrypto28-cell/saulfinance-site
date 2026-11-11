@@ -142,6 +142,8 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .daily-pnl-strip[hidden]{display:none!important}
 .daily-pnl-hot{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:flex-start;gap:2px 8px;margin:0 0 8px;min-width:0;line-height:1.25;font:600 13px/1.25 ui-monospace,monospace;color:var(--green);font-variant-numeric:tabular-nums}
 .daily-pnl-hot[hidden]{display:none!important}
+.daily-pnl-streak{display:flex;align-items:baseline;justify-content:flex-start;margin:0 0 6px;min-width:0;font:500 11px/1.2 ui-monospace,monospace;color:var(--green);font-variant-numeric:tabular-nums;letter-spacing:.2px}
+.daily-pnl-streak[hidden]{display:none!important}
 .hot-otd{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font:600 10px/1.2 ui-monospace,monospace;color:var(--green);white-space:nowrap;vertical-align:middle}
 .hot-otd-label{letter-spacing:.3px}
 .sector-holdings .hot-otd,.sector-ticker .hot-otd{margin-left:3px;font-size:11px}
@@ -237,6 +239,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .daily-pnl-since{font-size:11px;line-height:1.15;margin:0}
 .daily-pnl-strip.has-since{margin-bottom:8px;gap:4px 10px}
 .daily-pnl-hot{font-size:12px;margin:0 0 8px}
+.daily-pnl-streak{font-size:11px;margin:2px 0 6px}
 .index-strip{margin:0 0 8px}
 .index-last{font-size:11px}
 .index-pct{font-size:10px}
@@ -508,6 +511,18 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   pointer-events:none;
   white-space:nowrap;
 }
+.header-market-stack .daily-pnl-streak{
+  margin:0;
+  padding:0;
+  justify-content:center;
+  text-align:center;
+  font-size:10px;
+  line-height:1.15;
+  font-weight:500;
+  pointer-events:none;
+  white-space:nowrap;
+}
+#native-holdings .daily-pnl-streak{display:none}
 #holdings-page .slide-heading{padding-top:2px}
 /* Free pie space: hide in-panel strip on desktop only. */
 #native-holdings #daily-pnl-strip{display:none}

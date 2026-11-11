@@ -36,6 +36,8 @@ DEFAULT = {
     "fx_cad_per_usd": None,
     "fx_source": None,
     "fx_as_of": None,
+    "win_streak": None,
+    "closed_days": None,
 }
 
 
@@ -147,6 +149,8 @@ class Handler(BaseHTTPRequestHandler):
             "fx_cad_per_usd",
             "fx_source",
             "fx_as_of",
+            "win_streak",
+            "closed_days",
         }
         clean = {k: data.get(k) for k in allowed}
         with LOCK:
