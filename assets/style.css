@@ -20,7 +20,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .page-one-heading-row{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;min-width:0}.page-one-heading-row>h2{flex-shrink:0}.page-one-heading-copy{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;margin-left:auto;color:var(--green);font-family:inherit;font-weight:700;font-size:clamp(14px,1.4vw,20px);line-height:1.25;max-width:100%}.page-one-heading-copy>span{display:block;white-space:nowrap}@media(min-width:1024px){.page-one-heading-row{flex-wrap:nowrap}}
 
 /* Page-one copy spans the existing three heading rows instead of increasing the title row. */
-#holdings-page .slide-heading{display:grid;grid-template-columns:minmax(0,1fr) max-content;column-gap:clamp(12px,3vw,48px);row-gap:0;align-items:start}#holdings-page .slide-heading>.eyebrow{grid-column:1;grid-row:1}#holdings-page .page-one-heading-row{display:contents}#holdings-page #holdings-title{grid-column:1;grid-row:2;min-width:0}#holdings-page .page-one-heading-copy{grid-column:2;grid-row:1 / span 3;align-self:center;justify-self:end;margin:0}#holdings-page .slide-heading>p:last-child{grid-column:1;grid-row:3}
+#holdings-page .slide-heading{display:grid;grid-template-columns:minmax(0,1fr) max-content;column-gap:clamp(12px,3vw,48px);row-gap:0;align-items:start}#holdings-page .slide-heading>.eyebrow{grid-column:1;grid-row:1}#holdings-page .page-one-heading-row{display:contents}#holdings-page #holdings-title{grid-column:1;grid-row:2;min-width:0}#holdings-page .page-one-heading-copy{grid-column:2;grid-row:1 / span 2;align-self:end;justify-self:end;margin:0}#holdings-page .slide-heading .daily-pnl-streak{grid-column:2;grid-row:3;justify-self:end;align-self:start;margin:2px 0 0;padding:0;text-align:right;font-size:11px;line-height:1.2;font-weight:500;white-space:nowrap}#holdings-page .slide-heading>p:last-child{grid-column:1;grid-row:3}
 
 /* Canadian flag sits under the wordmark inside the shared header row. */
 .brand-title-block{flex:1;min-width:0;justify-self:stretch}.brand-title-stack{display:flex;flex-direction:column;align-items:center;width:max-content;max-width:100%}.brand-title-stack>h1{margin:0}.canadian-flag{display:block;height:14px;line-height:14px;font-size:16px;text-align:center}
@@ -239,7 +239,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .daily-pnl-since{font-size:11px;line-height:1.15;margin:0}
 .daily-pnl-strip.has-since{margin-bottom:8px;gap:4px 10px}
 .daily-pnl-hot{font-size:12px;margin:0 0 8px}
-.daily-pnl-streak{font-size:11px;margin:2px 0 6px}
+.daily-pnl-streak{font-size:11px;margin:0}
 .index-strip{margin:0 0 8px}
 .index-last{font-size:11px}
 .index-pct{font-size:10px}
@@ -511,18 +511,11 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   pointer-events:none;
   white-space:nowrap;
 }
-.header-market-stack .daily-pnl-streak{
-  margin:0;
-  padding:0;
-  justify-content:center;
-  text-align:center;
+#holdings-page .slide-heading .daily-pnl-streak{
   font-size:10px;
   line-height:1.15;
-  font-weight:500;
   pointer-events:none;
-  white-space:nowrap;
 }
-#native-holdings .daily-pnl-streak{display:none}
 #holdings-page .slide-heading{padding-top:2px}
 /* Free pie space: hide in-panel strip on desktop only. */
 #native-holdings #daily-pnl-strip{display:none}
