@@ -26,14 +26,15 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
  // Never block the first paint on the live PNL feed — a hung or cold API
  // used to leave "Loading the published allocation… Open original artwork".
  let pnl=typeof lastPnlData!=='undefined'?lastPnlData:null;
+ if(preferredLiveTotal(pnl)==null){try{pnl=readCachedPnl();}catch(e){}}
  let s=raw;
- try{s=applyLiveFxToState(raw,effectiveFx(pnl));}catch(e){s=raw;}
+ try{s=applyLiveHoldingsToState(raw,pnl);}catch(e){try{s=applyLiveFxToState(raw,effectiveFx(pnl));}catch(e2){s=raw;}}
  LAST_STATE=s;
  const v=s.valuation,live=s.mode==='yahoo_authorized';
  $('feed').textContent=s.feed_notice+(s.market.refreshing?' Refresh in progress.':'')+(s.market.any_stale_observations?' STALE observations are in use.':'');
  $('asof').textContent=`Reference inputs: ${s.snapshot.model_reference_date} · prepared: ${s.snapshot.prepared_date} · public read-only display`;
  $('timestamps').textContent=live?`Last successful fetch: ${date(s.market.last_success)} · Shared refresh target: five minutes; rate-limit backoff may extend this. Prices below retain their actual market-bar timestamps. No real-time guarantee.`:'Holdings capital and FX use the published portfolio figures. Daily PNL, fund total and index levels come from the live public feed.';
- $('capital-label').textContent=v.label;$('capital').textContent=money(v.total_cad);$('coverage').textContent=`${v.priced_count} / ${v.holding_count} rows valued${v.complete?'':' · incomplete; missing values excluded'}`;
+ $('capital-label').textContent=v.label;$('capital').textContent=money(preferredLiveTotal(pnl)??v.total_cad);$('coverage').textContent=`${v.priced_count} / ${v.holding_count} rows valued${v.complete?'':' · incomplete; missing values excluded'}`;
  $('count').textContent=v.holding_count;$('planned').textContent=`${s.holdings.filter(h=>h.status==='ACTUAL').length || s.holdings.length} ACTUAL · Wealthsimple TFSA`;
  try{paintFxCard(pnl,effectiveFx(pnl));}catch(e){}
  $('reference').textContent=money(v.reference_total_cad);
@@ -211,14 +212,20 @@ function fitDonut(){const svg=document.querySelector('#native-holdings .native-d
 }
 MOBILE.addEventListener?.('change',fitDonut);
 async function renderDesktop(s){
- const palette=['#00dca6','#49ffd0','#0daa96','#7af5be','#29b9c8','#52d878','#a6dc63','#73bcac','#1bdbb4','#74f3df','#97c7a0','#40f1bc'];
+ const palette=DONUT_PALETTE;
+ try{s=applyLiveHoldingsToState(s,lastGoodPnl(null));}catch(e){}
+ LAST_STATE=s;
  const sorted=[...s.holdings].sort((a,b)=>b.weight_cad-a.weight_cad),pie=allocationLabelGeometry(sorted),mobilePie=mobileAllocationLabelGeometry(sorted,pie),circumference=2*Math.PI*pie.radius;let offset=0;
+ const liveSrc=lastGoodPnl(null);
+ const liveTotal=preferredLiveTotal(liveSrc);
+ const donutTotalText=liveTotal!=null?money(liveTotal):'—';
+ const donutAsOf=liveAsOfText(liveSrc);
  try{if(!COVERED_CALLS._loaded){const r=await fetch('/data/covered-calls.json',{cache:'no-store'});if(r.ok){COVERED_CALLS=await r.json();COVERED_CALLS._loaded=true;renderCoveredCalls(COVERED_CALLS)}}}catch(e){}
   const arcs=sorted.map((h,i)=>{const percent=h.weight_cad*100,arc=`<circle cx="${pie.cx}" cy="${pie.cy}" r="${pie.radius}" fill="none" stroke="${palette[i%palette.length]}" stroke-width="46" stroke-dasharray="${h.weight_cad*circumference} ${circumference*(1-h.weight_cad)}" stroke-dashoffset="${-offset*circumference/100}" transform="rotate(-90 ${pie.cx} ${pie.cy})"><title>${esc(h.symbol)} · ${percent.toFixed(2)}%</title></circle>`;offset+=percent;return arc}).join('');
  const deskLabels=pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
  const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle" font-size="28">${esc(label.ticker)}</text>`).join('');
   const n=sorted.length;
- $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span></div><div class="daily-pnl-hot" id="daily-pnl-hot" hidden></div><div class="index-strip" id="index-strip" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${money(s.valuation.total_cad)}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX <span id="fx-rate-value">${(Number(s.valuation.fx_cad_per_usd)>0?Number(s.valuation.fx_cad_per_usd):FX_FALLBACK).toFixed(4)}</span>.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span>${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col" class="day-pct-col"><span class="day-pct-head day-pct-head-desk" title="Daily P&amp;L (%)"><span class="day-pct-line">Daily</span><span class="day-pct-line">P&amp;L</span></span><span class="day-pct-head day-pct-head-mob"><span class="day-pct-line">daily</span><span class="day-pct-line">percent</span></span></th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(displayTicker(h.symbol))}</th><td class="day-pct" data-day-pct-symbol="${esc(displayTicker(h.symbol))}" data-label="Daily percent"></td><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td class="weight-cell" data-label="Weight" data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
+ $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-meta"></span></div><div class="daily-pnl-hot" id="daily-pnl-hot" hidden></div><div class="index-strip" id="index-strip" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${donutTotalText}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text><text class="donut-center-asof" x="${pie.cx}" y="${pie.cy+48}" text-anchor="middle" fill="#8cbca0" font-size="11">${esc(donutAsOf)}</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX <span id="fx-rate-value">${(Number(s.valuation.fx_cad_per_usd)>0?Number(s.valuation.fx_cad_per_usd):FX_FALLBACK).toFixed(4)}</span>.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span>${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col" class="day-pct-col"><span class="day-pct-head day-pct-head-desk" title="Daily P&amp;L (%)"><span class="day-pct-line">Daily</span><span class="day-pct-line">P&amp;L</span></span><span class="day-pct-head day-pct-head-mob"><span class="day-pct-line">daily</span><span class="day-pct-line">percent</span></span></th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span>${esc(displayTicker(h.symbol))}</th><td class="day-pct" data-day-pct-symbol="${esc(displayTicker(h.symbol))}" data-label="Daily percent"></td><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td class="weight-cell" data-label="Weight" data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
  fitDonut(); loadDailyPnl();
  // Keep every visible holdings-count label in sync with the published model.
  const hc=(s.holdings||[]).length || (s.valuation&&s.valuation.holding_count) || 0;
@@ -463,6 +470,80 @@ loadCoveredCalls();
 // PNL strip: live feed (Render JSON API, no redeploy) with same-origin fallback.
 // Regular session → Daily PNL. Market closed → Since Nov 9 inception P&L (same spot).
 const FX_FALLBACK=1.4123;
+const DONUT_PALETTE=['#00dca6','#49ffd0','#0daa96','#7af5be','#29b9c8','#52d878','#a6dc63','#73bcac','#1bdbb4','#74f3df','#97c7a0','#40f1bc'];
+const PNL_CACHE_KEY='sff-pnl-live-v1';
+function readCachedPnl(){
+  try{
+    const raw=localStorage.getItem(PNL_CACHE_KEY);
+    if(!raw)return null;
+    const d=JSON.parse(raw);
+    if(d&&(d.market_value_cad!=null||(Array.isArray(d.holdings_cad)&&d.holdings_cad.length)))return d;
+  }catch(e){}
+  return null;
+}
+function writeCachedPnl(data){
+  try{
+    if(preferredLiveTotal(data)!=null) localStorage.setItem(PNL_CACHE_KEY,JSON.stringify(data));
+  }catch(e){}
+}
+function sumHoldingsCad(data){
+  const rows=data&&Array.isArray(data.holdings_cad)?data.holdings_cad:[];
+  let t=0,n=0;
+  for(const r of rows){
+    const v=Number(r&&r.market_value_cad);
+    if(!Number.isFinite(v))continue;
+    t+=v;n++;
+  }
+  return n?Math.round(t*100)/100:null;
+}
+function preferredLiveTotal(data){
+  const fromHoldings=sumHoldingsCad(data);
+  if(fromHoldings!=null)return fromHoldings;
+  return liveMarketValue(data);
+}
+function lastGoodPnl(data){
+  if(preferredLiveTotal(data)!=null)return data;
+  if(typeof lastPnlData!=='undefined'&&preferredLiveTotal(lastPnlData)!=null)return lastPnlData;
+  const cached=readCachedPnl();
+  if(preferredLiveTotal(cached)!=null)return cached;
+  return null;
+}
+function liveAsOfText(data){
+  if(!data||preferredLiveTotal(data)==null)return '';
+  if(data.updated_et)return 'LIVE · '+String(data.updated_et);
+  if(data.price_as_of)return 'LIVE · '+String(data.price_as_of);
+  return 'LIVE';
+}
+function applyLiveHoldingsToState(s,data){
+  if(!s||!Array.isArray(s.holdings))return s;
+  const rows=data&&Array.isArray(data.holdings_cad)?data.holdings_cad:null;
+  if(rows&&rows.length){
+    const by=new Map();
+    for(const r of rows){
+      const sym=displayTicker(r&&r.symbol);
+      const v=Number(r&&r.market_value_cad);
+      if(!sym||!Number.isFinite(v))continue;
+      by.set(sym,v);
+    }
+    if(by.size){
+      const holdings=s.holdings.map(h=>{
+        const t=displayTicker(h.symbol);
+        return by.has(t)?{...h,value_cad:by.get(t)}:h;
+      });
+      const total=holdings.reduce((a,h)=>a+(Number(h.value_cad)||0),0);
+      const withW=holdings.map(h=>({...h,weight_cad:total?(Number(h.value_cad)||0)/total:0}));
+      const sectors={};
+      for(const h of withW){const sec=h.sector||'Other';sectors[sec]=(sectors[sec]||0)+(h.weight_cad||0)}
+      const mv=preferredLiveTotal(data);
+      const valuation={...(s.valuation||{}),fx_cad_per_usd:effectiveFx(data)};
+      if(mv!=null)valuation.total_cad=mv;
+      else if(total)valuation.total_cad=Math.round(total*100)/100;
+      return {...s,holdings:withW,sectors,valuation};
+    }
+  }
+  return applyLiveFxToState(s,effectiveFx(data));
+}
+
 function readLiveFx(data){
   const n=data&&data.fx_cad_per_usd!=null?Number(data.fx_cad_per_usd):NaN;
   return Number.isFinite(n)&&n>0?n:null;
@@ -529,7 +610,7 @@ function paintFxCard(data,fx){
 function paintLiveFx(data){
   const fx=effectiveFx(data);
   paintFxCard(data,fx);
-  if(LAST_STATE) LAST_STATE=applyLiveFxToState(LAST_STATE,fx);
+  try{if(LAST_STATE) LAST_STATE=applyLiveHoldingsToState(LAST_STATE,data);}catch(e){if(LAST_STATE) LAST_STATE=applyLiveFxToState(LAST_STATE,fx);}
   const rateEl=$('fx-rate-value'); if(rateEl) rateEl.textContent=fx.toFixed(4);
   const s=LAST_STATE;
   if(!s||!Array.isArray(s.holdings))return;
@@ -636,10 +717,12 @@ async function fetchPnlJson(){
     try{
       const r=await fetchWithTimeout(url,{cache:'no-store',mode:'cors'},5000);
       if(!r.ok)throw Error('HTTP '+r.status);
-      return await r.json();
+      const data=await r.json();
+      if(preferredLiveTotal(data)!=null){writeCachedPnl(data);lastPnlData=data;}
+      return data;
     }catch(e){ /* try next */ }
   }
-  return null;
+  return lastGoodPnl(null);
 }
 
 let lastPnlData=null, lastPnlOpen=null;
@@ -812,6 +895,32 @@ function paintHotOtd(data=lastPnlData, marketOpen=lastPnlOpen){
   });
 }
 
+function paintDonutSlices(s){
+  const host=document.querySelector('#native-holdings .allocation-overview');
+  const svg=host&&host.querySelector('.native-donut');
+  if(!host||!svg||!s||!Array.isArray(s.holdings))return;
+  const palette=DONUT_PALETTE;
+  const sorted=[...s.holdings].sort((a,b)=>b.weight_cad-a.weight_cad);
+  const pie=allocationLabelGeometry(sorted),mobilePie=mobileAllocationLabelGeometry(sorted,pie),circumference=2*Math.PI*pie.radius;
+  let offset=0;
+  const arcs=sorted.map((h,i)=>{const percent=h.weight_cad*100,arc=`<circle cx="${pie.cx}" cy="${pie.cy}" r="${pie.radius}" fill="none" stroke="${palette[i%palette.length]}" stroke-width="46" stroke-dasharray="${h.weight_cad*circumference} ${circumference*(1-h.weight_cad)}" stroke-dashoffset="${-offset*circumference/100}" transform="rotate(-90 ${pie.cx} ${pie.cy})"><title>${esc(h.symbol)} · ${percent.toFixed(2)}%</title></circle>`;offset+=percent;return arc}).join('');
+  const deskLabels=pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
+  const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle" font-size="28">${esc(label.ticker)}</text>`).join('');
+  const liveSrc=lastGoodPnl(null);
+  const liveTotal=preferredLiveTotal(liveSrc);
+  const donutTotalText=liveTotal!=null?money(liveTotal):'—';
+  const donutAsOf=liveAsOfText(liveSrc);
+  const parent=svg.parentNode;
+  const tmp=document.createElement('div');
+  tmp.innerHTML=`<svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${sorted.length} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${donutTotalText}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text><text class="donut-center-asof" x="${pie.cx}" y="${pie.cy+48}" text-anchor="middle" fill="#8cbca0" font-size="11">${esc(donutAsOf)}</text></svg>`;
+  const neu=tmp.querySelector('svg');
+  if(neu){parent.replaceChild(neu,svg);fitDonut();}
+  const legend=host.querySelector('.donut-legend');
+  if(legend){
+    legend.innerHTML=sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('');
+  }
+}
+
 function paintPnl(data, mode='daily'){
   const els=[...document.querySelectorAll('.daily-pnl-strip')]; if(!els.length)return;
   let text='—', faceHtml='', metaText='', up=null;
@@ -868,13 +977,19 @@ function liveMarketValue(data){
   return Number.isFinite(n)?n:null;
 }
 function paintDonutTotal(data){
-  // Same public CAD total as the PNL feed (excludes CTGO / VGFCQ). Keep snapshot text if the feed has no MV.
+  // Live public CAD total (excludes CTGO / VGFCQ). Never fall back to the Nov 9 snapshot
+  // if a last-good live value exists (memory, localStorage, or same-origin fallback).
+  const src=lastGoodPnl(data);
+  const mv=preferredLiveTotal(src);
   const els=[...document.querySelectorAll('.donut-center-value')];
   if(!els.length)return;
-  const mv=liveMarketValue(data);
   if(mv==null)return;
   const text=money(mv);
+  const asof=liveAsOfText(src);
   for(const el of els){ if(el) el.textContent=text; }
+  document.querySelectorAll('.donut-center-asof').forEach(el=>{ if(el) el.textContent=asof; });
+  const cap=$('capital');
+  if(cap) cap.textContent=text;
 }
 async function loadDailyPnl(){
   const open=pnlMarketOpen();
@@ -903,6 +1018,8 @@ async function loadDailyPnl(){
   try{paintIndexes(data);}catch(e){}
   try{paintDayPct(data);}catch(e){}
   try{paintLiveFx(data);}catch(e){}
+  try{paintDonutSlices(LAST_STATE);}catch(e){}
+  try{paintDonutTotal(data);}catch(e){}
 }
 (()=>{
   const tick=()=>{loadDailyPnl();};
