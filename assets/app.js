@@ -23,17 +23,20 @@ const money=(n,c='CAD')=>n==null?'Unavailable':(c==='CAD'?'C$':'US$')+Number(n).
 const date=s=>s?new Date(s).toLocaleString('en-CA',{timeZone:'America/Vancouver',dateStyle:'medium',timeStyle:'short'})+' Pacific':'No observation';
 let timer,loading=false,LAST_STATE=null;
 async function load(){if(loading)return;loading=true;try{const r=await fetch('/published_state.json',{cache:'no-store'});if(!r.ok)throw Error('Holdings data temporarily unavailable');const raw=await r.json();
+ // Never block the first paint on the live PNL feed — a hung or cold API
+ // used to leave "Loading the published allocation… Open original artwork".
  let pnl=typeof lastPnlData!=='undefined'?lastPnlData:null;
- if(typeof fetchPnlJson==='function'&&readLiveFx(pnl)==null){try{pnl=await fetchPnlJson()}catch(e){/* fallback */}}
- if(pnl&&typeof lastPnlData!=='undefined') lastPnlData=pnl;
- const s=applyLiveFxToState(raw,effectiveFx(pnl)); LAST_STATE=s;
+ let s=raw;
+ try{s=applyLiveFxToState(raw,effectiveFx(pnl));}catch(e){s=raw;}
+ LAST_STATE=s;
  const v=s.valuation,live=s.mode==='yahoo_authorized';
  $('feed').textContent=s.feed_notice+(s.market.refreshing?' Refresh in progress.':'')+(s.market.any_stale_observations?' STALE observations are in use.':'');
  $('asof').textContent=`Reference inputs: ${s.snapshot.model_reference_date} · prepared: ${s.snapshot.prepared_date} · public read-only display`;
  $('timestamps').textContent=live?`Last successful fetch: ${date(s.market.last_success)} · Shared refresh target: five minutes; rate-limit backoff may extend this. Prices below retain their actual market-bar timestamps. No real-time guarantee.`:'Holdings capital and FX use the published portfolio figures. Daily PNL, fund total and index levels come from the live public feed.';
  $('capital-label').textContent=v.label;$('capital').textContent=money(v.total_cad);$('coverage').textContent=`${v.priced_count} / ${v.holding_count} rows valued${v.complete?'':' · incomplete; missing values excluded'}`;
  $('count').textContent=v.holding_count;$('planned').textContent=`${s.holdings.filter(h=>h.status==='ACTUAL').length || s.holdings.length} ACTUAL · Wealthsimple TFSA`;
- paintFxCard(pnl,effectiveFx(pnl));$('reference').textContent=money(v.reference_total_cad);
+ try{paintFxCard(pnl,effectiveFx(pnl));}catch(e){}
+ $('reference').textContent=money(v.reference_total_cad);
  $('holdings').innerHTML=s.holdings.map(h=>`<article class="holding"><h3 data-hot-symbol="${esc(displayTicker(h.symbol))}">${esc(h.symbol)} <small class="status">${esc(h.status)}</small></h3><p class="name">${saNameLink(h,h.name,"sa-link")}<br>${esc(h.sector)}</p><p class="fine">${live?'Observed position value':'Position value'}</p><div class="quote">${money(h.value_native,h.currency)}</div><div class="row-metrics"><span data-popup-cad-symbol="${esc(displayTicker(h.symbol))}">CAD equivalent: ${money(h.value_cad)}</span><span data-popup-weight-symbol="${esc(displayTicker(h.symbol))}">Weight: ${h.weight_cad==null?'—':(h.weight_cad*100).toFixed(2)+'%'}</span></div>${h.dividend_note?`<p class="fine div-note" data-div-note-symbol="${esc(displayTicker(h.symbol))}">${esc(h.dividend_note)}</p>`:''}${live?`<p class="quote-state">${h.quote?(h.quote.stale?'STALE cached observation':'Observed bar, possibly delayed'):'UNAVAILABLE'}<br>Market bar start: ${esc(date(h.quote?.market_bar_start))}<br>Last fetch: ${esc(date(h.quote?.fetched_at))}</p>`:''}</article>`).join('');
  const sectorNote=$('sector-note');if(sectorNote)sectorNote.textContent=v.complete?(live?'CAD weights use the observed prices/FX above, including any flagged stale values.':'CAD weights use published market values and FX. Custom mutually exclusive business categories sum to 100%.'):'Weights hidden until all required observations are available.';
  const bySector={};for(const h of s.holdings){(bySector[h.sector]=bySector[h.sector]||[]).push(h)}
@@ -43,7 +46,7 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
   const count=members.length;
   return `<article class="sector"><div class="sector-label"><span>${esc(name)}</span><span>${(w*100).toFixed(2)}%</span></div><div class="bar"><span style="width:${Math.max(0,Math.min(100,w*100))}%"></span></div><div class="sector-holdings" aria-label="${esc(name)} holdings">${tickers||'<span class="muted">No holdings</span>'}</div><p class="sector-count">${count} holding${count===1?'':'s'}</p></article>`;
  }).join('');
- await renderDesktop(s);if(typeof paintHotOtd==='function')paintHotOtd();if(typeof paintDayPct==='function')paintDayPct();clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
+ await renderDesktop(s);try{if(typeof paintHotOtd==='function')paintHotOtd();}catch(e){}try{if(typeof paintDayPct==='function')paintDayPct();}catch(e){}clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
@@ -621,12 +624,17 @@ function formatPnl(cad,pct){
   }
   return dollar+pctPart;
 }
+function fetchWithTimeout(url, opts={}, ms=5000){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),ms);
+  return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(t));
+}
 async function fetchPnlJson(){
   const bust='t='+Date.now();
   const urls=[`${PNL_LIVE}?${bust}`, `${PNL_FALLBACK}?${bust}`];
   for(const url of urls){
     try{
-      const r=await fetch(url,{cache:'no-store',mode:'cors'});
+      const r=await fetchWithTimeout(url,{cache:'no-store',mode:'cors'},5000);
       if(!r.ok)throw Error('HTTP '+r.status);
       return await r.json();
     }catch(e){ /* try next */ }
@@ -889,12 +897,12 @@ async function loadDailyPnl(){
       data=data?{...data,...fb}:fb;
     }
   }
-  paintPnl(data, open?'daily':'since');
-  paintDonutTotal(data);
-  paintHotOtd(data, open);
-  paintIndexes(data);
-  paintDayPct(data);
-  paintLiveFx(data);
+  try{paintPnl(data, open?'daily':'since');}catch(e){}
+  try{paintDonutTotal(data);}catch(e){}
+  try{paintHotOtd(data, open);}catch(e){}
+  try{paintIndexes(data);}catch(e){}
+  try{paintDayPct(data);}catch(e){}
+  try{paintLiveFx(data);}catch(e){}
 }
 (()=>{
   const tick=()=>{loadDailyPnl();};
