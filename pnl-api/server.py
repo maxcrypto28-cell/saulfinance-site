@@ -63,10 +63,25 @@ class Handler(BaseHTTPRequestHandler):
         print("%s - %s" % (self.address_string(), fmt % args), file=sys_stderr)
 
     def _cors(self) -> None:
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = (self.headers.get("Origin") or "").strip()
+        allowed = {
+            "https://saulfinance.ca",
+            "https://www.saulfinance.ca",
+            "https://saulfinance-site.onrender.com",
+        }
+        # Echo known site origins (incl. the onrender.com backup host).
+        # Fall back to * so curl, previews, and localhost keep working.
+        host = origin.split("://", 1)[-1].split("/", 1)[0]
+        if origin in allowed or host.startswith("localhost") or host.startswith("127.0.0.1"):
+            allow = origin or "*"
+        else:
+            allow = "*"
+        self.send_header("Access-Control-Allow-Origin", allow)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.send_header("Access-Control-Max-Age", "86400")
+        if allow != "*":
+            self.send_header("Vary", "Origin")
 
     def do_OPTIONS(self) -> None:
         self.send_response(204)

@@ -639,6 +639,7 @@ function paintLiveFx(data){
 }
 
 const PNL_LIVE='https://saulfinance-pnl.onrender.com/daily-pnl.json';
+const PNL_SEED='https://raw.githubusercontent.com/maxcrypto28-cell/saulfinance-site/pnl-data/data/daily-pnl.json';
 const PNL_FALLBACK='/data/daily-pnl.json';
 const INCEPTION_FALLBACK='/data/inception.json';
 const INCEPTION_DEFAULT={inception_date:'2026-11-09',label:'Since Nov 9',start_value_cad:114897.09};
@@ -716,18 +717,72 @@ function fetchWithTimeout(url, opts={}, ms=5000){
   const t=setTimeout(()=>ctrl.abort(),ms);
   return fetch(url,{...opts,signal:ctrl.signal}).finally(()=>clearTimeout(t));
 }
+function pnlPayloadUseful(data){
+  try{
+    if(!data||typeof data!=='object')return false;
+    if(typeof preferredLiveTotal==='function'&&preferredLiveTotal(data)!=null)return true;
+    if(data.since_cad!=null&&Number.isFinite(Number(data.since_cad)))return true;
+    if(data.day_change_cad!=null&&Number.isFinite(Number(data.day_change_cad)))return true;
+  }catch(e){}
+  return false;
+}
+function isStaleNov9Fallback(data){
+  // The copy baked into main is the Nov 9 session print and must never
+  // be used as the live fund total (it has no market_value_cad).
+  try{
+    if(!data)return false;
+    if(typeof preferredLiveTotal==='function'&&preferredLiveTotal(data)!=null)return false;
+    return String(data.date||'')==='2026-11-09';
+  }catch(e){return false;}
+}
+async function fetchPnlSource(url, ms=5000){
+  const r=await fetchWithTimeout(url,{cache:'no-store',mode:'cors'},ms);
+  if(!r.ok)throw Error('HTTP '+r.status);
+  return await r.json();
+}
 async function fetchPnlJson(){
   const bust='t='+Date.now();
-  const urls=[`${PNL_LIVE}?${bust}`, `${PNL_FALLBACK}?${bust}`];
-  for(const url of urls){
-    try{
-      const r=await fetchWithTimeout(url,{cache:'no-store',mode:'cors'},5000);
-      if(!r.ok)throw Error('HTTP '+r.status);
-      const data=await r.json();
-      if(preferredLiveTotal(data)!=null){writeCachedPnl(data);lastPnlData=data;}
-      return data;
-    }catch(e){ /* try next */ }
+  const take=async(url,ms)=>{
+    const data=await fetchPnlSource(url,ms);
+    if(!pnlPayloadUseful(data)||isStaleNov9Fallback(data)) throw Error('unusable');
+    return data;
+  };
+  const firstUseful=promises=>new Promise(resolve=>{
+    let left=promises.length;
+    const one=p=>p.then(d=>{
+      if(d){resolve(d);return;}
+      if(--left===0)resolve(null);
+    },()=>{ if(--left===0)resolve(null); });
+    for(const p of promises) one(p);
+  });
+  // Prefer the live API. If it hangs (cold Render boot) or returns an
+  // empty default, use the CORS-open pnl-data seed after 4s / immediately
+  // on failure. Never use the baked Nov 9 file for the fund total.
+  let seedStarted=false, cancelled=false;
+  const liveP=take(`${PNL_LIVE}?${bust}`,20000).catch(()=>null);
+  const startSeed=()=>{
+    if(seedStarted||cancelled)return Promise.resolve(null);
+    seedStarted=true;
+    return take(`${PNL_SEED}?${bust}`,8000).catch(()=>null);
+  };
+  const seedP=new Promise(resolve=>{
+    const t=setTimeout(()=>startSeed().then(resolve),4000);
+    liveP.then(d=>{
+      if(d){cancelled=true;clearTimeout(t);resolve(null);return;}
+      clearTimeout(t);
+      startSeed().then(resolve);
+    });
+  });
+  const data=await firstUseful([liveP, seedP]);
+  if(data){
+    if(preferredLiveTotal(data)!=null){writeCachedPnl(data);lastPnlData=data;}
+    return data;
   }
+  try{
+    const local=await take(`${PNL_FALLBACK}?${bust}`,5000);
+    if(preferredLiveTotal(local)!=null){writeCachedPnl(local);lastPnlData=local;}
+    return local;
+  }catch(e){}
   return lastGoodPnl(null);
 }
 
