@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tiny public JSON feed for saulfinance.ca daily PNL. No secrets in responses."""
+"""Tiny public JSON feed for saulfinance.com daily PNL. No secrets in responses."""
 from __future__ import annotations
 
 import json
@@ -67,6 +67,8 @@ class Handler(BaseHTTPRequestHandler):
         allowed = {
             "https://saulfinance.ca",
             "https://www.saulfinance.ca",
+            "https://saulfinance.com",
+            "https://www.saulfinance.com",
             "https://saulfinance-site.onrender.com",
         }
         # Echo known site origins (incl. the onrender.com backup host).
