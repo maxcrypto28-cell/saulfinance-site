@@ -1122,24 +1122,45 @@ function paintDonutTotal(data){
   if(cap) cap.textContent=text;
 }
 
+function rollingGreenFromSrc(src){
+  // Last N trading days, N grows 1..5 from inception then rolls at 5.
+  // During a live session, today's live day change counts as one of the N.
+  // Shown only when at least 3 of those days are green. Never called a streak.
+  try{
+    if(!src)return '';
+    const rows=Array.isArray(src.closed_days)?src.closed_days:[];
+    const byDate=new Map();
+    for(const row of rows){
+      if(!row)continue;
+      const date=row.date!=null?String(row.date).slice(0,10):'';
+      const cad=row.day_change_cad!=null?Number(row.day_change_cad):NaN;
+      if(!date||!Number.isFinite(cad))continue;
+      byDate.set(date,{date,cad});
+    }
+    const session=src.session!=null?String(src.session):'';
+    const inSession=session==='open'||(!session&&typeof pnlMarketOpen==='function'&&pnlMarketOpen());
+    if(inSession){
+      const today=src.date!=null?String(src.date).slice(0,10):'';
+      const day=src.day_change_cad!=null?Number(src.day_change_cad):NaN;
+      if(today&&Number.isFinite(day)) byDate.set(today,{date:today,cad:day});
+    }
+    const window=[...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
+    const n=window.length;
+    const x=window.filter(d=>d.cad>0).length;
+    if(!(n>=1)||!(x>=3))return '';
+    return '📈 '+x+' of '+n+' days green';
+  }catch(e){return '';}
+}
+function rollingGreenLabel(data){
+  try{
+    const src=typeof lastGoodPnl==='function'?lastGoodPnl(data):data;
+    return rollingGreenFromSrc(src)||'';
+  }catch(e){return '';}
+}
 function paintWinStreak(data=lastPnlData){
   const els=[...document.querySelectorAll('.daily-pnl-streak')];
   if(!els.length)return;
-  let n=null;
-  try{
-    const src=typeof lastGoodPnl==='function'?lastGoodPnl(data):data;
-    const v=src&&src.win_streak!=null?Number(src.win_streak):NaN;
-    if(Number.isFinite(v)&&v>=0){
-      n=Math.floor(v);
-      const session=src&&src.session!=null?String(src.session):'';
-      const inSession=session==='open'||(!session&&typeof pnlMarketOpen==='function'&&pnlMarketOpen());
-      if(inSession){
-        const day=src&&src.day_change_cad!=null?Number(src.day_change_cad):NaN;
-        if(Number.isFinite(day)&&day>0) n=n+1;
-      }
-    }
-  }catch(e){n=null;}
-  const line=(n&&n>0)?('📈 '+n+'-day win streak'):'';
+  const line=rollingGreenLabel(data)||'';
   for(const el of els){
     if(!el)continue;
     if(!line){el.hidden=true;el.textContent='';el.removeAttribute('aria-label');continue;}
