@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-12T19:03:51-07:00",
-  "notes": "Open covered calls sold in the Wealthsimple TFSA. Premiums are net as shown on the brokerage activity. Options are listed on the Montr\u00e9al Exchange. IV at sale was not on the screenshot and is left null. Ex-dividend dates are included only when a company IR or TMX page states the ex-date (not inferred from a record date). Current option marks are Montr\u00e9al Exchange last/last close captured 2026-11-12 after the regular close; bid/ask were 0.",
+  "updated_at": "2026-11-12T19:08:00-07:00",
+  "notes": "Open covered calls sold in the Wealthsimple TFSA. Premiums are net as shown on the brokerage activity. Options are listed on the Montréal Exchange. IV at sale is unknown. Option marks are Montréal Exchange LAST TRADE only (not a live mid), as of after the 2026-11-12 regular close. Ex-dividend figures marked approximate are labeled with a tilde in the UI.",
   "positions": [
     {
       "id": "cc-enb-2026-12-11-73c",
@@ -23,14 +23,17 @@
       "option_mark": 0.15,
       "option_mark_as_of": "2026-11-12",
       "option_mark_source": "m-x.ca",
-      "option_mark_note": "MX last / last close after the 2026-11-12 regular session. Bid and ask were 0; volume 0.",
-      "ex_dividend_date": null,
-      "ex_dividend_amount": null,
-      "ex_dividend_source": "Enbridge IR (2026-11-04) states a C$0.97 common dividend payable 2026-12-01 to holders of record 2026-11-13, but does not state the ex-dividend date. Shown as \u2014 until an IR or TMX ex-date is verified.",
+      "option_mark_note": "MX last, Nov 12",
+      "option_open_interest": 2,
+      "ex_dividend_date": "2026-11-12",
+      "ex_dividend_date_approximate": false,
+      "ex_dividend_amount": 0.97,
+      "ex_dividend_amount_approximate": true,
+      "ex_dividend_source": "ENB went ex 2026-11-12 (~C$0.97); no remaining ex-div before the 2026-12-11 expiry.",
       "close_price": null,
       "close_date": null,
       "realized_pnl": null,
-      "notes": "Wealthsimple net premium as shown. 1 contract covers 100 shares. Montr\u00e9al Exchange."
+      "notes": "Wealthsimple net premium as shown. 1 contract covers 100 shares. Montréal Exchange. ENB 2026-11-12 close C$68.57 (OTM vs 73 strike)."
     },
     {
       "id": "cc-cnq-2026-12-11-78c",
@@ -53,14 +56,17 @@
       "option_mark": 0.39,
       "option_mark_as_of": "2026-11-12",
       "option_mark_source": "m-x.ca",
-      "option_mark_note": "MX last / last close after the 2026-11-12 regular session. Bid and ask were 0; volume 0.",
-      "ex_dividend_date": "2026-12-15",
+      "option_mark_note": "MX last, Nov 12",
+      "option_open_interest": 20,
+      "ex_dividend_date": "2026-12-14",
+      "ex_dividend_date_approximate": true,
       "ex_dividend_amount": 0.625,
-      "ex_dividend_source": "CNRL IR dividend history: record date 2026-12-15, payable 2027-01-05, C$0.625. This date is after option expiry, so it is not shown as a pre-expiry ex-div.",
+      "ex_dividend_amount_approximate": true,
+      "ex_dividend_source": "Next ex-div is after option expiry (~Dec 14, ~C$0.625).",
       "close_price": null,
       "close_date": null,
       "realized_pnl": null,
-      "notes": "Wealthsimple net premium as shown. 1 contract covers 100 shares. Montr\u00e9al Exchange."
+      "notes": "Wealthsimple net premium as shown. 1 contract covers 100 shares. Montréal Exchange. CNQ 2026-11-12 close C$70.04 (OTM vs 78 strike)."
     },
     {
       "id": "cc-ppl-2026-12-11-76c",
@@ -83,14 +89,17 @@
       "option_mark": 0.23,
       "option_mark_as_of": "2026-11-12",
       "option_mark_source": "m-x.ca",
-      "option_mark_note": "MX last / last close after the 2026-11-12 regular session. Bid and ask were 0; volume 0.",
-      "ex_dividend_date": "2026-12-15",
+      "option_mark_note": "MX last, Nov 12",
+      "option_open_interest": 1,
+      "ex_dividend_date": "2026-12-14",
+      "ex_dividend_date_approximate": true,
       "ex_dividend_amount": 0.735,
-      "ex_dividend_source": "Pembina IR stock & dividend page: ex-dividend date 2026-12-15, record 2026-12-15, payable 2026-12-31, C$0.735. This date is after option expiry, so it is not shown as a pre-expiry ex-div.",
+      "ex_dividend_amount_approximate": true,
+      "ex_dividend_source": "Next ex-div is after option expiry (~Dec 14, ~C$0.735).",
       "close_price": null,
       "close_date": null,
       "realized_pnl": null,
-      "notes": "Wealthsimple net premium as shown. 1 contract covers 100 shares. Montr\u00e9al Exchange."
+      "notes": "Wealthsimple net premium as shown. 1 contract covers 100 shares. Montréal Exchange. PPL 2026-11-12 close C$71.31 (OTM vs 76 strike)."
     }
   ]
 }

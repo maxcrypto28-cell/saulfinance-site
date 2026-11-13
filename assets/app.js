@@ -492,13 +492,50 @@ function tickerDotColor(sym){
     return palette[(i>=0?i:0)%palette.length];
   }catch(e){return '#00dca6';}
 }
-function exDivBeforeExpiry(pos){
+function formatApproxDate(s,approx){
+  const label=formatShortDate(s);
+  if(!label||label==='—')return '—';
+  return approx?('~'+label):label;
+}
+function formatApproxMoney(n,c,approx){
+  if(n==null||!Number.isFinite(Number(n)))return '—';
+  const cur=(String(c||'CAD').toUpperCase()==='USD')?'US$':'C$';
+  const s=Number(n).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:4});
+  return (approx?'~':'')+cur+s;
+}
+function exDivInfo(pos){
   if(!pos)return null;
   const ex=pos.ex_dividend_date?String(pos.ex_dividend_date).slice(0,10):'';
   const exp=pos.expiration?String(pos.expiration).slice(0,10):'';
-  if(!ex||!exp||ex>exp)return null;
+  if(!ex||!/^\d{4}-\d{2}-\d{2}$/.test(ex))return null;
   const amt=pos.ex_dividend_amount!=null?Number(pos.ex_dividend_amount):NaN;
-  return {date:ex,amount:Number.isFinite(amt)?amt:null,currency:pos.currency||'CAD'};
+  const info={
+    date:ex,
+    amount:Number.isFinite(amt)?amt:null,
+    currency:pos.currency||'CAD',
+    dateApprox:!!pos.ex_dividend_date_approximate,
+    amountApprox:!!pos.ex_dividend_amount_approximate
+  };
+  const today=todayISOInZone('America/Toronto')||'';
+  if(exp&&ex>exp)info.kind='after_expiry';
+  else if(today&&ex<=today)info.kind='already_ex';
+  else info.kind='before_expiry';
+  return info;
+}
+function exDivLabel(info){
+  if(!info)return 'Ex-div before expiry';
+  if(info.kind==='after_expiry')return 'Next ex-div after expiry';
+  if(info.kind==='already_ex')return 'Ex-div before expiry';
+  return 'Ex-div before expiry';
+}
+function exDivText(info){
+  if(!info)return '—';
+  const d=formatApproxDate(info.date,info.dateApprox);
+  const a=info.amount!=null?formatApproxMoney(info.amount,info.currency,info.amountApprox):'';
+  const bit=a?(d+' · '+a):d;
+  if(info.kind==='after_expiry')return bit;
+  if(info.kind==='already_ex')return 'None before expiry · went ex '+bit;
+  return bit;
 }
 
 function renderCoveredCalls(data){
@@ -538,23 +575,23 @@ function renderCoveredCalls(data){
     const daysText=days==null?'—':(days<0?'Expired':(days+' day'+(days===1?'':'s')));
     const live=liveUnderlyingPrice(p.underlying);
     const moneyNess=live&&strike!=null?callMoneyness(live.price,strike):null;
-    const ex=exDivBeforeExpiry(p);
-    const exText=ex?(formatShortDate(ex.date)+(ex.amount!=null?' · '+money(ex.amount,ex.currency):'')):'—';
-    const early=ex&&moneyNess&&moneyNess.side==='ITM';
+    const ex=exDivInfo(p);
+    const exText=exDivText(ex);
+    const early=ex&&ex.kind==='before_expiry'&&moneyNess&&moneyNess.side==='ITM';
     const iv=p.iv_at_sale!=null&&Number.isFinite(Number(p.iv_at_sale))?(Number(p.iv_at_sale).toFixed(1)+'%'):'—';
     const mark=p.option_mark!=null&&Number.isFinite(Number(p.option_mark))?Number(p.option_mark):null;
     let markText='—';
     let markNote='quote unavailable';
     if(mark!=null){
       markText=money(mark,cur);
-      const asof=p.option_mark_as_of?formatShortDate(p.option_mark_as_of):'';
-      const src=p.option_mark_source?String(p.option_mark_source):'';
-      markNote=[src==='m-x.ca'?'MX last':'', asof?('as of '+asof):'', 'not a live bid/ask'].filter(Boolean).join(' · ');
+      markNote=p.option_mark_note?String(p.option_mark_note):'MX last, Nov 12';
+      const oi=p.option_open_interest;
+      if(oi!=null&&Number.isFinite(Number(oi))) markNote=markNote+' · OI '+String(Number(oi));
     }
     const href=stockAnalysisUrl({symbol:p.underlying,currency:cur});
     const title=href?`<a class="cc-ticker sa-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(tkr)}</a>`:`<span class="cc-ticker">${esc(tkr)}</span>`;
     const metric=(label,value,attrs='')=>`<div class="cc-metric"${attrs}><span>${label}</span><strong>${value}</strong></div>`;
-    return `<article class="native-panel cc-card" data-cc-id="${esc(p.id||tkr)}" data-cc-underlying="${esc(p.underlying||tkr)}" data-cc-strike="${strike==null?'':esc(String(strike))}" data-cc-expiry="${esc(p.expiration||'')}" data-cc-exdiv="${esc(ex?ex.date:'')}" data-cc-currency="${esc(cur)}">
+    return `<article class="native-panel cc-card" data-cc-id="${esc(p.id||tkr)}" data-cc-underlying="${esc(p.underlying||tkr)}" data-cc-strike="${strike==null?'':esc(String(strike))}" data-cc-expiry="${esc(p.expiration||'')}" data-cc-exdiv="${esc(ex&&ex.kind==='before_expiry'?ex.date:'')}" data-cc-currency="${esc(cur)}">
       <header class="cc-card-head">
         <span class="ticker-dot" style="background:${esc(color)}"></span>
         <div class="cc-card-title">${title}<span class="cc-card-name">${esc(name)}</span></div>
@@ -571,7 +608,7 @@ function renderCoveredCalls(data){
         ${metric('Moneyness', moneyNess?esc(moneyNess.label):'—', ' data-cc-field="moneyness"')}
         ${metric('Exit if assigned', exit==null?'—':money(exit,cur))}
         ${metric('Downside buffer', esc(moneyPerShare(per,cur)))}
-        ${metric('Ex-div before expiry', esc(exText))}
+        ${metric(exDivLabel(ex), esc(exText))}
         ${metric('Early assignment', early?'ITM into an ex-div before expiry':'—', ' data-cc-field="early"')}
         ${metric('IV at sale', esc(iv))}
         ${metric('Current option value', '<span data-cc-field="mark">'+esc(markText)+'</span> <small class="cc-mark-note">'+esc(markNote)+'</small>')}

@@ -767,7 +767,7 @@ a.sector-ticker:hover{text-decoration:underline}
 #covered-calls .cc-income-line{margin:0;color:var(--mint);font-size:14px;line-height:1.45}
 #covered-calls .cc-green,#covered-calls .cc-income-value,#covered-calls .cc-metric .cc-green{color:var(--green)!important}
 #covered-calls .cc-cards{display:flex;flex-direction:column;gap:14px;min-height:0;overflow:auto;overscroll-behavior:contain}
-#covered-calls .cc-card{padding:16px 18px}
+#covered-calls .cc-card{padding:16px 18px;flex:0 0 auto;min-height:auto}
 #covered-calls .cc-card-head{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-width:0}
 #covered-calls .cc-card-title{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
 #covered-calls .cc-ticker{color:var(--mint);font-weight:600;font-size:20px;letter-spacing:.2px;text-decoration:none}
@@ -787,4 +787,10 @@ a.sector-ticker:hover{text-decoration:underline}
 }
 @media(min-width:1024px) and (max-width:1200px){
 #covered-calls .cc-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@media(min-width:1024px){
+/* COVERED-CALLS-DESKTOP-SCROLL: keep the income row, let position cards scroll without overlapping */
+#covered-calls .covered-calls-native{grid-template-rows:auto minmax(0,1fr) auto;height:100%;min-height:0;overflow:hidden}
+#covered-calls .cc-income{min-height:auto}
 }
