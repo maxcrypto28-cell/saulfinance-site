@@ -47,7 +47,7 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
   const count=members.length;
   return `<article class="sector"><div class="sector-label"><span>${esc(name)}</span><span>${(w*100).toFixed(2)}%</span></div><div class="bar"><span style="width:${Math.max(0,Math.min(100,w*100))}%"></span></div><div class="sector-holdings" aria-label="${esc(name)} holdings">${tickers||'<span class="muted">No holdings</span>'}</div><p class="sector-count">${count} holding${count===1?'':'s'}</p></article>`;
  }).join('');
- await renderDesktop(s);try{if(typeof paintHotOtd==='function')paintHotOtd();}catch(e){}try{if(typeof paintWinStreak==='function')paintWinStreak();}catch(e){}try{if(typeof paintDayPct==='function')paintDayPct();}catch(e){}try{if(typeof paintLivePrices==='function')paintLivePrices();}catch(e){}clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
+ await renderDesktop(s);try{if(typeof paintHotOtd==='function')paintHotOtd();}catch(e){}try{if(typeof paintWinStreak==='function')paintWinStreak();}catch(e){}try{if(typeof paintDayPct==='function')paintDayPct();}catch(e){}try{if(typeof paintLivePrices==='function')paintLivePrices();}catch(e){}try{if(typeof paintCoveredCallLive==='function')paintCoveredCallLive();}catch(e){}clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
@@ -418,43 +418,213 @@ function formatShortDate(s){
   if(Number.isNaN(d.getTime()))return esc(s);
   return d.toLocaleDateString('en-CA',{year:'numeric',month:'short',day:'numeric'});
 }
+function premiumPerShare(pos){
+  if(!pos)return null;
+  const rec=pos.premium_received;
+  if(rec&&typeof rec==='object'&&rec.per_share!=null){
+    const n=Number(rec.per_share);
+    return Number.isFinite(n)?n:null;
+  }
+  const total=premiumTotal(pos);
+  const shares=Number(pos.shares_covered??((pos.contracts||0)*100));
+  if(total==null||!shares)return null;
+  return total/shares;
+}
+function moneySigned(n,c){
+  if(n==null||!Number.isFinite(Number(n)))return '—';
+  const v=Number(n);
+  const s=money(Math.abs(v),c||'CAD');
+  if(!s||s==='Unavailable')return '—';
+  return (v>0?'+':v<0?'−':'')+s;
+}
+function moneyPerShare(n,c){
+  if(n==null||!Number.isFinite(Number(n)))return '—';
+  const cur=(String(c||'CAD').toUpperCase()==='USD')?'US$':'C$';
+  return cur+Number(n).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:4});
+}
+function todayISOInZone(tz){
+  try{
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:tz||'America/Toronto',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const g=k=>(parts.find(p=>p.type===k)||{}).value;
+    const y=g('year'),m=g('month'),d=g('day');
+    if(!y||!m||!d)return null;
+    return y+'-'+m+'-'+d;
+  }catch(e){return new Date().toISOString().slice(0,10);}
+}
+function daysRemainingToExpiry(expiration){
+  if(!expiration)return null;
+  const exp=String(expiration).slice(0,10);
+  const today=todayISOInZone('America/Toronto');
+  if(!today||!/^\d{4}-\d{2}-\d{2}$/.test(exp))return null;
+  const a=Date.parse(today+'T12:00:00Z'), b=Date.parse(exp+'T12:00:00Z');
+  if(!Number.isFinite(a)||!Number.isFinite(b))return null;
+  return Math.round((b-a)/86400000);
+}
+function liveUnderlyingPrice(ticker){
+  try{
+    const src=typeof lastGoodPnl==='function'?lastGoodPnl(null):null;
+    const rows=src&&Array.isArray(src.holdings_price_native)?src.holdings_price_native:[];
+    const want=normalizeTicker(ticker);
+    if(!want)return null;
+    for(const r of rows){
+      if(!r||normalizeTicker(r.symbol)!==want)continue;
+      const px=r.price!=null?Number(r.price):NaN;
+      if(Number.isFinite(px)&&px>0)return {price:px,currency:r.currency||'CAD'};
+    }
+  }catch(e){}
+  return null;
+}
+function callMoneyness(price,strike){
+  const px=Number(price), k=Number(strike);
+  if(!Number.isFinite(px)||!Number.isFinite(k)||k===0)return null;
+  const dist=((px-k)/k)*100;
+  let side='ATM';
+  if(px>k)side='ITM';
+  else if(px<k)side='OTM';
+  return {side,dist,label:side+' '+Math.abs(dist).toFixed(1)+'%'};
+}
+function tickerDotColor(sym){
+  try{
+    const holdings=(typeof LAST_STATE!=='undefined'&&LAST_STATE&&Array.isArray(LAST_STATE.holdings))?LAST_STATE.holdings:[];
+    const sorted=[...holdings].sort((a,b)=>(b.weight_cad||0)-(a.weight_cad||0));
+    const i=sorted.findIndex(h=>normalizeTicker(h.symbol)===normalizeTicker(sym));
+    const palette=(typeof DONUT_PALETTE!=='undefined')?DONUT_PALETTE:['#00dca6'];
+    return palette[(i>=0?i:0)%palette.length];
+  }catch(e){return '#00dca6';}
+}
+function exDivBeforeExpiry(pos){
+  if(!pos)return null;
+  const ex=pos.ex_dividend_date?String(pos.ex_dividend_date).slice(0,10):'';
+  const exp=pos.expiration?String(pos.expiration).slice(0,10):'';
+  if(!ex||!exp||ex>exp)return null;
+  const amt=pos.ex_dividend_amount!=null?Number(pos.ex_dividend_amount):NaN;
+  return {date:ex,amount:Number.isFinite(amt)?amt:null,currency:pos.currency||'CAD'};
+}
+
 function renderCoveredCalls(data){
   const host=$('native-covered-calls'); if(!host)return;
   COVERED_CALLS=data||{updated_at:null,positions:[]};COVERED_CALLS._loaded=true;
   const positions=Array.isArray(COVERED_CALLS.positions)?COVERED_CALLS.positions:[];
   const open=positions.filter(p=>String(p.status||'').toLowerCase()==='open');
   const history=positions.filter(p=>['closed','assigned','expired'].includes(String(p.status||'').toLowerCase()));
-  const premiumSum=open.reduce((a,p)=>{const t=premiumTotal(p);return a+(t==null?0:t)},0);
-  const realizedSum=history.reduce((a,p)=>a+(p.realized_pnl==null?0:Number(p.realized_pnl)),0);
   const currencyHint=open[0]?.currency||history[0]?.currency||'CAD';
-  const moneyOrDash=(n,c)=>n==null?'—':money(n,c||currencyHint);
 
   if(!open.length&&!history.length){
     host.innerHTML=`<div class="cc-empty native-panel" role="status"><p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O, NNN. CRT.UN (250) has no listed Montréal options.</p></div>`;
     return;
   }
 
-  const row=(p,hist=false)=>{
+  const premiumSum=open.reduce((a,p)=>{const t=premiumTotal(p);return a+(t==null?0:t)},0);
+  const incomeLine=open.map(p=>{
+    const tkr=displayTicker(p.underlying||'');
+    const strike=p.strike==null?'—':Number(p.strike).toLocaleString('en-CA',{minimumFractionDigits:0,maximumFractionDigits:2});
+    const exp=formatShortDate(p.expiration);
+    const prem=premiumTotal(p);
+    return esc(tkr)+' $'+esc(String(strike))+' '+esc(exp)+' '+(prem==null?'—':moneySigned(prem,p.currency||currencyHint));
+  }).join(' · ');
+
+  const cards=open.map(p=>{
+    const cur=p.currency||'CAD';
+    const tkr=displayTicker(p.underlying||'');
+    const name=p.name||tkr;
+    const color=tickerDotColor(p.underlying);
+    const contracts=p.contracts==null?'—':String(p.contracts);
+    const shares=p.shares_covered==null?'—':String(p.shares_covered)+' sh';
+    const strike=p.strike==null?null:Number(p.strike);
+    const prem=premiumTotal(p);
+    const per=premiumPerShare(p);
+    const exit=(strike!=null&&per!=null)?strike+per:null;
+    const days=daysRemainingToExpiry(p.expiration);
+    const daysText=days==null?'—':(days<0?'Expired':(days+' day'+(days===1?'':'s')));
+    const live=liveUnderlyingPrice(p.underlying);
+    const moneyNess=live&&strike!=null?callMoneyness(live.price,strike):null;
+    const ex=exDivBeforeExpiry(p);
+    const exText=ex?(formatShortDate(ex.date)+(ex.amount!=null?' · '+money(ex.amount,ex.currency):'')):'—';
+    const early=ex&&moneyNess&&moneyNess.side==='ITM';
+    const iv=p.iv_at_sale!=null&&Number.isFinite(Number(p.iv_at_sale))?(Number(p.iv_at_sale).toFixed(1)+'%'):'—';
+    const mark=p.option_mark!=null&&Number.isFinite(Number(p.option_mark))?Number(p.option_mark):null;
+    let markText='—';
+    let markNote='quote unavailable';
+    if(mark!=null){
+      markText=money(mark,cur);
+      const asof=p.option_mark_as_of?formatShortDate(p.option_mark_as_of):'';
+      const src=p.option_mark_source?String(p.option_mark_source):'';
+      markNote=[src==='m-x.ca'?'MX last':'', asof?('as of '+asof):'', 'not a live bid/ask'].filter(Boolean).join(' · ');
+    }
+    const href=stockAnalysisUrl({symbol:p.underlying,currency:cur});
+    const title=href?`<a class="cc-ticker sa-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(tkr)}</a>`:`<span class="cc-ticker">${esc(tkr)}</span>`;
+    const metric=(label,value,attrs='')=>`<div class="cc-metric"${attrs}><span>${label}</span><strong>${value}</strong></div>`;
+    return `<article class="native-panel cc-card" data-cc-id="${esc(p.id||tkr)}" data-cc-underlying="${esc(p.underlying||tkr)}" data-cc-strike="${strike==null?'':esc(String(strike))}" data-cc-expiry="${esc(p.expiration||'')}" data-cc-exdiv="${esc(ex?ex.date:'')}" data-cc-currency="${esc(cur)}">
+      <header class="cc-card-head">
+        <span class="ticker-dot" style="background:${esc(color)}"></span>
+        <div class="cc-card-title">${title}<span class="cc-card-name">${esc(name)}</span></div>
+        <span class="cc-status cc-status-open">Open</span>
+      </header>
+      <div class="cc-metrics">
+        ${metric('Contracts / shares', esc(contracts)+' · '+esc(shares))}
+        ${metric('Strike', strike==null?'—':money(strike,cur))}
+        ${metric('Expiry', esc(formatShortDate(p.expiration)))}
+        ${metric('Premium received', '<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>')}
+        ${metric('Premium / share', esc(moneyPerShare(per,cur)))}
+        ${metric('Days to expiry', daysText, ' data-cc-field="days"')}
+        ${metric('Underlying', live?money(live.price,live.currency):'—', ' data-cc-field="underlying"')}
+        ${metric('Moneyness', moneyNess?esc(moneyNess.label):'—', ' data-cc-field="moneyness"')}
+        ${metric('Exit if assigned', exit==null?'—':money(exit,cur))}
+        ${metric('Downside buffer', esc(moneyPerShare(per,cur)))}
+        ${metric('Ex-div before expiry', esc(exText))}
+        ${metric('Early assignment', early?'ITM into an ex-div before expiry':'—', ' data-cc-field="early"')}
+        ${metric('IV at sale', esc(iv))}
+        ${metric('Current option value', '<span data-cc-field="mark">'+esc(markText)+'</span> <small class="cc-mark-note">'+esc(markNote)+'</small>')}
+      </div>
+    </article>`;
+  }).join('');
+
+  const histRow=(p)=>{
     const cur=p.currency||'CAD';
     const prem=premiumTotal(p);
-    const premPer=p.premium_received&&typeof p.premium_received==='object'?p.premium_received.per_share:null;
     return `<tr>
-      <th scope="row">${esc(p.underlying)}</th>
+      <th scope="row">${esc(displayTicker(p.underlying||''))}</th>
       <td data-label="Shares">${esc(p.shares_covered??'—')}</td>
       <td data-label="Contracts">${esc(p.contracts??'—')}</td>
       <td data-label="Strike">${p.strike==null?'—':Number(p.strike).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
       <td data-label="Expiration">${formatShortDate(p.expiration)}</td>
-      <td data-label="Premium">${prem==null?'—':money(prem,cur)}${premPer!=null?`<span class="cc-per"> · ${money(premPer,cur)}/sh</span>`:''}</td>
+      <td data-label="Premium">${prem==null?'—':money(prem,cur)}</td>
       <td data-label="Status"><span class="cc-status cc-status-${esc(String(p.status||'').toLowerCase())}">${esc(p.status||'—')}</span></td>
-      ${hist?`<td data-label="P&amp;L">${p.realized_pnl==null?'—':money(p.realized_pnl,cur)}</td>`:''}
+      <td data-label="P&amp;L">${p.realized_pnl==null?'—':money(p.realized_pnl,cur)}</td>
     </tr>`;
   };
+  const histTable=history.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Closed / assigned</h3><span>${history.length} recorded</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Covered call history"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th><th scope="col">P&amp;L</th></tr></thead><tbody>${history.map(histRow).join('')}</tbody></table></div></section>`:'';
 
-  const openTable=open.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Open positions</h3><span>${open.length} open</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Open covered calls"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th></tr></thead><tbody>${open.map(p=>row(p,false)).join('')}</tbody></table></div></section>`:'<section class="native-panel cc-panel"><div class="cc-empty-inline" role="status"><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O, NNN.</p></div></section>';
+  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,currencyHint)}</strong></div><p class="cc-income-line">${incomeLine}</p></section>`:'';
 
-  const histTable=history.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Closed / assigned</h3><span>${history.length} recorded</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Covered call history"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th><th scope="col">P&amp;L</th></tr></thead><tbody>${history.map(p=>row(p,true)).join('')}</tbody></table></div></section>`:'';
-
-  host.innerHTML=`<section class="native-panel cc-summary" aria-label="Covered call summary"><div class="cc-stats"><div><span>Open</span><strong>${open.length}</strong></div><div><span>Premium collected (open)</span><strong>${open.length?money(premiumSum,currencyHint):'—'}</strong></div><div><span>Realized P&amp;L</span><strong>${history.length?money(realizedSum,currencyHint):'—'}</strong></div></div><p class="fine">Updated ${esc(COVERED_CALLS.updated_at||'—')} · educational display, not a brokerage blotter</p></section>${openTable}${histTable}`;
+  host.innerHTML=`${income}<div class="cc-cards">${cards}</div>${histTable}`;
+  try{paintCoveredCallLive();}catch(e){}
+}
+function paintCoveredCallLive(){
+  const cards=document.querySelectorAll('#covered-calls .cc-card[data-cc-underlying]');
+  if(!cards.length)return;
+  for(const card of cards){
+    if(!card)continue;
+    try{
+      const under=card.getAttribute('data-cc-underlying')||'';
+      const strikeRaw=card.getAttribute('data-cc-strike');
+      const strike=strikeRaw?Number(strikeRaw):NaN;
+      const expiry=card.getAttribute('data-cc-expiry')||'';
+      const exdiv=card.getAttribute('data-cc-exdiv')||'';
+      const days=daysRemainingToExpiry(expiry);
+      const daysEl=card.querySelector('[data-cc-field="days"] strong');
+      if(daysEl) daysEl.textContent=days==null?'—':(days<0?'Expired':(days+' day'+(days===1?'':'s')));
+      const live=liveUnderlyingPrice(under);
+      const underEl=card.querySelector('[data-cc-field="underlying"] strong');
+      if(underEl) underEl.textContent=live?money(live.price,live.currency):'—';
+      const mEl=card.querySelector('[data-cc-field="moneyness"] strong');
+      const moneyNess=(live&&Number.isFinite(strike))?callMoneyness(live.price,strike):null;
+      if(mEl) mEl.textContent=moneyNess?moneyNess.label:'—';
+      const earlyEl=card.querySelector('[data-cc-field="early"] strong');
+      const early=!!(exdiv&&moneyNess&&moneyNess.side==='ITM');
+      if(earlyEl) earlyEl.textContent=early?'ITM into an ex-div before expiry':'—';
+    }catch(e){}
+  }
 }
 async function loadCoveredCalls(){
   try{
@@ -1197,7 +1367,7 @@ async function loadDailyPnl(){
   try{paintHotOtd(data, open);}catch(e){}
   try{paintIndexes(data);}catch(e){}
   try{paintDayPct(data);}catch(e){}
-  try{paintLivePrices(data);}catch(e){}
+  try{paintLivePrices(data);}catch(e){}try{paintCoveredCallLive();}catch(e){}
   try{paintLiveFx(data);}catch(e){}
   try{paintDonutSlices(LAST_STATE);}catch(e){}
   try{paintDonutTotal(data);}catch(e){}

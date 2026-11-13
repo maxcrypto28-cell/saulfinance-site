@@ -758,3 +758,33 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .sa-link:hover{text-decoration:underline}
 a.sector-ticker{text-decoration:none}
 a.sector-ticker:hover{text-decoration:underline}
+
+/* Covered call income + detail cards (page 3 only) */
+#covered-calls .cc-income{display:flex;flex-direction:column;gap:8px;padding:18px 20px}
+#covered-calls .cc-income-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px}
+#covered-calls .cc-income-label{color:var(--mint);font-size:16px;font-weight:500}
+#covered-calls .cc-income-value{color:var(--green)!important;font-size:clamp(32px,4.2vw,48px);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.2px;line-height:1.1}
+#covered-calls .cc-income-line{margin:0;color:var(--mint);font-size:14px;line-height:1.45}
+#covered-calls .cc-green,#covered-calls .cc-income-value,#covered-calls .cc-metric .cc-green{color:var(--green)!important}
+#covered-calls .cc-cards{display:flex;flex-direction:column;gap:14px;min-height:0;overflow:auto;overscroll-behavior:contain}
+#covered-calls .cc-card{padding:16px 18px}
+#covered-calls .cc-card-head{display:flex;align-items:center;gap:10px;margin:0 0 12px;min-width:0}
+#covered-calls .cc-card-title{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+#covered-calls .cc-ticker{color:var(--mint);font-weight:600;font-size:20px;letter-spacing:.2px;text-decoration:none}
+#covered-calls a.cc-ticker:hover{color:var(--green)}
+#covered-calls .cc-card-name{color:var(--mint);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#covered-calls .cc-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px}
+#covered-calls .cc-metric{min-width:0;background:#0b2618;border:1px solid var(--edge);border-radius:8px;padding:10px 12px}
+#covered-calls .cc-metric span{display:block;font-size:12px;color:var(--mint);margin-bottom:4px}
+#covered-calls .cc-metric strong{display:block;font-size:16px;color:var(--text);font-weight:550;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+#covered-calls .cc-mark-note{display:block;margin-top:3px;font-size:11px;color:var(--dim);font-weight:400;line-height:1.3}
+@media(max-width:1023px){
+#covered-calls .cc-income-value{font-size:34px}
+#covered-calls .cc-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#covered-calls .cc-metric{padding:9px 10px}
+#covered-calls .cc-metric strong{font-size:15px}
+#covered-calls .cc-ticker{font-size:18px}
+}
+@media(min-width:1024px) and (max-width:1200px){
+#covered-calls .cc-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
