@@ -1402,12 +1402,64 @@ function paintDonutTotal(data){
   if(cap) cap.textContent=text;
 }
 
-function rollingGreenFromSrc(src){
+function findSessionOnEtDate(ymd){
+  try{
+    const sessions=typeof OPEN_CALENDAR!=='undefined'&&OPEN_CALENDAR&&Array.isArray(OPEN_CALENDAR.sessions)?OPEN_CALENDAR.sessions:null;
+    if(!ymd||!sessions||!sessions.length||typeof etYmd!=='function')return null;
+    let low=0,high=sessions.length;
+    while(low<high){
+      const mid=(low+high)>>1;
+      const midDay=etYmd(sessions[mid][0]);
+      if(midDay<ymd)low=mid+1;else high=mid;
+    }
+    if(low>=sessions.length)return null;
+    const sess=sessions[low];
+    if(!sess||etYmd(sess[0])!==ymd)return null;
+    return sess;
+  }catch(e){return null;}
+}
+function sessionPhase(now){
+  try{
+    const t=(now==null?(typeof clockNow==='function'?clockNow():Date.now()):now);
+    if(typeof findCurrentClose==='function'&&findCurrentClose(t))return 'open';
+    const ymd=typeof etYmd==='function'?etYmd(t):'';
+    const sess=findSessionOnEtDate(ymd);
+    if(!sess)return 'holiday';
+    const close=typeof sessionCloseMs==='function'?sessionCloseMs(sess[0]):null;
+    if(close==null)return '';
+    if(t<sess[0])return 'premarket';
+    if(t>=close)return 'afterclose';
+    return 'open';
+  }catch(e){return '';}
+}
+function shouldMergeLiveDay(src, now){
+  // Count the feed's current date once that trading day's session has started
+  // (live open or after close), including later days if the close row is late.
+  // Pre-market: do not count today yet. Never invent a day_change.
+  try{
+    if(!src)return false;
+    if(String(src.session||'')==='open')return true;
+    const feedDate=src.date!=null?String(src.date).slice(0,10):'';
+    if(!feedDate)return false;
+    const t=(now==null?(typeof clockNow==='function'?clockNow():Date.now()):now);
+    const sess=findSessionOnEtDate(feedDate);
+    if(sess&&Number.isFinite(sess[0])&&t>=sess[0])return true;
+    if(typeof pnlMarketOpen==='function'&&pnlMarketOpen(t)){
+      const today=typeof etYmd==='function'?etYmd(t):'';
+      return !today||feedDate===today;
+    }
+    return false;
+  }catch(e){return false;}
+}
+function rollingGreenFromSrc(src, now){
   // Last N trading days, N grows 1..5 from inception then rolls at 5.
-  // During a live session, today's live day change counts as one of the N.
+  // Once today's session has started, today's live (or close) day change
+  // counts as one of the N — during the session and after close, even if
+  // closed_days has not caught up yet. Pre-market does not count today.
   // Shown only when at least 3 of those days are green. Never called a streak.
   try{
     if(!src)return '';
+    const t=(now==null?(typeof clockNow==='function'?clockNow():Date.now()):now);
     const rows=Array.isArray(src.closed_days)?src.closed_days:[];
     const byDate=new Map();
     for(const row of rows){
@@ -1417,13 +1469,15 @@ function rollingGreenFromSrc(src){
       if(!date||!Number.isFinite(cad))continue;
       byDate.set(date,{date,cad});
     }
-    const session=src.session!=null?String(src.session):'';
-    const inSession=session==='open'||(!session&&typeof pnlMarketOpen==='function'&&pnlMarketOpen());
-    if(inSession){
+    if(shouldMergeLiveDay(src, t)){
       const today=src.date!=null?String(src.date).slice(0,10):'';
       const day=src.day_change_cad!=null?Number(src.day_change_cad):NaN;
       if(today&&Number.isFinite(day)) byDate.set(today,{date:today,cad:day});
     }
+    const todayEt=typeof etYmd==='function'?etYmd(t):'';
+    const phase=sessionPhase(t);
+    // During/after today's session, don't paint a stale window that omits today.
+    if((phase==='open'||phase==='afterclose')&&todayEt&&!byDate.has(todayEt))return '';
     const window=[...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(-5);
     const n=window.length;
     const x=window.filter(d=>d.cad>0).length;
