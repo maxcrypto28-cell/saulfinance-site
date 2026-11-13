@@ -73,6 +73,7 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   slides.forEach((slide,i)=>{const active=i===stops[page];slide.inert=!active;slide.setAttribute('aria-hidden',String(!active))});
   nav.forEach(button=>{if(Number(button.dataset.page)===page)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
   $('page-counter').textContent=`Page ${page+1} of ${stops.length}`;
+  try{document.body.classList.toggle('cc-tab-active', ids[page]==='covered-calls');}catch(e){}
   $('previous-slide').disabled=page===0;$('next-slide').disabled=page===stops.length-1;
   history.replaceState(null,'',`#${ids[page]}`);
   if(moveFocus)slides[stops[page]].querySelector('h2')?.focus({preventScroll:true});
@@ -634,7 +635,7 @@ function renderCoveredCalls(data){
 
   const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,currencyHint)}</strong></div><p class="cc-income-line">${incomeLine}</p></section>`:'';
 
-  host.innerHTML=`${income}<div class="cc-cards">${cards}</div>${histTable}`;
+  host.innerHTML=`${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
   try{paintCoveredCallLive();}catch(e){}
 }
 function paintCoveredCallLive(){
