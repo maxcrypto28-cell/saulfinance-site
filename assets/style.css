@@ -784,6 +784,9 @@ a.sector-ticker:hover{text-decoration:underline}
 #covered-calls .cc-metric{padding:9px 10px}
 #covered-calls .cc-metric strong{font-size:15px}
 #covered-calls .cc-ticker{font-size:18px}
+/* Let the slide own vertical pan on mobile. overflow:auto + overscroll-behavior:contain
+   on .cc-cards (needed on desktop) was a non-scrolling scrollport that blocked chaining. */
+#covered-calls .cc-cards{overflow:visible;height:auto;overscroll-behavior:auto;touch-action:pan-y pinch-zoom}
 }
 
 /* Hide the persistent Since Nov 9 / best-performer / indexes stack on tab 3 only. */

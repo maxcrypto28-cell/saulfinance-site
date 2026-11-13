@@ -103,15 +103,29 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   wheelConsumed=true;goTo(page+Math.sign(delta));
  },{passive:false});
  viewport.addEventListener('touchstart',event=>{
-  const region=event.target.closest('[data-scroll-region]'),mobileRegion=region&&MOBILE.matches&&region.scrollWidth<=region.clientWidth+1;
-  if(event.touches.length!==1||moving()||dialogOpen()||event.target.closest('button')||(region&&!mobileRegion)){touchStart=null;return}
-  touchStart={x:event.touches[0].clientX,y:event.touches[0].clientY};
+  const region=event.target&&event.target.closest&&event.target.closest('[data-scroll-region]'),mobileRegion=region&&MOBILE.matches&&region.scrollWidth<=region.clientWidth+1;
+  const t=event.touches&&event.touches[0];
+  if(!t||event.touches.length!==1||moving()||dialogOpen()||(event.target&&event.target.closest&&event.target.closest('button'))||(region&&!mobileRegion)){touchStart=null;return}
+  touchStart={x:t.clientX,y:t.clientY,axis:null};
  },{passive:true});
+ viewport.addEventListener('touchmove',event=>{
+  const start=touchStart,t=event.touches&&event.touches[0];
+  if(!start||!t||event.touches.length!==1)return;
+  const dx=start.x-t.clientX,dy=start.y-t.clientY;
+  if(!start.axis){
+    if(Math.max(Math.abs(dx),Math.abs(dy))<8)return;
+    start.axis=Math.abs(dx)>Math.abs(dy)?'x':'y';
+  }
+  // Horizontal page swipe: prevent the slide from also scrolling. Vertical: allow pan-y.
+  if(start.axis==='x'&&event.cancelable)event.preventDefault();
+ },{passive:false});
  viewport.addEventListener('touchend',event=>{
   const start=touchStart;touchStart=null;
-  if(!start||event.touches.length||event.changedTouches.length!==1)return;
-  const dx=start.x-event.changedTouches[0].clientX,dy=start.y-event.changedTouches[0].clientY;
-  if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25){if(event.cancelable)event.preventDefault();goTo(page+Math.sign(dx))}
+  const t=event.changedTouches&&event.changedTouches[0];
+  if(!start||!t||event.touches.length||event.changedTouches.length!==1)return;
+  const dx=start.x-t.clientX,dy=start.y-t.clientY;
+  const horizontal=start.axis==='x'||(!start.axis&&Math.abs(dx)>Math.abs(dy)*1.25);
+  if(horizontal&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.25){if(event.cancelable)event.preventDefault();goTo(page+Math.sign(dx))}
  },{passive:false});
  viewport.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
  document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.open).showModal()));
