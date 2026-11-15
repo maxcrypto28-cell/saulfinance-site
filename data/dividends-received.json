@@ -1,0 +1,5 @@
+{
+  "updated_at": null,
+  "notes": "Actual cash dividends received, booked in Canadian dollars. Stock Performance shows the per-ticker sum of amount_cad. An empty list means C$0.00 for every public holding. Add one object to entries for each payment.",
+  "entries": []
+}

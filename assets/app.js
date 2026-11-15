@@ -47,7 +47,7 @@ async function load(){if(loading)return;loading=true;try{const r=await fetch('/p
   const count=members.length;
   return `<article class="sector"><div class="sector-label"><span>${esc(name)}</span><span>${(w*100).toFixed(2)}%</span></div><div class="bar"><span style="width:${Math.max(0,Math.min(100,w*100))}%"></span></div><div class="sector-holdings" aria-label="${esc(name)} holdings">${tickers||'<span class="muted">No holdings</span>'}</div><p class="sector-count">${count} holding${count===1?'':'s'}</p></article>`;
  }).join('');
- await renderDesktop(s);try{if(typeof paintHotOtd==='function')paintHotOtd();}catch(e){}try{if(typeof paintWinStreak==='function')paintWinStreak();}catch(e){}try{if(typeof paintDayPct==='function')paintDayPct();}catch(e){}try{if(typeof paintAllTimePnl==='function')paintAllTimePnl();}catch(e){}try{if(typeof paintLivePrices==='function')paintLivePrices();}catch(e){}try{if(typeof paintCoveredCallLive==='function')paintCoveredCallLive();}catch(e){}clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
+ await renderDesktop(s);try{if(typeof paintHotOtd==='function')paintHotOtd();}catch(e){}try{if(typeof paintWinStreak==='function')paintWinStreak();}catch(e){}try{if(typeof paintDayPct==='function')paintDayPct();}catch(e){}try{if(typeof paintAllTimePnl==='function')paintAllTimePnl();}catch(e){}try{if(typeof paintLivePrices==='function')paintLivePrices();}catch(e){}try{if(typeof paintCoveredCallLive==='function')paintCoveredCallLive();}catch(e){}try{if(typeof paintStockPerformance==='function')paintStockPerformance();}catch(e){}try{if(typeof paintNextDividend==='function')paintNextDividend();}catch(e){}clearTimeout(timer);timer=setTimeout(()=>{if(!document.hidden)load()},s.market.refreshing?2500:300000);
  }catch(e){$('feed').textContent=e.message+'; existing display is not refreshed.'}finally{loading=false}}
 $('refresh').addEventListener('click',load);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});load();
 
@@ -58,11 +58,17 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
  const motion=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):{matches:false};
  const GLIDE_MS=900,WHEEL_IDLE_MS=260,MIN_WHEEL_PX=4;
  let page=0,lockedUntil=0,lastWheel=-Infinity,wheelConsumed=false,touchStart=null;
- const dialogOpen=()=>!!document.querySelector('dialog[open]');
+ const dialogOpen=()=>!!document.querySelector('dialog[open]')||document.body.classList.contains('stock-performance-open');
  const moving=()=>!motion.matches&&performance.now()<lockedUntil;
- function goTo(value,instant=false){
+ function goTo(value,instant=false,opts={}){
   const next=Math.max(0,Math.min(stops.length-1,Number(value)));if(!Number.isInteger(next)||(!instant&&moving()))return false;
-  if(!instant&&next===page)return false;
+  if(!instant&&next===page){
+    if(page===0&&document.body.classList.contains('stock-performance-open')&&!opts.keepHash){
+      try{if(typeof closeStockPerformance==='function')closeStockPerformance({fromNav:true});}catch(e){}
+      history.replaceState(null,'','#holdings-page');
+    }
+    return false;
+  }
   const old=slides[stops[page]],moveFocus=old?.contains(document.activeElement);page=next;
   lockedUntil=performance.now()+(instant||motion.matches?0:GLIDE_MS);
   const previousTransition=deck.style.transition;if(instant)deck.style.transition='none';
@@ -75,7 +81,8 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   $('page-counter').textContent=`Page ${page+1} of ${stops.length}`;
   try{document.body.classList.toggle('cc-tab-active', ids[page]==='covered-calls');}catch(e){}
   $('previous-slide').disabled=page===0;$('next-slide').disabled=page===stops.length-1;
-  history.replaceState(null,'',`#${ids[page]}`);
+  history.replaceState(null,'',opts.keepHash?location.hash:`#${ids[page]}`);
+  if(!opts.keepHash){try{if(typeof closeStockPerformance==='function')closeStockPerformance({fromNav:true});}catch(e){}}
   if(moveFocus)slides[stops[page]].querySelector('h2')?.focus({preventScroll:true});
   return true;
  }
@@ -130,9 +137,11 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
  viewport.addEventListener('touchcancel',()=>{touchStart=null},{passive:true});
  document.querySelectorAll('[data-open]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.open).showModal()));
  document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
- function pageForHash(){const hash=location.hash.slice(1),found=ids.indexOf(hash);if(found>=0)return found;const physical=slides.findIndex(s=>s.id===hash);return physical>=0?Math.min(stops.length-1,Math.ceil(physical/2)):0}
- window.addEventListener('hashchange',()=>{if(!goTo(pageForHash()))history.replaceState(null,'',`#${ids[page]}`)});
- goTo(pageForHash(),true);
+ function pageForHash(){if(typeof performanceHash==='function'&&performanceHash())return 0;let hash=location.hash.slice(1);if(hash==='income')hash='dividends';const found=ids.indexOf(hash);if(found>=0)return found;const physical=slides.findIndex(s=>s.id===hash);return physical>=0?Math.min(stops.length-1,Math.ceil(physical/2)):0}
+ window.addEventListener('hashchange',()=>{const sym=typeof performanceHash==='function'?performanceHash():'';if(sym){goTo(0,true,{keepHash:true});try{if(typeof openStockPerformance==='function')openStockPerformance(sym,{fromHash:true});}catch(e){}return;}try{if(typeof closeStockPerformance==='function')closeStockPerformance({fromNav:true});}catch(e){}if(!goTo(pageForHash()))history.replaceState(null,'',`#${ids[page]}`)});
+ const bootSym=typeof performanceHash==='function'?performanceHash():'';
+ goTo(pageForHash(),true,bootSym?{keepHash:true}:{});
+ if(bootSym){try{if(typeof openStockPerformance==='function')openStockPerformance(bootSym,{fromHash:true});}catch(e){}}
 })();
 
 const MODEL_DISPLAY={"monthly":[["Jan",306.5352860552,286.54999314692],["Feb",220.27041925000003,199.9465395625],["Mar",579.0290366777,546.754811276045],["Apr",230.51533525,217.9280349625],["May",251.16495025,230.2118909125],["Jun",579.0290366777,546.754811276045],["Jul",253.02080424999997,241.0626836125],["Aug",220.27041925000003,199.9465395625],["Sep",583.2235676777,550.320162626045],["Oct",253.02080424999997,241.0626836125],["Nov",220.27041925000003,199.9465395625],["Dec",529.7090858725,504.832853091625]],"annual":[["Bearish",1,3040.922312061721,2843.1683072530604,98839.81792042643,-0.12746834533183193],["Bearish",2,3135.3978049698617,2936.7928705980858,102037.51920783415,-0.099239887872687],["Bearish",3,3294.4450379248146,3086.1052225413086,108053.3187271208,-0.04613400788269173],["Bearish",4,3464.522074094691,3248.482715009007,115161.67933226643,0.01661671112186003],["Bearish",5,3668.391141871632,3437.7345760516055,121755.71541309974,0.07482710986200236],["Neutral",1,3528.2542293332426,3292.014024319578,122337.4077015088,0.07996213485083703],["Neutral",2,3772.05028301782,3523.5326540417354,132367.13586383127,0.1685019105552863],["Neutral",3,4023.747231034638,3758.9522229503427,142576.36341694836,0.25862625919559457],["Neutral",4,4272.717506040086,3991.7368564620465,154132.20001645316,0.3606381147552473],["Neutral",5,4559.018826643058,4258.935779925718,165718.89420769038,0.46292237293703975],["Bullish",1,3623.259993775615,3381.5533356662913,128184.55499242317,0.1315791977731644],["Bullish",2,3991.125703344346,3729.7644671796525,145142.0809183089,0.28127573168526965],["Bullish",3,4382.258816573044,4097.181338642599,163575.20286470393,0.4439984352573929],["Bullish",4,4786.969511313348,4475.3172536226,184785.31124060167,0.6312356372908119],["Bullish",5,5254.653753414544,4912.888654963636,207616.47451287173,0.8327830812975456]],"paths":{"Bearish":[112146.34043553405,110811.98826531622,109443.52623834036,108357.12722106269,107043.46953132116,105753.87793726262,104714.58587273868,103472.32179521224,102204.90979167879,101233.13092697781,100049.66947567399,98839.81792042643,99249.74312022806,99462.51938709,99621.02897571678,100045.69592686219,100240.88708896196,100445.93398485154,100875.90502458808,101090.88987240999,101263.29304667209,101693.38454648253,101892.1919306601,102037.51920783415,102687.66034656546,103133.60700621636,103511.99710646935,104148.74469234332,104559.53353301098,104968.85859609437,105609.33541486792,106054.95458342046,106453.61099831463,107136.03515219211,107616.75613333269,108053.3187271208,108772.36407751842,109312.7842540555,109790.09433262672,110549.38701884501,111085.00886913866,111621.3914183213,112391.98133329277,112942.98898558751,113425.86924348302,114192.14646445512,114714.20118613158,115161.67933226643,115886.12416257644,116382.7334214197,116795.53786256225,117492.20936618521,117932.19255772805,118376.01588250037,119076.7819400763,119555.71537001629,119988.41103236479,120738.91190599003,121267.3000989456,121755.71541309974],"Neutral":[114192.47641390325,114857.1292536101,115472.84730102375,116395.33670329864,117038.71167365547,117706.57239936953,118645.60238829051,119326.29203285345,119977.30697188497,120950.30640375972,121661.64250290592,122337.4077015088,123341.48541821392,124098.95291787418,124803.87562076125,125835.2681515727,126567.86088125597,127328.3076585841,128371.17358547816,129132.54810866414,129847.33161352799,130904.46162981716,131660.82979432226,132367.13586383127,133424.09314811337,134180.95515435725,134868.47062276033,135904.99594929052,136615.49621767833,137349.22973941662,138395.11725476474,139159.96009008918,139880.75149843202,140982.99266168333,141805.14886022787,142576.36341694836,143750.37671601004,144612.5485475213,145418.45463218106,146607.34494468174,147463.52513693922,148332.91169603166,149535.54140806114,150421.92840343493,151239.37981362955,152453.8640648636,153329.88674436262,154132.20001645316,155355.4379678854,156203.50947413102,156974.2406085563,158149.36692862972,158960.77460698338,159777.47978095018,160961.16244848934,161833.26942777468,162641.01348719827,163893.79469193393,164838.99512150904,165718.89420769038],"Bullish":[114647.2950651813,115766.1869328458,116837.99927017845,118233.9732773308,119350.95883251134,120501.43848126831,121933.86057934118,123110.05047504752,124265.38820656175,125754.61916802434,126982.43477571166,128184.55499242317,129741.80098402286,131038.94241063284,132287.8028994177,133883.73419925052,135173.1919491179,136500.92376860895,138131.0174218621,139474.5455353485,140779.39888310793,142451.3372165944,143817.5160288573,145142.0809183089,146860.7149563469,148269.68630746132,149614.0339928677,151342.92310872045,152718.6386218889,154128.40105859912,155881.00435773132,157328.41668544838,158736.80028358684,160564.20172150314,162089.16674305932,163575.20286470393,165522.5542449971,167126.75490464683,168680.913374096,170670.5461359096,172297.30021078934,173953.39290579606,175991.59852013772,177687.14019554647,179321.5432681036,181410.0279374556,183131.21212540194,184785.31124060167,186943.24960527485,188677.06438466645,190335.2290422559,192465.02332601554,194179.78056454932,195911.40480939602,198069.63197993423,199871.5613785776,201610.2092169194,203866.12775594447,205772.1043448722,207616.47451287173]},"source_note":"Holdings/monthly income reflect the actual Wealthsimple TFSA basket (26 names); multi-year paths remain original illustrative v3 scenarios."};
@@ -240,7 +249,7 @@ async function renderDesktop(s){
  const deskLabels=pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
  const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle" font-size="28">${esc(label.ticker)}</text>`).join('');
   const n=sorted.length;
- $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-since" hidden></span><span class="daily-pnl-meta"></span></div><div class="daily-pnl-hot" id="daily-pnl-hot" hidden></div><div class="index-strip" id="index-strip" hidden></div><div class="cc-landing-tracker cc-landing-tracker-mob" id="cc-landing-tracker-mob" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${donutTotalText}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text><text class="donut-center-asof" x="${pie.cx}" y="${pie.cy+48}" text-anchor="middle" fill="#8cbca0" font-size="11">${esc(donutAsOf)}</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX <span id="fx-rate-value">${(Number(s.valuation.fx_cad_per_usd)>0?Number(s.valuation.fx_cad_per_usd):FX_FALLBACK).toFixed(4)}</span>.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span>${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col" class="all-time-col"><span class="all-time-head all-time-head-desk" title="All-time P&amp;L versus book cost"><span class="all-time-line">All-time</span><span class="all-time-line">P&amp;L</span></span><span class="all-time-head all-time-head-mob"><span class="all-time-line">all-time</span><span class="all-time-line">P&amp;L</span></span></th><th scope="col" class="day-pct-col"><span class="day-pct-head day-pct-head-desk" title="Daily P&amp;L (%)"><span class="day-pct-line">Daily</span><span class="day-pct-line">P&amp;L</span></span><span class="day-pct-head day-pct-head-mob"><span class="day-pct-line">daily</span><span class="day-pct-line">percent</span></span></th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span><span class="ticker-main"><span class="ticker-sym">${esc(displayTicker(h.symbol))}</span><span class="ticker-px" data-ticker-px-symbol="${esc(displayTicker(h.symbol))}"></span></span></th><td class="all-time-pnl" data-all-time-symbol="${esc(displayTicker(h.symbol))}" data-label="All-time P&amp;L"></td><td class="day-pct" data-day-pct-symbol="${esc(displayTicker(h.symbol))}" data-label="Daily percent"></td><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td class="weight-cell" data-label="Weight" data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
+ $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-since" hidden></span><span class="daily-pnl-meta"></span></div><div class="daily-pnl-hot" id="daily-pnl-hot" hidden></div><div class="index-strip" id="index-strip" hidden></div><div class="cc-landing-tracker cc-landing-tracker-mob" id="cc-landing-tracker-mob" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${donutTotalText}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text><text class="donut-center-asof" x="${pie.cx}" y="${pie.cy+48}" text-anchor="middle" fill="#8cbca0" font-size="11">${esc(donutAsOf)}</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX <span id="fx-rate-value">${(Number(s.valuation.fx_cad_per_usd)>0?Number(s.valuation.fx_cad_per_usd):FX_FALLBACK).toFixed(4)}</span>.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span>${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col" class="all-time-col"><span class="all-time-head all-time-head-desk" title="All-time P&amp;L versus book cost"><span class="all-time-line">All-time</span><span class="all-time-line">P&amp;L</span></span><span class="all-time-head all-time-head-mob"><span class="all-time-line">all-time</span><span class="all-time-line">P&amp;L</span></span></th><th scope="col" class="day-pct-col"><span class="day-pct-head day-pct-head-desk" title="Daily P&amp;L (%)"><span class="day-pct-line">Daily</span><span class="day-pct-line">P&amp;L</span></span><span class="day-pct-head day-pct-head-mob"><span class="day-pct-line">daily</span><span class="day-pct-line">percent</span></span></th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span><span class="ticker-main"><span class="ticker-sym">${esc(displayTicker(h.symbol))}</span><span class="ticker-px" data-ticker-px-symbol="${esc(displayTicker(h.symbol))}"></span></span></th><td class="all-time-pnl" data-all-time-symbol="${esc(displayTicker(h.symbol))}" data-label="All-time P&amp;L"></td><td class="day-pct" data-day-pct-symbol="${esc(displayTicker(h.symbol))}" data-label="Daily percent" role="button" tabindex="0"></td><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td class="weight-cell" data-label="Weight" data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
  fitDonut(); loadDailyPnl(); try{paintLandingCcTracker();}catch(e){}
  // Keep every visible holdings-count label in sync with the published model.
  const hc=(s.holdings||[]).length || (s.valuation&&s.valuation.holding_count) || 0;
@@ -581,11 +590,15 @@ function coveredCallSummary(data){
   }catch(e){return null;}
 }
 const COVERED_CALL_EXPLAINER_URL='https://www.youtube.com/watch?v=RORX9vVRoP8';
+function youtubePlayMarkSvg(){
+  // Official YouTube play-button mark, inline (no external fetch). 15px tall.
+  return '<svg class="cc-yt-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 20" width="21" height="15" aria-hidden="true" focusable="false"><path fill="#FF0000" d="M27.432 3.123A3.516 3.516 0 0 0 24.958.65C22.754 0 14 0 14 0S5.246 0 3.042.65A3.516 3.516 0 0 0 .568 3.123 36.83 36.83 0 0 0 0 10a36.83 36.83 0 0 0 .568 6.877 3.516 3.516 0 0 0 2.474 2.473C5.246 20 14 20 14 20s8.754 0 10.958-.65a3.516 3.516 0 0 0 2.474-2.473A36.83 36.83 0 0 0 28 10a36.83 36.83 0 0 0-.568-6.877Z"/><path fill="#FFF" d="M11.2 14.286V5.714L18.4 10z"/></svg>';
+}
 function coveredCallExplainerLink(cls){
   try{
     const url=COVERED_CALL_EXPLAINER_URL;
     if(!url)return '';
-    return `<a class="${esc(cls||'cc-landing-learn')}" href="${esc(url)}" target="_blank" rel="noopener">Learn how it works</a>`;
+    return `<a class="${esc(cls||'cc-landing-learn')}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="Learn how it works in 2 min, YouTube video"><span class="cc-learn-text">Learn how it works in 2 min</span>${youtubePlayMarkSvg()}</a>`;
   }catch(e){return '';}
 }
 function landingCcTrackerHtml(sum){
@@ -594,7 +607,7 @@ function landingCcTrackerHtml(sum){
   const countLabel=String(sum.count)+' open';
   const tickers=(sum.tickers||[]).map(t=>`<a class="cc-landing-tkr" href="#covered-calls">${esc(t)}</a>`).join('<span class="cc-landing-sep"> · </span>');
   const learn=coveredCallExplainerLink('cc-landing-learn');
-  return `<div class="cc-landing-body"><span class="cc-landing-kicker">Covered calls</span><strong class="cc-landing-income">${income}</strong><span class="cc-landing-count">${esc(countLabel)}</span>${tickers?`<span class="cc-landing-tickers">${tickers}</span>`:''}</div><div class="cc-landing-links"><a class="cc-landing-more" href="#covered-calls">see covered calls →</a>${learn}</div>`;
+  return `<div class="cc-landing-body"><span class="cc-landing-kicker">Covered calls</span><strong class="cc-landing-income">${income}</strong><span class="cc-landing-count">${esc(countLabel)}</span>${tickers?`<span class="cc-landing-tickers">${tickers}</span>`:''}</div><div class="cc-landing-links"><a class="cc-landing-more" href="#covered-calls">see covered calls →</a></div>${learn}`;
 }
 let landingCcNavBound=false;
 function bindLandingCcNav(){
@@ -1149,11 +1162,12 @@ function paintDayPct(data=lastPnlData){
       el.textContent='–';
       el.classList.add('day-pct-hot');
       el.title='Best performer OTD';
-      el.setAttribute('aria-label','Best performer OTD');
+      el.setAttribute('aria-label',(sym?sym+' daily P&L, best performer OTD. Stock performance':'Best performer OTD'));
       continue;
     }
     if(!bySym.has(sym)){
       el.textContent='–';
+      el.removeAttribute('aria-label');
       continue;
     }
     const p=bySym.get(sym);
@@ -1161,6 +1175,7 @@ function paintDayPct(data=lastPnlData){
     if(p>0)el.classList.add('day-pct-up');
     else if(p<0)el.classList.add('day-pct-down');
     else el.classList.add('day-pct-flat');
+    el.setAttribute('aria-label',`${sym} daily P&L ${formatHotPct(p)}. Stock performance`);
   }
 }
 
@@ -1599,7 +1614,7 @@ async function loadDailyPnl(){
   try{paintHotOtd(data, open);}catch(e){}
   try{paintIndexes(data);}catch(e){}
   try{paintDayPct(data);}catch(e){}
-  try{paintAllTimePnl(data);}catch(e){}
+  try{paintAllTimePnl(data);}catch(e){}try{if(typeof paintStockPerformance==='function')paintStockPerformance();}catch(e){}try{if(typeof paintNextDividend==='function')paintNextDividend();}catch(e){}
   try{paintLivePrices(data);}catch(e){}try{paintCoveredCallLive();}catch(e){}
   try{paintLiveFx(data);}catch(e){}
   try{paintDonutSlices(LAST_STATE);}catch(e){}
@@ -1631,3 +1646,260 @@ window.addEventListener('load',()=>setTimeout(()=>{try{
   else{const r=fr[0];g.globalAlpha=f===5?.45:1;for(let i=0;i<8;i++){const a=i*Math.PI/4;g.fillStyle=cols[i%4];g.fillRect(Math.round(8+r*Math.cos(a)),Math.round(8+r*Math.sin(a)),1,1);if(r>3&&f<5){g.fillRect(Math.round(8+(r-2)*Math.cos(a+.4)),Math.round(8+(r-2)*Math.sin(a+.4)),1,1)}}g.globalAlpha=1;g.fillStyle='#fff';if(f===2)g.fillRect(8,8,1,1)}
   if(++f<frames.length)setTimeout(draw,333);else setTimeout(()=>c.remove(),333)};draw();
 }catch(e){}},400));
+
+
+const DIVIDENDS_LEDGER_URL='/data/dividends-received.json?v=cc60';
+const PRIVATE_TICKERS=new Set(['CTGO','VGFCQ']);
+let dividendLedger={entries:[],loaded:false,failed:false};
+let stockPerformanceSymbol='';
+
+function performanceHash(hash=location.hash){
+  const h=String(hash||'').replace(/^#/,'');
+  const m=h.match(/^performance[\/-](.+)$/i);
+  if(!m)return '';
+  try{return displayTicker(decodeURIComponent(m[1]).trim());}catch(e){return displayTicker(m[1].trim());}
+}
+
+function isPublicPerformanceTicker(sym){
+  const t=displayTicker(sym);
+  if(!t||PRIVATE_TICKERS.has(t))return false;
+  const holdings=(typeof LAST_STATE!=='undefined'&&LAST_STATE&&Array.isArray(LAST_STATE.holdings))?LAST_STATE.holdings:null;
+  if(!holdings)return true;
+  return holdings.some(h=>displayTicker(h.symbol)===t);
+}
+
+function dividendsCollectedCad(ticker){
+  const sym=displayTicker(ticker);
+  if(!sym||PRIVATE_TICKERS.has(sym))return 0;
+  let t=0;
+  for(const e of (dividendLedger.entries||[])){
+    if(!e)continue;
+    const s=displayTicker(e.ticker||e.symbol);
+    if(s!==sym)continue;
+    const n=Number(e.amount_cad);
+    if(!Number.isFinite(n))continue;
+    t+=n;
+  }
+  return Math.round(t*100)/100;
+}
+
+async function loadDividendLedger(){
+  try{
+    const r=await fetch(DIVIDENDS_LEDGER_URL,{cache:'no-store'});
+    if(!r.ok)throw Error('unavailable');
+    const data=await r.json();
+    dividendLedger={entries:Array.isArray(data&&data.entries)?data.entries:[],loaded:true,failed:false};
+  }catch(e){
+    dividendLedger={entries:dividendLedger.entries||[],loaded:true,failed:true};
+  }
+  try{paintStockPerformance();}catch(err){}
+}
+loadDividendLedger();
+
+function holdingRecord(sym){
+  const t=displayTicker(sym);
+  const holdings=(typeof LAST_STATE!=='undefined'&&LAST_STATE&&Array.isArray(LAST_STATE.holdings))?LAST_STATE.holdings:[];
+  return holdings.find(h=>displayTicker(h.symbol)===t)||null;
+}
+
+function paintStockPerformance(){
+  const page=$('stock-performance');
+  if(!page||page.hidden||!stockPerformanceSymbol)return;
+  const sym=displayTicker(stockPerformanceSymbol);
+  const title=$('stock-performance-ticker');
+  if(title)title.textContent=sym;
+  const atEl=$('stock-performance-all-time');
+  if(atEl){
+    atEl.classList.remove('perf-up','perf-down','perf-flat');
+    atEl.textContent='—';
+    const src=typeof lastGoodPnl==='function'?lastGoodPnl(typeof lastPnlData!=='undefined'?lastPnlData:null):null;
+    const rows=src&&Array.isArray(src.holdings_cad)?src.holdings_cad:[];
+    const rec=rows.find(r=>displayTicker(r&&r.symbol)===sym);
+    const cad=rec&&rec.all_time_pnl_cad!=null?Number(rec.all_time_pnl_cad):NaN;
+    const pct=rec&&rec.all_time_pnl_pct!=null?Number(rec.all_time_pnl_pct):NaN;
+    if(Number.isFinite(cad)){
+      const dollar=typeof moneySigned==='function'?moneySigned(cad,'CAD'):'';
+      const pctTxt=typeof formatAllTimePct==='function'?formatAllTimePct(pct):'';
+      atEl.innerHTML=pctTxt?`${esc(dollar)}<span class="perf-pct">${esc(pctTxt)}</span>`:esc(dollar||'—');
+      atEl.classList.add(cad>0?'perf-up':cad<0?'perf-down':'perf-flat');
+    }
+  }
+  const divEl=$('stock-performance-dividends');
+  if(divEl){
+    const collected=dividendsCollectedCad(sym);
+    divEl.textContent=typeof money==='function'?money(collected,'CAD'):'C$0.00';
+  }
+  const h=holdingRecord(sym);
+  const sh=$('stock-performance-shares');
+  if(sh) sh.textContent=typeof formatShares==='function'?formatShares(h?h.shares??h.starting_shares_theoretical:null):'—';
+  const ac=$('stock-performance-avg-cost');
+  if(ac) ac.textContent='—';
+}
+
+function openStockPerformance(raw,opts={}){
+  const sym=displayTicker(raw);
+  if(!isPublicPerformanceTicker(sym))return;
+  const page=$('stock-performance');
+  if(!page)return;
+  stockPerformanceSymbol=sym;
+  page.hidden=false;
+  page.setAttribute('aria-hidden','false');
+  document.body.classList.add('stock-performance-open');
+  const deck=$('portfolio-deck');
+  if(deck)deck.inert=true;
+  paintStockPerformance();
+  if(!opts.fromHash && performanceHash()!==sym){
+    location.hash='#performance/'+encodeURIComponent(sym);
+  }
+  $('stock-performance-ticker')?.focus({preventScroll:true});
+}
+
+function closeStockPerformance(opts={}){
+  const page=$('stock-performance');
+  const wasOpen=page&&!page.hidden;
+  if(page){
+    page.hidden=true;
+    page.setAttribute('aria-hidden','true');
+  }
+  document.body.classList.remove('stock-performance-open');
+  const deck=$('portfolio-deck');
+  if(deck)deck.inert=false;
+  const backTo=opts.focusSymbol|| (wasOpen?stockPerformanceSymbol:'');
+  if(!opts.fromNav && !opts.fromHash && performanceHash()){
+    history.replaceState(null,'','#holdings-page');
+  }
+  if(backTo && !opts.fromNav){
+    const cell=document.querySelector(`.day-pct[data-day-pct-symbol="${CSS.escape(backTo)}"]`);
+    if(cell)cell.focus();
+  }
+  if(!opts.keepSymbol) stockPerformanceSymbol='';
+}
+
+
+document.addEventListener('click',e=>{
+  const back=e.target.closest&&e.target.closest('#stock-performance-back');
+  if(back){e.preventDefault();closeStockPerformance();return;}
+  const cell=e.target.closest&&e.target.closest('.allocation-table tbody td.day-pct[data-day-pct-symbol]');
+  if(!cell)return;
+  const sym=cell.getAttribute('data-day-pct-symbol');
+  if(!sym)return;
+  e.preventDefault();
+  openStockPerformance(sym);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.body.classList.contains('stock-performance-open') && !document.querySelector('dialog[open]')){
+    e.preventDefault();
+    closeStockPerformance();
+    return;
+  }
+  if(e.key!=='Enter' && e.key!==' ')return;
+  const cell=e.target.closest&&e.target.closest('.allocation-table tbody td.day-pct[data-day-pct-symbol]');
+  if(!cell)return;
+  e.preventDefault();
+  openStockPerformance(cell.getAttribute('data-day-pct-symbol'));
+});
+
+
+const UPCOMING_DIVIDENDS_URL='/data/upcoming-dividends.json?v=cc60';
+let upcomingDividends={entries:[],loaded:false};
+
+function parseISODate(s){
+  if(!s)return null;
+  const m=String(s).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m)return null;
+  return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+}
+function todayVancouver(){
+  try{
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Vancouver',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const get=t=>parts.find(p=>p.type===t)?.value;
+    return new Date(Number(get('year')), Number(get('month'))-1, Number(get('day')));
+  }catch(e){
+    const d=new Date();
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  }
+}
+function formatDivDate(d){
+  if(!d||!(d instanceof Date)||Number.isNaN(d.getTime()))return '—';
+  try{
+    return new Intl.DateTimeFormat('en-CA',{day:'numeric',month:'short',year:'numeric'}).format(d);
+  }catch(e){
+    return d.toISOString().slice(0,10);
+  }
+}
+function nextDividendEntry(entries){
+  const today=todayVancouver();
+  const upcoming=[];
+  for(const e of entries||[]){
+    if(!e||PRIVATE_TICKERS.has(displayTicker(e.symbol)))continue;
+    const pay=parseISODate(e.pay_date);
+    if(!pay||pay<today)continue;
+    upcoming.push({...e, _pay:pay, _ex:parseISODate(e.ex_date)});
+  }
+  upcoming.sort((a,b)=>{
+    const c=a._pay-b._pay;
+    if(c)return c;
+    const ae=a._ex?a._ex.getTime():Infinity, be=b._ex?b._ex.getTime():Infinity;
+    if(ae!==be)return ae-be;
+    return displayTicker(a.symbol).localeCompare(displayTicker(b.symbol));
+  });
+  return upcoming[0]||null;
+}
+function nextDividendAmountCad(entry){
+  if(!entry||entry.per_share_native==null)return null;
+  const per=Number(entry.per_share_native);
+  if(!Number.isFinite(per))return null;
+  const t=displayTicker(entry.symbol);
+  const h=(typeof LAST_STATE!=='undefined'&&LAST_STATE&&Array.isArray(LAST_STATE.holdings))
+    ? LAST_STATE.holdings.find(x=>displayTicker(x.symbol)===t)
+    : null;
+  const qty=Number(h&&(h.shares??h.starting_shares_theoretical));
+  if(!Number.isFinite(qty)||qty<=0)return null;
+  const ccy=String(entry.currency||(h&&h.currency)||'CAD').toUpperCase();
+  let fx=1;
+  if(ccy==='USD'){
+    const live=typeof lastGoodPnl==='function'?lastGoodPnl(typeof lastPnlData!=='undefined'?lastPnlData:null):null;
+    const liveFx=live&&Number(live.fx_cad_per_usd);
+    const stateFx=typeof LAST_STATE!=='undefined'&&LAST_STATE&&LAST_STATE.valuation?Number(LAST_STATE.valuation.fx_cad_per_usd):NaN;
+    fx=Number.isFinite(liveFx)&&liveFx>0?liveFx:(Number.isFinite(stateFx)&&stateFx>0?stateFx:(typeof FX_FALLBACK==='number'?FX_FALLBACK:1));
+  }
+  return Math.round(qty*per*fx*100)/100;
+}
+function paintNextDividend(){
+  const host=$('next-dividend-card');
+  if(!host)return;
+  if(!upcomingDividends.loaded){
+    host.innerHTML=`<p class="next-div-kicker">Next payment</p><p class="next-div-pending">Looking up the next announced payment…</p>`;
+    return;
+  }
+  const entry=nextDividendEntry(upcomingDividends.entries);
+  if(!entry){
+    host.innerHTML=`<p class="next-div-kicker">Next payment</p><p class="next-div-empty">No upcoming payment on the calendar yet.</p>`;
+    return;
+  }
+  const sym=displayTicker(entry.symbol);
+  const payTxt=formatDivDate(entry._pay);
+  const exTxt=entry._ex?formatDivDate(entry._ex):'';
+  const datesEst=entry.date_status==='estimated';
+  const amt=nextDividendAmountCad(entry);
+  const amtEst=entry.amount_status!=='declared'||amt==null;
+  const amountTxt=amt==null?'—':(typeof money==='function'?money(amt,'CAD'):'C$'+amt.toFixed(2));
+  const dateNote=datesEst?' <span class="next-div-est">est.</span>':'';
+  const amtNote=amtEst?'<span class="next-div-est">est.</span>':'';
+  const exLine=exTxt?`<span class="next-div-ex">Ex-div ${esc(exTxt)}${dateNote}</span>`:'';
+  const source=entry.date_status==='declared'?'Yahoo Finance calendar':'Estimated from the regular schedule';
+  const amtSource=entry.amount_status==='declared'?' · declared per-share.':' · last declared per-share, est.';
+  host.innerHTML=`<p class="next-div-kicker">Next payment</p><p class="next-div-ticker">${esc(sym)}</p><p class="next-div-dates">Pays ${esc(payTxt)}${dateNote}${exLine? ' · '+exLine:''}</p><p class="next-div-amount">${esc(amountTxt)} ${amtNote}</p><p class="next-div-note">${esc(source)}${esc(amtSource)}</p>`;
+}
+async function loadUpcomingDividends(){
+  try{
+    const r=await fetch(UPCOMING_DIVIDENDS_URL,{cache:'no-store'});
+    if(!r.ok)throw Error('unavailable');
+    const data=await r.json();
+    upcomingDividends={entries:Array.isArray(data&&data.entries)?data.entries:[],loaded:true};
+  }catch(e){
+    upcomingDividends={entries:upcomingDividends.entries||[],loaded:true};
+  }
+  try{paintNextDividend();}catch(err){}
+}
+loadUpcomingDividends();

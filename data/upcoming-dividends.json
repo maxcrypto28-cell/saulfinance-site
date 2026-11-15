@@ -1,0 +1,278 @@
+{
+  "as_of": "2026-11-15",
+  "timezone": "America/Vancouver",
+  "source": "yfinance calendar and dividends history, retrieved 2026-11-15 America/Vancouver. Calendar pay/ex dates are treated as announced. Per-share is declared only when that ex-date appears in the dividend history; otherwise the last declared per-share is used and marked est. When the calendar date has already passed, the next date is estimated from each name regular pay months.",
+  "notes": "Public holdings only (excludes CTGO, VGFCQ). The site computes expected CAD as qty \u00d7 per-share \u00d7 FX at display time. Rows marked estimated must not be read as confirmed declarations.",
+  "entries": [
+    {
+      "symbol": "BNS",
+      "currency": "CAD",
+      "pay_date": "2027-01-27",
+      "ex_date": "2027-01-05",
+      "per_share_native": 1.14,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "CM",
+      "currency": "CAD",
+      "pay_date": "2027-01-27",
+      "ex_date": "2026-12-28",
+      "per_share_native": 1.07,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "CNQ",
+      "currency": "CAD",
+      "pay_date": "2027-01-04",
+      "ex_date": "2026-12-14",
+      "per_share_native": 0.625,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "CNR",
+      "currency": "CAD",
+      "pay_date": "2026-12-29",
+      "ex_date": "2026-12-08",
+      "per_share_native": 0.915,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "CRT.UN",
+      "currency": "CAD",
+      "pay_date": "2026-11-15",
+      "ex_date": "2026-10-29",
+      "per_share_native": 0.082,
+      "date_status": "declared",
+      "amount_status": "declared",
+      "source": "yfinance calendar"
+    },
+    {
+      "symbol": "CU",
+      "currency": "CAD",
+      "pay_date": "2026-11-30",
+      "ex_date": "2026-11-04",
+      "per_share_native": 0.462,
+      "date_status": "declared",
+      "amount_status": "declared",
+      "source": "yfinance calendar"
+    },
+    {
+      "symbol": "EIF",
+      "currency": "CAD",
+      "pay_date": "2026-12-12",
+      "ex_date": "2026-11-28",
+      "per_share_native": 0.24,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "ENB",
+      "currency": "CAD",
+      "pay_date": "2026-11-30",
+      "ex_date": "2026-11-12",
+      "per_share_native": 0.97,
+      "date_status": "declared",
+      "amount_status": "declared",
+      "source": "yfinance calendar"
+    },
+    {
+      "symbol": "H",
+      "currency": "CAD",
+      "pay_date": "2026-12-30",
+      "ex_date": "2026-12-08",
+      "per_share_native": 0.353,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "IRM",
+      "currency": "USD",
+      "pay_date": "2027-01-05",
+      "ex_date": "2026-12-14",
+      "per_share_native": 0.864,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "JNJ",
+      "currency": "USD",
+      "pay_date": "2026-12-07",
+      "ex_date": "2026-11-23",
+      "per_share_native": 1.34,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "KO",
+      "currency": "USD",
+      "pay_date": "2026-12-14",
+      "ex_date": "2026-11-30",
+      "per_share_native": 0.53,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "LMT",
+      "currency": "USD",
+      "pay_date": "2026-12-30",
+      "ex_date": "2026-11-30",
+      "per_share_native": 3.45,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "MCD",
+      "currency": "USD",
+      "pay_date": "2026-12-14",
+      "ex_date": "2026-11-30",
+      "per_share_native": 1.86,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "NNN",
+      "currency": "USD",
+      "pay_date": "2027-02-12",
+      "ex_date": "2027-01-29",
+      "per_share_native": 0.62,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "NOC",
+      "currency": "USD",
+      "pay_date": "2026-12-15",
+      "ex_date": "2026-11-29",
+      "per_share_native": 2.47,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "O",
+      "currency": "USD",
+      "pay_date": "2026-12-14",
+      "ex_date": "2026-11-29",
+      "per_share_native": 0.272,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "PEP",
+      "currency": "USD",
+      "pay_date": "2027-01-29",
+      "ex_date": "2027-01-03",
+      "per_share_native": 1.48,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "POW",
+      "currency": "CAD",
+      "pay_date": "2027-01-29",
+      "ex_date": "2026-12-29",
+      "per_share_native": 0.668,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "PPL",
+      "currency": "CAD",
+      "pay_date": "2026-12-30",
+      "ex_date": "2026-12-14",
+      "per_share_native": 0.735,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "PZA",
+      "currency": "CAD",
+      "pay_date": "2026-12-12",
+      "ex_date": "2026-11-28",
+      "per_share_native": 0.068,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "RTX",
+      "currency": "USD",
+      "pay_date": "2026-12-09",
+      "ex_date": "2026-11-19",
+      "per_share_native": 0.73,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "RY",
+      "currency": "CAD",
+      "pay_date": "2026-11-23",
+      "ex_date": "2026-10-25",
+      "per_share_native": 1.76,
+      "date_status": "declared",
+      "amount_status": "declared",
+      "source": "yfinance calendar"
+    },
+    {
+      "symbol": "SOBO",
+      "currency": "CAD",
+      "pay_date": "2027-01-14",
+      "ex_date": "2026-12-30",
+      "per_share_native": 0.708,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    },
+    {
+      "symbol": "V",
+      "currency": "USD",
+      "pay_date": "2026-11-30",
+      "ex_date": "2026-11-09",
+      "per_share_native": 0.78,
+      "date_status": "declared",
+      "amount_status": "declared",
+      "source": "yfinance calendar"
+    },
+    {
+      "symbol": "WM",
+      "currency": "USD",
+      "pay_date": "2026-12-24",
+      "ex_date": "2026-12-10",
+      "per_share_native": 0.945,
+      "date_status": "estimated",
+      "amount_status": "estimated",
+      "source": "regular pay-month schedule and last declared per-share"
+    },
+    {
+      "symbol": "WMT",
+      "currency": "USD",
+      "pay_date": "2027-01-03",
+      "ex_date": "2026-12-10",
+      "per_share_native": 0.248,
+      "date_status": "declared",
+      "amount_status": "estimated",
+      "source": "yfinance calendar; per-share is last declared amount, not yet in history for this ex-date"
+    }
+  ]
+}
