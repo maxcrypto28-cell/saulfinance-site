@@ -1117,3 +1117,65 @@ body.stock-performance-open .header-market-stack{visibility:hidden;pointer-event
 @media(max-width:1023px){
 #dividends .dividends-heading > .next-div-card{margin:10px 0 0}
 }
+
+/* cc61: tighten Jaguar-to-title gap; flush mobile tabs under the car;
+   thin green frame around the Jaguar+tabs header. Desktop bottom edge
+   is the road at tire contact. Car size is unchanged.
+   Frame uses inset box-shadow so it does not shrink the header content box. */
+@media(max-width:1023px){
+:root{--header-height:98px}
+.site-header{
+  grid-template-rows:auto 38px;
+  gap:0;
+  padding:4px 12px 0;
+  border-bottom:0;
+  box-shadow:
+    inset 1px 0 0 color-mix(in srgb,var(--green) 50%,transparent),
+    inset -1px 0 0 color-mix(in srgb,var(--green) 50%,transparent),
+    inset 0 1px 0 color-mix(in srgb,var(--green) 50%,transparent),
+    inset 0 -1px 0 var(--green);
+  box-sizing:border-box;
+}
+.brand-title-stack{gap:1px}
+.brand-jaguar{margin:0 auto}
+.brand-jaguar-img{height:32px;width:auto;max-width:110px}
+}
+@media(max-width:759px) and (max-height:500px){
+:root{--header-height:86px}
+.site-header{grid-template-rows:auto 29px;padding:3px 10px 0}
+.topnav button{min-height:29px}
+}
+@media(min-width:1024px){
+:root{--header-height:141px}
+.site-header{
+  grid-template-rows:minmax(0,1fr);
+  gap:0;
+  padding:6px 36px 0;
+  border-bottom:0;
+  box-shadow:
+    inset 1px 0 0 color-mix(in srgb,var(--green) 45%,transparent),
+    inset -1px 0 0 color-mix(in srgb,var(--green) 45%,transparent),
+    inset 0 1px 0 color-mix(in srgb,var(--green) 45%,transparent),
+    inset 0 -1px 0 var(--green);
+  box-sizing:border-box;
+  overflow:visible;
+}
+.brand-jaguar{margin:-6px auto 0}
+.brand-jaguar-img{height:auto;width:280px;max-width:min(280px,30vw)}
+.site-header .brand-row{align-items:flex-start;height:100%}
+.site-header .topnav{
+  position:absolute;
+  left:calc(clamp(12px,3vw,36px) + min(280px,30vw) + 16px);
+  right:clamp(220px,22vw,280px);
+  bottom:0;
+  height:32px;
+  width:auto;
+  max-width:none;
+  margin:0;
+  z-index:1;
+}
+}
+@media(min-width:1024px) and (max-height:760px){
+:root{--header-height:118px}
+.brand-jaguar-img{width:200px}
+}
