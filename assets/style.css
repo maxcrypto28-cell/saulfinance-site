@@ -1147,11 +1147,7 @@ body.stock-performance-open .header-market-stack{visibility:hidden;pointer-event
   gap:0;
   padding:6px 36px 0;
   border-bottom:0;
-  box-shadow:
-    inset 1px 0 0 color-mix(in srgb,var(--green) 45%,transparent),
-    inset -1px 0 0 color-mix(in srgb,var(--green) 45%,transparent),
-    inset 0 1px 0 color-mix(in srgb,var(--green) 45%,transparent),
-    inset 0 -1px 0 var(--green);
+  box-shadow:none;
   box-sizing:border-box;
   overflow:visible;
 }
@@ -1191,4 +1187,99 @@ body.stock-performance-open .header-market-stack{visibility:hidden;pointer-event
 }
 #holdings-page .donut-ticker{font-size:32px}
 #holdings-page .donut-leader{stroke-width:1px}
+}
+
+/* cc63: one continuous desktop road line with a rounded hump over the tabs.
+   Mobile is unchanged. The holdings heading sits in the old header-center slot. */
+.header-road,.header-holdings-heading,.header-holdings-aside{display:none}
+@media(min-width:1024px){
+.header-road{
+  display:block;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
+  overflow:visible;
+}
+.header-road path{
+  fill:none;
+  stroke:var(--green);
+  stroke-width:1.25px;
+  stroke-linejoin:round;
+  stroke-linecap:butt;
+}
+.site-header .brand-row{position:relative;z-index:1}
+.site-header .topnav{z-index:2}
+.site-header .header-market-stack{z-index:3}
+
+/* Holdings heading lives in the header on desktop; collapse the old row so content rises. */
+body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-heading{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:absolute;
+  top:5px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:6;
+  pointer-events:none;
+  text-align:center;
+  gap:1px;
+}
+.header-holdings-kicker{
+  margin:0;
+  font:11px ui-monospace,monospace;
+  letter-spacing:1.3px;
+  color:var(--mint);
+  text-transform:uppercase;
+}
+.header-holdings-title{
+  margin:0;
+  font-weight:700;
+  font-size:32px;
+  line-height:1.1;
+  font-family:inherit;
+  color:var(--green);
+  white-space:nowrap;
+}
+body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-aside{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  position:absolute;
+  top:8px;
+  right:clamp(260px, calc(22vw + 70px), 360px);
+  z-index:6;
+  text-align:right;
+  gap:2px;
+}
+.header-holdings-aside .page-one-heading-copy{
+  margin:0;
+  align-items:flex-end;
+  font-size:clamp(12px,1vw,15px);
+  line-height:1.15;
+  max-width:200px;
+}
+.header-holdings-aside .daily-pnl-streak{
+  margin:0;
+  padding:0;
+  text-align:right;
+  font-size:11px;
+  line-height:1.2;
+  font-weight:500;
+  white-space:nowrap;
+}
+#holdings-page .slide-heading{
+  position:absolute;
+  width:1px;
+  height:1px;
+  margin:-1px;
+  padding:0;
+  overflow:hidden;
+  clip:rect(0,0,0,0);
+  border:0;
+  white-space:nowrap;
+}
 }

@@ -1903,3 +1903,67 @@ async function loadUpcomingDividends(){
   try{paintNextDividend();}catch(err){}
 }
 loadUpcomingDividends();
+
+/* cc63: desktop header road — one continuous line at tire level, hump over the tabs. */
+(function(){
+  const mq=window.matchMedia('(min-width:1024px)');
+  function roundedRoad(x0,x3,x1,x2,tireY,humpY,r){
+    const rise=tireY-humpY;
+    r=Math.min(r,Math.max(0,rise/2-0.5),Math.max(0,(x2-x1)/2-1));
+    if(r<1)return `M ${x0},${tireY} H ${x1} V ${humpY} H ${x2} V ${tireY} H ${x3}`;
+    return `M ${x0},${tireY} H ${x1-r} Q ${x1},${tireY} ${x1},${tireY-r} V ${humpY+r} Q ${x1},${humpY} ${x1+r},${humpY} H ${x2-r} Q ${x2},${humpY} ${x2},${humpY+r} V ${tireY-r} Q ${x2},${tireY} ${x2+r},${tireY} H ${x3}`;
+  }
+  function layoutHeaderRoad(){
+    const svg=document.querySelector('.header-road');
+    const header=document.querySelector('.site-header');
+    const nav=document.querySelector('.topnav');
+    if(!svg||!header||!nav)return;
+    if(!mq.matches){svg.replaceChildren();return;}
+    const hr=header.getBoundingClientRect();
+    const buttons=[...nav.querySelectorAll('button')];
+    if(!buttons.length)return;
+    const first=buttons[0].getBoundingClientRect();
+    const last=buttons[buttons.length-1].getBoundingClientRect();
+    const w=hr.width,h=hr.height;
+    const pad=12;
+    const x1=first.left-hr.left-pad;
+    const x2=last.right-hr.left+pad;
+    const tireY=h-0.5;
+    const humpY=(first.top-hr.top)-8;
+    const d=roundedRoad(0,w,x1,x2,tireY,humpY,8);
+    svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    svg.setAttribute('width',String(w));
+    svg.setAttribute('height',String(h));
+    svg.setAttribute('preserveAspectRatio','none');
+    let path=svg.querySelector('path');
+    if(!path){
+      path=document.createElementNS('http://www.w3.org/2000/svg','path');
+      svg.appendChild(path);
+    }
+    path.setAttribute('d',d);
+  }
+  function placeHoldingsExtras(){
+    const host=document.querySelector('.header-holdings-aside');
+    const home=document.querySelector('#holdings-page .page-one-heading-row')||document.querySelector('#holdings-page .slide-heading');
+    const live=document.querySelector('.page-one-heading-copy');
+    const streak=document.querySelector('#daily-pnl-streak-heading');
+    if(!host||!home||!live)return;
+    if(mq.matches){
+      if(live.parentElement!==host)host.appendChild(live);
+      if(streak&&streak.parentElement!==host)host.appendChild(streak);
+    }else{
+      if(live.parentElement!==home)home.appendChild(live);
+      if(streak&&streak.parentElement!==home)home.appendChild(streak);
+    }
+  }
+  function layoutCc63(){
+    layoutHeaderRoad();
+    placeHoldingsExtras();
+  }
+  window.layoutHeaderRoad=layoutHeaderRoad;
+  window.addEventListener('resize',layoutCc63);
+  mq.addEventListener?.('change',layoutCc63);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',layoutCc63);
+  else layoutCc63();
+  window.addEventListener('load',layoutCc63);
+})();
