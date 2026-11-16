@@ -278,9 +278,79 @@ function formatShares(n){
  return v.toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2})+' sh';
 }
 // Desktop: full labelled viewBox. Mobile: taller labelled viewBox for top-N tickers (not ring crop).
+function spreadDesktopDonutLabels(){
+  try{
+    if(window.matchMedia('(min-width:1024px)').matches===false)return;
+    const svg=document.querySelector('#native-holdings .native-donut');
+    if(!svg)return;
+    const orig=(svg.dataset.fullOrig||svg.dataset.full||'').trim();
+    if(!orig)return;
+    if(!svg.dataset.fullOrig)svg.dataset.fullOrig=orig;
+    const parts=orig.split(/\s+/).map(Number);
+    if(parts.length!==4||parts.some(n=>!Number.isFinite(n)))return;
+    const [ox,oy,ow,oh]=parts;
+    const rect=svg.getBoundingClientRect();
+    if(rect.width<2||rect.height<2||oh<2)return;
+    // Widen the viewBox to the SVG's display aspect so side labels can
+    // reach the covered-calls box edges, without scaling Y or the ring.
+    const W=oh*(rect.width/rect.height);
+    const minX=(ox+ow/2)-W/2;
+    svg.setAttribute('viewBox', minX+' '+oy+' '+W+' '+oh);
+    const group=svg.querySelector('.donut-labels');
+    if(!group)return;
+    const texts=[...group.querySelectorAll('.donut-ticker')];
+    const lines=[...group.querySelectorAll('.donut-leader')];
+    texts.forEach(t=>{
+      if(!t.hasAttribute('data-orig-x'))t.setAttribute('data-orig-x',t.getAttribute('x')||'0');
+      t.setAttribute('x',t.getAttribute('data-orig-x'));
+    });
+    lines.forEach(p=>{
+      if(!p.hasAttribute('data-orig-points'))p.setAttribute('data-orig-points',p.getAttribute('points')||'');
+      p.setAttribute('points',p.getAttribute('data-orig-points'));
+    });
+    const ctm=svg.getScreenCTM();
+    if(!ctm)return;
+    const inv=ctm.inverse();
+    const toSvgX=screenX=>{
+      const p=svg.createSVGPoint();
+      p.x=screenX;p.y=0;
+      return p.matrixTransform(inv).x;
+    };
+    const chip=document.querySelector('#holdings-page .cc-landing-tracker, #native-holdings .cc-landing-tracker');
+    const target=chip&&chip.getBoundingClientRect().width>2?chip.getBoundingClientRect():rect;
+    const shift=(els,dx)=>{
+      if(!els.length||Math.abs(dx)<0.05)return;
+      els.forEach(t=>{
+        t.setAttribute('x',((+t.getAttribute('x'))||0)+dx);
+        const line=t.previousElementSibling;
+        if(line&&line.classList.contains('donut-leader')){
+          const pts=(line.getAttribute('points')||'').trim().split(/\s+/).filter(Boolean).map(s=>s.split(',').map(Number));
+          if(pts.length>=1){
+            pts[pts.length-1][0]+=dx;
+            line.setAttribute('points',pts.map(pt=>pt.map(n=>n.toFixed(3)).join(',')).join(' '));
+          }
+        }
+      });
+    };
+    const lefts=texts.filter(t=>(t.getAttribute('text-anchor')||'')==='end');
+    const rights=texts.filter(t=>(t.getAttribute('text-anchor')||'')==='start');
+    if(lefts.length){
+      const edge=Math.min(...lefts.map(t=>t.getBoundingClientRect().left));
+      shift(lefts, toSvgX(target.left)-toSvgX(edge));
+    }
+    if(rights.length){
+      const edge=Math.max(...rights.map(t=>t.getBoundingClientRect().right));
+      shift(rights, toSvgX(target.right)-toSvgX(edge));
+    }
+  }catch(e){}
+}
 function fitDonut(){const svg=document.querySelector('#native-holdings .native-donut');if(!svg)return;
  if(MOBILE.matches){if(svg.dataset.mobile)svg.setAttribute('viewBox',svg.dataset.mobile)}
- else{if(svg.dataset.full)svg.setAttribute('viewBox',svg.dataset.full)}
+ else{
+  const orig=svg.dataset.fullOrig||svg.dataset.full;
+  if(orig)svg.setAttribute('viewBox',orig);
+  try{spreadDesktopDonutLabels();}catch(e){}
+ }
 }
 MOBILE.addEventListener?.('change',fitDonut);
 async function renderDesktop(s){
@@ -2330,6 +2400,7 @@ loadUpcomingDividends();
     try{placeLandingCcLearn();}catch(e){}
     try{layoutSectorsMobile();}catch(e){}
     try{if(typeof paintHotOtd==='function')paintHotOtd();}catch(e){}
+    try{if(typeof fitDonut==='function')fitDonut();}catch(e){}
   }
   window.layoutHeaderRoad=layoutHeaderRoad;
   window.layoutHeaderLasers=layoutHeaderLasers;
