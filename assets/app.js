@@ -2264,6 +2264,9 @@ loadUpcomingDividends();
       if(streak&&streak.parentElement!==home)home.appendChild(streak);
     }
   }
+  // cc80: pin the desktop headlight path on pages 2-5 to the exact
+  // Holdings (page 1) start/end, for the same viewport size.
+  let holdingsTitleBeam=null;
   function layoutHeaderLasers(){
     const svg=document.querySelector('.header-lasers');
     if(!svg)return;
@@ -2277,15 +2280,12 @@ loadUpcomingDividends();
     const jag=document.querySelector('.brand-jaguar-img')||document.querySelector('.brand-jaguar');
     if(!header||!jag){svg.replaceChildren();return;}
     const desktop=mq.matches;
-    const holdingsOn=!!document.querySelector('#holdings-page:not([aria-hidden="true"])');
     const targets=[];
     if(desktop){
-      // cc78: on pages 2-5 hide the headlight (title) beam only; the fog
-      // (Holdings-tab) beam keeps firing with the same target and timing.
       const tab=document.querySelector('.topnav button[data-page="0"]');
       const title=document.querySelector('.header-holdings-title');
       if(tab)targets.push({cls:'header-laser-tab',el:tab,aim:'center'});
-      if(holdingsOn&&title)targets.push({cls:'header-laser-title',el:title,aim:'left'});
+      if(title)targets.push({cls:'header-laser-title',el:title,aim:'left'});
     }else{
       // Mobile: one beam to the date line under NEXT OPEN (#open-at).
       const dateLine=document.querySelector('#open-at')||document.querySelector('.market-clock-open span:last-child');
@@ -2373,10 +2373,7 @@ loadUpcomingDividends();
       });
     }
     const n=targets.length;
-    // Desktop always uses the two-beam cadence (period 1000, tab delay 0,
-    // title delay 500) so the fog beam's timing is unchanged on pages 2-5
-    // when the title beam is omitted. Mobile stays one 500ms beam.
-    const period=desktop?1000:(n>=2?1000:500);
+    const period=n>=2?1000:500;
     targets.forEach((t,i)=>{
       const br=t.el.getBoundingClientRect();
       // Title beam aims at the left edge (the G); other beams keep mid-target.
@@ -2384,15 +2381,25 @@ loadUpcomingDividends();
       const y2=(br.top+br.bottom)/2-hr.top;
       let x1,y1;
       if(desktop){
-        if(t.cls==='header-laser-title'){x1=headX;y1=headY;}
+        if(t.cls==='header-laser-title'){
+          x1=headX;y1=headY;
+          // Holdings keeps its live path. Pages 2-5 reuse that exact path
+          // when the viewport matches, so a title-box shift cannot move the G.
+          const holdingsOn=!!document.querySelector('#holdings-page:not([aria-hidden="true"])');
+          const vp=window.innerWidth+'x'+window.innerHeight;
+          if(holdingsOn){
+            holdingsTitleBeam={vp,x1,y1,x2,y2};
+          }else if(holdingsTitleBeam&&holdingsTitleBeam.vp===vp){
+            x1=holdingsTitleBeam.x1;y1=holdingsTitleBeam.y1;x2=holdingsTitleBeam.x2;y2=holdingsTitleBeam.y2;
+          }
+        }
         else if(t.cls==='header-laser-tab'){x1=fogX;y1=fogY;}
         else {x1=noseX;y1=midHeadY;}
       }else{
         // Mobile unchanged: one origin just outside the front edge at mid-headlight.
         x1=noseX;y1=midHeadY;
       }
-      const delay=desktop?(t.cls==='header-laser-title'?500:0):(n>=2?i*(period/n):0);
-      beam(t.cls,x1,y1,x2,y2,delay,period);
+      beam(t.cls,x1,y1,x2,y2,n>=2?i*(period/n):0,period);
     });
     // Drop stale beams when switching desktop/mobile.
     [...group.querySelectorAll('path')].forEach(p=>{
