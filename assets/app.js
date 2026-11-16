@@ -689,27 +689,67 @@ function layoutSectorsMobile(){
     }
   }catch(e){}
 }
-function fitMobileChipLearn(learn,count,body){
-  if(!learn||!count||!body)return;
+function clearLandingCcLearnFit(learn){
+  if(!learn||!learn.style)return;
   learn.style.fontSize='';
   learn.style.transform='';
   learn.style.marginRight='';
   learn.style.transformOrigin='';
+  learn.style.width='';
+  const text=learn.querySelector('.cc-learn-text');
+  if(text&&text.style){
+    text.style.fontSize='';
+    text.style.transform='';
+    text.style.marginRight='';
+    text.style.transformOrigin='';
+    text.style.display='';
+    text.style.width='';
+  }
+}
+function fitMobileChipLearn(learn,count,body){
+  if(!learn||!count||!body)return;
+  clearLandingCcLearnFit(learn);
+  const text=learn.querySelector('.cc-learn-text')||learn;
   const gap=parseFloat(getComputedStyle(body).columnGap);
   const avail=body.getBoundingClientRect().right-count.getBoundingClientRect().right-(Number.isFinite(gap)?gap:8);
   if(!(avail>0))return;
   let fitted=false;
   for(const s of [9,8,7.5,7,6.5,6]){
     learn.style.fontSize=s+'px';
-    if(learn.getBoundingClientRect().width<=avail+0.5){fitted=true;break;}
+    if(text.getBoundingClientRect().width<=avail+0.5){fitted=true;break;}
   }
   if(!fitted){
-    const need=learn.getBoundingClientRect().width||1;
+    const need=text.getBoundingClientRect().width||1;
     const scale=Math.max(0.5,avail/need);
-    learn.style.transformOrigin='left center';
-    learn.style.transform='scale('+scale+')';
-    learn.style.marginRight=(avail-need)+'px';
+    text.style.display='inline-block';
+    text.style.transformOrigin='left center';
+    text.style.transform='scale('+scale+')';
+    // Shrink the layout box to the visual (scaled) text width so the
+    // absolutely positioned YouTube mark stays centered under the glyphs
+    // and the first row does not overflow. Do not scale the <a> itself,
+    // or the mark would shrink with it.
+    const visual=need*scale;
+    text.style.marginRight=(visual-need)+'px';
+    learn.style.width=visual.toFixed(2)+'px';
+  }else{
+    learn.style.width=text.getBoundingClientRect().width.toFixed(2)+'px';
   }
+}
+function nasdaqIndexLastEl(){
+  const preferred=document.querySelector('.header-market-stack .index-strip, .index-strip-header');
+  const strips=[preferred,...document.querySelectorAll('.index-strip')].filter(Boolean);
+  const seen=new Set();
+  for(const strip of strips){
+    if(seen.has(strip))continue;
+    seen.add(strip);
+    const cs=getComputedStyle(strip);
+    const b=strip.getBoundingClientRect();
+    if(strip.hidden||cs.display==='none'||b.width<2||b.height<2)continue;
+    const item=[...strip.querySelectorAll('.index-item')].find(it=>/^nasdaq$/i.test((it.querySelector('.index-label')?.textContent||'').trim()));
+    const last=item&&item.querySelector('.index-last');
+    if(last)return last;
+  }
+  return null;
 }
 function placeLandingCcLearn(){
   try{
@@ -741,26 +781,15 @@ function placeLandingCcLearn(){
       if(learn){
         if(learn.parentElement!==host)host.appendChild(learn);
         learn.classList.remove('cc-learn-below-pie');
-        learn.style.fontSize='';
-        learn.style.transform='';
-        learn.style.marginRight='';
-        learn.style.transformOrigin='';
+        clearLandingCcLearnFit(learn);
       }
-      const income=host.querySelector('.cc-landing-income');
-      if(!income||!learn)continue;
+      if(!learn)continue;
       const hr=host.getBoundingClientRect();
-      const ir=income.getBoundingClientRect();
       const lw=learn.getBoundingClientRect().width||learn.offsetWidth||157;
-      let mid=(ir.left+ir.right)/2-hr.left;
-      const stack=document.querySelector('.header-market-stack');
-      const pad=8;
-      if(stack){
-        const sr=stack.getBoundingClientRect();
-        if(sr.width>2&&sr.height>2){
-          const maxRight=sr.left-pad-hr.left;
-          if(mid+lw/2>maxRight) mid=maxRight-lw/2;
-        }
-      }
+      const nasdaq=nasdaqIndexLastEl();
+      const nr=nasdaq&&nasdaq.getBoundingClientRect();
+      let mid=(nr&&nr.width>2)?((nr.left+nr.right)/2-hr.left):(hr.width/2);
+      const pad=10;
       mid=Math.max(lw/2+pad, Math.min(hr.width-lw/2-pad, mid));
       host.style.setProperty('--cc-learn-mid', mid.toFixed(2)+'px');
     }
@@ -1467,6 +1496,7 @@ function paintIndexes(data){
     el.classList.toggle('has-vs', !!vs);
     el.setAttribute('aria-label', aria);
   }
+  try{placeLandingCcLearn();}catch(e){}
 }
 
 function paintHotOtd(data=lastPnlData, marketOpen=lastPnlOpen){
