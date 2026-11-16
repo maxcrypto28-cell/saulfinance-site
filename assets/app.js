@@ -1868,7 +1868,7 @@ function shouldMergeLiveDay(src, now){
 }
 // Weekly green-day counter (cc83). Visible only when the current ET week
 // (Monday reset) has at least one green trading day. Set false to force it off.
-const GREEN_DAYS_WEEKLY=true;
+const GREEN_DAYS_WEEKLY=false;
 
 function mondayOfEtWeek(ymd){
   const m=String(ymd||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
