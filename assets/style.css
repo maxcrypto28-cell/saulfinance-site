@@ -1574,3 +1574,25 @@ body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:
 #matrix-rain{opacity:.696}
 .rain{opacity:.3}
 @media(prefers-reduced-motion:reduce){#matrix-rain{opacity:.42}}
+
+
+/* cc70: desktop landing — move the learn link out of the covered-calls bar
+   into the empty gap above it, centered on the +C$ income figure. Mobile
+   is unchanged, and the bar/pie/pills/header stay put. */
+@media(min-width:1024px){
+#native-holdings .cc-landing-tracker .cc-landing-learn,
+#holdings-page .cc-landing-learn{
+  position:absolute;
+  left:var(--cc-learn-mid,148px);
+  right:auto;
+  top:auto;
+  bottom:100%;
+  transform:translateX(-50%);
+  margin:0 0 8px;
+  z-index:1;
+}
+#holdings-page .cc-landing-tracker,
+#native-holdings .cc-landing-tracker{
+  overflow:visible;
+}
+}

@@ -625,6 +625,35 @@ function bindLandingCcNav(){
     }catch(err){}
   });
 }
+function placeLandingCcLearn(){
+  try{
+    if(!window.matchMedia('(min-width:1024px)').matches){
+      document.querySelectorAll('.cc-landing-tracker').forEach(h=>{if(h&&h.style)h.style.removeProperty('--cc-learn-mid');});
+      return;
+    }
+    for(const host of document.querySelectorAll('#holdings-page .cc-landing-tracker, #native-holdings .cc-landing-tracker')){
+      if(!host||host.hidden)continue;
+      const income=host.querySelector('.cc-landing-income');
+      const learn=host.querySelector('.cc-landing-learn');
+      if(!income||!learn)continue;
+      const hr=host.getBoundingClientRect();
+      const ir=income.getBoundingClientRect();
+      const lw=learn.getBoundingClientRect().width||learn.offsetWidth||157;
+      let mid=(ir.left+ir.right)/2-hr.left;
+      const stack=document.querySelector('.header-market-stack');
+      const pad=8;
+      if(stack){
+        const sr=stack.getBoundingClientRect();
+        if(sr.width>2&&sr.height>2){
+          const maxRight=sr.left-pad-hr.left;
+          if(mid+lw/2>maxRight) mid=maxRight-lw/2;
+        }
+      }
+      mid=Math.max(lw/2+pad, Math.min(hr.width-lw/2-pad, mid));
+      host.style.setProperty('--cc-learn-mid', mid.toFixed(2)+'px');
+    }
+  }catch(e){}
+}
 function paintLandingCcTracker(data){
   try{
     bindLandingCcNav();
@@ -640,6 +669,7 @@ function paintLandingCcTracker(data){
       host.hidden=false;
       host.classList.toggle('has-more',!!host.querySelector('.cc-landing-more'));
     }
+    placeLandingCcLearn();
   }catch(e){
     try{document.querySelectorAll('.cc-landing-tracker').forEach(el=>{if(el)el.hidden=true;});}catch(e2){}
   }
@@ -2074,6 +2104,7 @@ loadUpcomingDividends();
     layoutHeaderRoad();
     placeHoldingsExtras();
     layoutHeaderLasers();
+    try{placeLandingCcLearn();}catch(e){}
   }
   window.layoutHeaderRoad=layoutHeaderRoad;
   window.layoutHeaderLasers=layoutHeaderLasers;
