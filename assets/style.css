@@ -1658,3 +1658,23 @@ body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:
 .cc-landing-tracker-mob .cc-landing-tickers,
 #holdings-page .cc-landing-tracker .cc-landing-tickers{flex-basis:100%}
 }
+
+
+/* cc73: mobile Sectors — hide the heading subtitle, sit Energy flush
+   under "Sector weights", and move the weights note (with the gap that
+   used to sit above it) to the very bottom of the page. Desktop unchanged. */
+@media(max-width:1023px){
+#sectors .native-table-heading>span{display:none}
+#sectors .sectors-panel>.native-table-heading,
+#sectors .native-table-heading{padding-bottom:0;margin-bottom:0}
+#sectors .native-table-heading h3{margin:0}
+#sectors .sectors-list{display:flex;flex-direction:column}
+#sectors .sectors-list>.sector[data-sector="Energy"]{order:-1;margin-top:0}
+#sectors #sector-note{
+  margin:16px 12px 8px;
+  font-size:14px;
+  line-height:1.35;
+}
+/* Best-performer OTD line stays on a single row; names are omitted if they don't fit. */
+.daily-pnl-hot{flex-wrap:nowrap;white-space:nowrap;overflow:hidden}
+}
