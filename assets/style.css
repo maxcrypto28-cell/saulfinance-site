@@ -1214,8 +1214,8 @@ body.stock-performance-open .header-market-stack{visibility:hidden;pointer-event
 .site-header .topnav{z-index:2}
 .site-header .header-market-stack{z-index:3}
 
-/* Holdings heading lives in the header on desktop; collapse the old row so content rises. */
-body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-heading{
+/* Holdings heading lives in the header on desktop (all 5 content pages); collapse the old row so content rises. */
+.header-holdings-heading{
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -1733,7 +1733,7 @@ body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-laser-title-cor
    site accent green. */
 .header-holdings-launch{display:none;margin:0}
 @media(min-width:1024px){
-body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-launch{
+.header-holdings-launch{
   display:block;
   margin:2px 0 0;
   padding:0;
@@ -1745,7 +1745,7 @@ body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-launch{
   text-align:center;
   white-space:nowrap;
 }
-body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-launch .launch-rocket{
+.header-holdings-launch .launch-rocket{
   display:inline-block;
   width:12px;
   height:12px;

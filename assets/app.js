@@ -127,6 +127,7 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   slides.forEach((slide,i)=>{const active=i===stops[page];slide.inert=!active;slide.setAttribute('aria-hidden',String(!active))});
   nav.forEach(button=>{if(Number(button.dataset.page)===page)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current')});
   $('page-counter').textContent=`Page ${page+1} of ${stops.length}`;
+  try{const kicker=document.querySelector('p.header-holdings-kicker');if(kicker)kicker.textContent=`CONTENT PAGE ${page+1} / ${stops.length}`;}catch(e){}
   try{document.body.classList.toggle('cc-tab-active', ids[page]==='covered-calls');}catch(e){}
   $('previous-slide').disabled=page===0;$('next-slide').disabled=page===stops.length-1;
   history.replaceState(null,'',opts.keepHash?location.hash:`#${ids[page]}`);
