@@ -627,14 +627,31 @@ function bindLandingCcNav(){
 }
 function placeLandingCcLearn(){
   try{
+    const hosts=[...document.querySelectorAll('#holdings-page .cc-landing-tracker, #native-holdings .cc-landing-tracker')];
     if(!window.matchMedia('(min-width:1024px)').matches){
-      document.querySelectorAll('.cc-landing-tracker').forEach(h=>{if(h&&h.style)h.style.removeProperty('--cc-learn-mid');});
+      hosts.forEach(h=>{if(h&&h.style)h.style.removeProperty('--cc-learn-mid');});
+      const host=hosts.find(h=>h&&!h.hidden)||hosts[0];
+      const pie=document.querySelector('#native-holdings .native-donut, #holdings-page .native-donut');
+      const inChip=host?host.querySelector('.cc-landing-learn'):null;
+      const outside=[...document.querySelectorAll('#holdings-page .cc-landing-learn, #native-holdings .cc-landing-learn')].filter(a=>!host||!host.contains(a));
+      let learn=inChip||outside[0]||null;
+      if(inChip)outside.forEach(a=>a.remove());
+      else outside.slice(1).forEach(a=>a.remove());
+      if(learn&&pie){
+        learn.classList.add('cc-learn-below-pie');
+        if(learn.previousElementSibling!==pie)pie.after(learn);
+      }
       return;
     }
-    for(const host of document.querySelectorAll('#holdings-page .cc-landing-tracker, #native-holdings .cc-landing-tracker')){
+    for(const host of hosts){
       if(!host||host.hidden)continue;
+      let learn=host.querySelector('.cc-landing-learn');
+      if(!learn){
+        learn=document.querySelector('#holdings-page .cc-landing-learn, #native-holdings .cc-landing-learn, .cc-learn-below-pie');
+        if(learn&&!host.contains(learn))host.appendChild(learn);
+      }
+      if(learn)learn.classList.remove('cc-learn-below-pie');
       const income=host.querySelector('.cc-landing-income');
-      const learn=host.querySelector('.cc-landing-learn');
       if(!income||!learn)continue;
       const hr=host.getBoundingClientRect();
       const ir=income.getBoundingClientRect();

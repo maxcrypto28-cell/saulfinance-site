@@ -1596,3 +1596,52 @@ body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:
   overflow:visible;
 }
 }
+
+
+/* cc72: mobile landing — move the learn link out of the covered-calls chip
+   to just below the pie, small and centered. Desktop is unchanged. */
+@media(max-width:1023px){
+#holdings-page .cc-landing-learn.cc-learn-below-pie,
+#native-holdings .cc-landing-learn.cc-learn-below-pie{
+  position:static;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  width:max-content;
+  max-width:100%;
+  margin:8px auto 2px;
+  padding:0;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+  transform:none;
+  font-size:10px;
+  line-height:1.2;
+  font-weight:400;
+  letter-spacing:.1px;
+  color:var(--green);
+  text-decoration:none;
+  text-align:center;
+  white-space:nowrap;
+  z-index:auto;
+}
+#holdings-page .cc-learn-below-pie .cc-learn-text,
+#native-holdings .cc-learn-below-pie .cc-learn-text{
+  color:var(--green);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+#holdings-page .cc-learn-below-pie:hover,
+#holdings-page .cc-learn-below-pie:hover .cc-learn-text,
+#native-holdings .cc-learn-below-pie:hover,
+#native-holdings .cc-learn-below-pie:hover .cc-learn-text{color:var(--green)}
+#holdings-page .cc-learn-below-pie .cc-yt-mark,
+#native-holdings .cc-learn-below-pie .cc-yt-mark{width:16px;height:11px}
+/* The chip no longer reserves a right-hand slot for the link. */
+#native-holdings .cc-landing-tracker .cc-landing-body,
+.cc-landing-tracker-mob .cc-landing-body,
+#holdings-page .cc-landing-tracker .cc-landing-body{padding-right:0}
+}
