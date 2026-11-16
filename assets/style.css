@@ -1726,7 +1726,9 @@ body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:
 /* cc74: desktop holdings header — a small green launch line sits directly
    under the centered "Get Rich Slowly." title. Mobile is unchanged: the
    heading is hidden there, and The machine "Since November 9, 2026" line
-   stays put. */
+   stays put.
+   cc75: emoji rockets replaced with inline SVGs so the flames use the
+   site accent green. */
 .header-holdings-launch{display:none;margin:0}
 @media(min-width:1024px){
 body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-launch{
@@ -1740,5 +1742,14 @@ body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-launch{
   color:var(--green);
   text-align:center;
   white-space:nowrap;
+}
+body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-launch .launch-rocket{
+  display:inline-block;
+  width:12px;
+  height:12px;
+  margin:0 1px;
+  vertical-align:-1px;
+  overflow:visible;
+  flex:0 0 auto;
 }
 }
