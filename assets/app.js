@@ -249,7 +249,7 @@ async function renderDesktop(s){
  const deskLabels=pie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle">${esc(label.ticker)}</text>`).join('');
  const mobLabels=mobilePie.labels.map(label=>`<polyline class="donut-leader" points="${label.points.map(point=>point.map(n=>n.toFixed(3)).join(',')).join(' ')}"/><text class="donut-ticker-mobile" x="${label.x}" y="${label.y}" text-anchor="${label.side==='right'?'start':'end'}" dominant-baseline="middle" font-size="28">${esc(label.ticker)}</text>`).join('');
   const n=sorted.length;
- $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-since" hidden></span><span class="daily-pnl-meta"></span></div><div class="daily-pnl-hot" id="daily-pnl-hot" hidden></div><div class="index-strip" id="index-strip" hidden></div><div class="cc-landing-tracker cc-landing-tracker-mob" id="cc-landing-tracker-mob" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${donutTotalText}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text><text class="donut-center-asof" x="${pie.cx}" y="${pie.cy+48}" text-anchor="middle" fill="#8cbca0" font-size="11">${esc(donutAsOf)}</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX <span id="fx-rate-value">${(Number(s.valuation.fx_cad_per_usd)>0?Number(s.valuation.fx_cad_per_usd):FX_FALLBACK).toFixed(4)}</span>.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span>${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col" class="all-time-col"><span class="all-time-head all-time-head-desk" title="All-time P&amp;L versus book cost"><span class="all-time-line">All-time</span><span class="all-time-line">P&amp;L</span></span><span class="all-time-head all-time-head-mob"><span class="all-time-line">all-time</span><span class="all-time-line">P&amp;L</span></span></th><th scope="col" class="day-pct-col"><span class="day-pct-head day-pct-head-desk" title="Daily P&amp;L (%)"><span class="day-pct-line">Daily</span><span class="day-pct-line">P&amp;L</span></span><span class="day-pct-head day-pct-head-mob"><span class="day-pct-line">daily</span><span class="day-pct-line">percent</span></span></th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span><span class="ticker-main"><span class="ticker-sym">${esc(displayTicker(h.symbol))}</span><span class="ticker-px" data-ticker-px-symbol="${esc(displayTicker(h.symbol))}"></span></span></th><td class="all-time-pnl" data-all-time-symbol="${esc(displayTicker(h.symbol))}" data-label="All-time P&amp;L"></td><td class="day-pct" data-day-pct-symbol="${esc(displayTicker(h.symbol))}" data-label="Daily percent" role="button" tabindex="0"></td><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td class="weight-cell" data-label="Weight" data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
+ $('native-holdings').innerHTML=`<section class="native-panel allocation-overview" data-scroll-region tabindex="0" aria-label="Allocation overview"><div class="daily-pnl-strip" id="daily-pnl-strip" aria-live="polite"><span class="daily-pnl-label">Daily PNL</span><span class="daily-pnl-face" aria-hidden="true"></span><span class="daily-pnl-value">—</span><span class="daily-pnl-since" hidden></span><span class="daily-pnl-meta"></span></div><div class="daily-pnl-hot" id="daily-pnl-hot" hidden></div><div class="index-strip" id="index-strip" hidden></div><div class="cc-landing-tracker cc-landing-tracker-mob" id="cc-landing-tracker-mob" hidden></div><svg class="native-donut" viewBox="0 0 ${pie.width} ${pie.height}" data-full="0 0 ${pie.width} ${pie.height}" data-mobile="${mobilePie.viewBox}" role="img" aria-label="Capital-weighted allocation across ${n} holdings, with outside ticker labels and leader lines">${arcs}<g class="donut-labels" aria-hidden="true">${deskLabels}</g><g class="donut-labels-mobile" aria-hidden="true">${mobLabels}</g><text class="donut-center-value" x="${pie.cx}" y="${pie.cy-5}" text-anchor="middle" fill="#e1f3e6" font-size="34" font-weight="600">${donutTotalText}</text><text class="donut-center-label" x="${pie.cx}" y="${pie.cy+30}" text-anchor="middle" fill="#8cbca0" font-size="20">CAD HOLDINGS</text><text class="donut-center-asof" x="${pie.cx}" y="${pie.cy+48}" text-anchor="middle" fill="#8cbca0" font-size="11">${esc(donutAsOf)}</text></svg><ul class="donut-legend" aria-label="Allocation legend">${sorted.map((h,i)=>`<li><i style="background:${palette[i%palette.length]}"></i><b>${esc(h.symbol.replace(/\.TO$/,'').replace('CRT-UN','CRT.UN'))}</b><span data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(1)}%</span></li>`).join('')}</ul><p class="native-summary"><strong>${n} holdings</strong> · Actual TFSA positions</p><p>Native C$ / US$ allocations.<br>CAD weights use FX <span id="fx-rate-value">${(Number(s.valuation.fx_cad_per_usd)>0?Number(s.valuation.fx_cad_per_usd):FX_FALLBACK).toFixed(4)}</span>.</p></section><section class="native-panel holdings-table-panel"><div class="native-table-heading"><h3>The machine</h3><span class="machine-since">Since November 9, 2026</span><span class="machine-count">${n} holdings · CAD weights</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Scroll all ${n} holdings in the machine"><table class="allocation-table"><thead><tr><th scope="col">Ticker</th><th scope="col" class="all-time-col"><span class="all-time-head all-time-head-desk" title="All-time P&amp;L versus book cost"><span class="all-time-line">All-time</span><span class="all-time-line">P&amp;L</span></span><span class="all-time-head all-time-head-mob"><span class="all-time-line">all-time</span><span class="all-time-line">P&amp;L</span></span></th><th scope="col" class="day-pct-col"><span class="day-pct-head day-pct-head-desk" title="Daily P&amp;L (%)"><span class="day-pct-line">Daily</span><span class="day-pct-line">P&amp;L</span></span><span class="day-pct-head day-pct-head-mob"><span class="day-pct-line">daily</span><span class="day-pct-line">percent</span></span></th><th scope="col">Business</th><th scope="col">Shares</th><th scope="col">Native capital</th><th scope="col">Weight</th><th scope="col" title="Annual dividend rate ÷ Nov 9, 2026 price.">Div yield</th></tr></thead><tbody>${sorted.map((h,i)=>`<tr><th scope="row" data-hot-symbol="${esc(displayTicker(h.symbol))}"><span class="ticker-dot" style="background:${palette[i%palette.length]}"></span><span class="ticker-main"><span class="ticker-sym">${esc(displayTicker(h.symbol))}</span><span class="ticker-px" data-ticker-px-symbol="${esc(displayTicker(h.symbol))}"></span></span></th><td class="all-time-pnl" data-all-time-symbol="${esc(displayTicker(h.symbol))}" data-label="All-time P&amp;L"></td><td class="day-pct" data-day-pct-symbol="${esc(displayTicker(h.symbol))}" data-label="Daily percent" role="button" tabindex="0"></td><td class="business-name">${saNameLink(h,h.name,"sa-link")}</td><td class="shares-cell" data-label="Shares">${formatShares(h.shares??h.starting_shares_theoretical)}</td><td data-label="Native capital">${money(h.planned_capital_native,h.currency)}</td><td class="weight-cell" data-label="Weight" data-weight-symbol="${esc(displayTicker(h.symbol))}">${(h.weight_cad*100).toFixed(2)}%</td><td class="div-yield" data-label="Div yield">${formatDivYield(h)}</td></tr>`).join('')}</tbody></table></div><p class="fine div-yield-note">Shares = actual Wealthsimple TFSA quantity. Div yield = annual dividend rate ÷ Nov 9, 2026 price.</p></section>`;
  fitDonut(); loadDailyPnl(); try{paintLandingCcTracker();}catch(e){}
  // Keep every visible holdings-count label in sync with the published model.
  const hc=(s.holdings||[]).length || (s.valuation&&s.valuation.holding_count) || 0;
@@ -598,7 +598,7 @@ function coveredCallExplainerLink(cls){
   try{
     const url=COVERED_CALL_EXPLAINER_URL;
     if(!url)return '';
-    return `<a class="${esc(cls||'cc-landing-learn')}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="Learn how it works in 2 min, YouTube video"><span class="cc-learn-text">Learn how it works in 2 min</span>${youtubePlayMarkSvg()}</a>`;
+    return `<a class="${esc(cls||'cc-landing-learn')}" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="Learn how CC's work in 2 min, YouTube video"><span class="cc-learn-text">Learn how CC's work in 2 min</span>${youtubePlayMarkSvg()}</a>`;
   }catch(e){return '';}
 }
 function landingCcTrackerHtml(sum){
@@ -655,7 +655,8 @@ function renderCoveredCalls(data){
   const currencyHint=open[0]?.currency||history[0]?.currency||'CAD';
 
   if(!open.length&&!history.length){
-    host.innerHTML=`<div class="cc-empty native-panel" role="status"><p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O, NNN. CRT.UN (250) has no listed Montréal options.</p>${coveredCallExplainerLink('cc-page-learn')}</div>`;
+    const learn=coveredCallExplainerLink('cc-page-learn');
+    host.innerHTML=`${learn}<div class="cc-empty native-panel" role="status"><p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O, NNN. CRT.UN (250) has no listed Montréal options.</p></div>`;
     return;
   }
 
@@ -741,9 +742,9 @@ function renderCoveredCalls(data){
   const histTable=history.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Closed / assigned</h3><span>${history.length} recorded</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Covered call history"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th><th scope="col">P&amp;L</th></tr></thead><tbody>${history.map(histRow).join('')}</tbody></table></div></section>`:'';
 
   const learn=coveredCallExplainerLink('cc-page-learn');
-  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,currencyHint)}</strong></div><p class="cc-income-line">${incomeLine}</p>${learn}</section>`:'';
+  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,currencyHint)}</strong></div><p class="cc-income-line">${incomeLine}</p></section>`:'';
 
-  host.innerHTML=`${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
+  host.innerHTML=`${learn}${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
   try{paintCoveredCallLive();}catch(e){}
 }
 function paintCoveredCallLive(){
@@ -1956,14 +1957,129 @@ loadUpcomingDividends();
       if(streak&&streak.parentElement!==home)home.appendChild(streak);
     }
   }
+  function layoutHeaderLasers(){
+    const svg=document.querySelector('.header-lasers');
+    if(!svg)return;
+    const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if(reduce){
+      svg.replaceChildren();
+      svg.removeAttribute('viewBox');
+      return;
+    }
+    const header=document.querySelector('.site-header');
+    const jag=document.querySelector('.brand-jaguar-img')||document.querySelector('.brand-jaguar');
+    if(!header||!jag){svg.replaceChildren();return;}
+    const desktop=mq.matches;
+    const holdingsOn=!!document.querySelector('#holdings-page:not([aria-hidden="true"])');
+    const targets=[];
+    if(desktop){
+      if(!holdingsOn){svg.replaceChildren();svg.removeAttribute('viewBox');return;}
+      const tab=document.querySelector('.topnav button[data-page="0"]');
+      const title=document.querySelector('.header-holdings-title');
+      if(tab)targets.push({cls:'header-laser-tab',el:tab});
+      if(title)targets.push({cls:'header-laser-title',el:title});
+    }else{
+      // Mobile: one beam to the date line under NEXT OPEN (#open-at).
+      const dateLine=document.querySelector('#open-at')||document.querySelector('.market-clock-open span:last-child');
+      if(dateLine)targets.push({cls:'header-laser-open',el:dateLine});
+    }
+    if(!targets.length){svg.replaceChildren();return;}
+    const hr=header.getBoundingClientRect();
+    const jr=jag.getBoundingClientRect();
+    const w=hr.width,h=hr.height;
+    // Just outside the front edge of the crop, at mid-headlight.
+    // Source frame is 720x232; opaque nose tip x=713, lamp mid y≈116.
+    const startX=jr.left-hr.left+(713/720)*jr.width+2;
+    const startY=jr.top-hr.top+(116/232)*jr.height;
+    svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    svg.setAttribute('width',String(w));
+    svg.setAttribute('height',String(h));
+    svg.setAttribute('preserveAspectRatio','none');
+    const ns='http://www.w3.org/2000/svg';
+    let defs=svg.querySelector('defs');
+    if(!defs){defs=document.createElementNS(ns,'defs');svg.appendChild(defs);}
+    let clip=defs.querySelector('#header-laser-clip');
+    if(!clip){
+      clip=document.createElementNS(ns,'clipPath');
+      clip.setAttribute('id','header-laser-clip');
+      const rect=document.createElementNS(ns,'rect');
+      clip.appendChild(rect);
+      defs.appendChild(clip);
+    }
+    const clipRect=clip.querySelector('rect');
+    // Clip at the start so haze never lands on the Jaguar; stay inside the header.
+    const clipX=Math.max(0,startX);
+    clipRect.setAttribute('x',String(clipX));
+    clipRect.setAttribute('y','0');
+    clipRect.setAttribute('width',String(Math.max(0,w-clipX)));
+    clipRect.setAttribute('height',String(h));
+    let group=svg.querySelector('g.header-lasers-beams');
+    if(!group){
+      group=document.createElementNS(ns,'g');
+      group.setAttribute('class','header-lasers-beams');
+      group.setAttribute('clip-path','url(#header-laser-clip)');
+      svg.appendChild(group);
+    }
+    const keep=new Set();
+    function beam(cls,x2,y2){
+      keep.add(cls+'-haze'); keep.add(cls+'-core');
+      let haze=group.querySelector('path.'+cls+'-haze');
+      let core=group.querySelector('path.'+cls+'-core');
+      if(!haze){
+        haze=document.createElementNS(ns,'path');
+        haze.setAttribute('class','header-laser header-laser-haze '+cls+'-haze');
+        group.appendChild(haze);
+      }
+      if(!core){
+        core=document.createElementNS(ns,'path');
+        core.setAttribute('class','header-laser header-laser-core '+cls+'-core');
+        group.appendChild(core);
+      }
+      const d='M '+startX.toFixed(2)+' '+startY.toFixed(2)+' L '+x2.toFixed(2)+' '+y2.toFixed(2);
+      haze.setAttribute('d',d);
+      core.setAttribute('d',d);
+      const len=Math.max(1,core.getTotalLength());
+      const bolt=Math.min(36,Math.max(18,len*0.28));
+      [haze,core].forEach(el=>{
+        el.style.strokeDasharray=bolt+' '+len;
+        el.style.strokeDashoffset=String(bolt);
+        el.getAnimations().forEach(a=>a.cancel());
+        el.animate(
+          [
+            {strokeDashoffset:bolt, opacity:0, offset:0},
+            {strokeDashoffset:bolt*0.2, opacity:1, offset:0.08},
+            {strokeDashoffset:-len, opacity:1, offset:0.32},
+            {strokeDashoffset:-len, opacity:0, offset:0.48},
+            {strokeDashoffset:-len, opacity:0, offset:1}
+          ],
+          {duration:1500, iterations:Infinity, easing:'linear'}
+        );
+      });
+    }
+    for(const t of targets){
+      const br=t.el.getBoundingClientRect();
+      const x2=(br.left+br.right)/2-hr.left;
+      const y2=(br.top+br.bottom)/2-hr.top;
+      beam(t.cls,x2,y2);
+    }
+    // Drop stale beams when switching desktop/mobile.
+    [...group.querySelectorAll('path')].forEach(p=>{
+      const cls=[...p.classList].find(c=>/^header-laser-(tab|title|open)-(haze|core)$/.test(c));
+      if(cls&&!keep.has(cls))p.remove();
+    });
+  }
   function layoutCc63(){
     layoutHeaderRoad();
     placeHoldingsExtras();
+    layoutHeaderLasers();
   }
   window.layoutHeaderRoad=layoutHeaderRoad;
+  window.layoutHeaderLasers=layoutHeaderLasers;
   window.addEventListener('resize',layoutCc63);
   mq.addEventListener?.('change',layoutCc63);
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',layoutCc63);
   else layoutCc63();
   window.addEventListener('load',layoutCc63);
+  const navBtns=[...document.querySelectorAll('.topnav [data-page]')];
+  navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();

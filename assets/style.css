@@ -1308,3 +1308,209 @@ body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-aside{
 }
 .cc-landing-learn:hover,
 .cc-landing-learn:hover .cc-learn-text{color:var(--green)}
+
+/* cc67: Covered Calls page learn link — centered under the heading, accent
+   green, underlined, a little larger. Landing chip is unchanged. */
+#covered-calls .covered-calls-native{grid-template-rows:auto auto minmax(0,1fr) auto}
+#covered-calls .cc-page-learn{
+  position:static;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  margin:0 auto 4px;
+  padding:0;
+  top:auto;
+  right:auto;
+  left:auto;
+  transform:none;
+  align-self:center;
+  width:max-content;
+  max-width:100%;
+  color:var(--green);
+  font-size:14px;
+  line-height:1.25;
+  font-weight:500;
+  letter-spacing:.12px;
+  text-decoration:none;
+  text-align:center;
+  white-space:nowrap;
+  z-index:1;
+}
+#covered-calls .cc-page-learn .cc-learn-text{
+  color:var(--green);
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+#covered-calls .cc-page-learn:hover,
+#covered-calls .cc-page-learn:hover .cc-learn-text{color:var(--green)}
+#covered-calls .cc-page-learn .cc-yt-mark{width:25px;height:18px}
+@media(min-width:1024px){
+#covered-calls .cc-income{padding-right:16px}
+}
+@media(max-width:1023px){
+#covered-calls .cc-page-learn{font-size:13px;margin:2px auto 6px}
+#covered-calls .cc-page-learn .cc-yt-mark{width:24px;height:17px}
+#covered-calls .cc-income{padding-right:8px}
+}
+
+/* cc67: desktop landing chip — learn link at the chip's true horizontal center.
+   Mobile keeps the cc66 right-side placement. Left-side chip copy is untouched. */
+@media(min-width:1024px){
+#native-holdings .cc-landing-tracker .cc-landing-learn,
+#holdings-page .cc-landing-learn{
+  left:50%;
+  right:auto;
+  top:50%;
+  transform:translate(-50%,-50%);
+}
+}
+
+/* cc67: desktop landing — biggest possible left-aligned pie, table immediately
+   to its right. The chip spans the full row so its centered link has room.
+   Mobile untouched. */
+@media(min-width:1024px){
+#holdings-page .holdings-native{
+  grid-template-columns:auto minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr);
+  gap:10px;
+  align-items:stretch;
+}
+#holdings-page .allocation-overview{
+  display:contents;
+}
+#holdings-page .cc-landing-tracker,
+#native-holdings .cc-landing-tracker{
+  grid-column:1 / -1;
+  grid-row:1;
+}
+#holdings-page .native-donut{
+  grid-column:1;
+  grid-row:2;
+  justify-self:start;
+  align-self:stretch;
+  min-width:0;
+  min-height:0;
+  width:auto;
+  height:100%;
+  max-width:100%;
+  max-height:100%;
+  aspect-ratio:720 / 600;
+  margin:0;
+  object-fit:contain;
+  object-position:left top;
+}
+#holdings-page .holdings-table-panel{
+  grid-column:2;
+  grid-row:2 / -1;
+  min-width:0;
+}
+#holdings-page .allocation-overview>.native-summary,
+#holdings-page .allocation-overview>p{
+  display:none;
+}
+}
+
+/* cc67: headlight laser pulses — quick green poofs every 1.5s.
+   Desktop: to the Holdings tab and "Get rich slowly."
+   Mobile: to the date line under NEXT OPEN. Hidden under reduced-motion. */
+.header-lasers{display:none}
+body:has(.site-header) .header-lasers{
+  display:block;
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:1;
+  overflow:visible;
+}
+@media(min-width:1024px){
+body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:none}
+}
+.header-laser{
+  fill:none;
+  stroke:var(--green);
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.header-laser-core{
+  stroke-width:1.6;
+  filter:drop-shadow(0 0 3px var(--green)) drop-shadow(0 0 7px color-mix(in srgb,var(--green) 65%,transparent));
+}
+.header-laser-haze{
+  stroke-width:6;
+  stroke:color-mix(in srgb,var(--green) 55%,transparent);
+  filter:blur(2.6px);
+  opacity:.85;
+}
+@media(max-width:1023px){
+.header-laser-core{stroke-width:1.4}
+.header-laser-haze{stroke-width:5;filter:blur(2.2px)}
+}
+@media(prefers-reduced-motion:reduce){
+.header-lasers{display:none!important}
+}
+
+/* cc67: "Since November 9, 2026" centered in The machine header row. */
+@media(min-width:1024px){
+#holdings-page .holdings-table-panel .native-table-heading{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:baseline;
+  gap:8px 16px;
+  padding:0 0 12px;
+}
+#holdings-page .holdings-table-panel .native-table-heading h3{
+  justify-self:start;
+  margin:0;
+}
+#holdings-page .holdings-table-panel .machine-since{
+  justify-self:center;
+  color:var(--green);
+  font-size:15px;
+  font-weight:500;
+  line-height:1.2;
+  text-align:center;
+  white-space:nowrap;
+}
+#holdings-page .holdings-table-panel .machine-count{
+  justify-self:end;
+  margin:0;
+  display:block;
+  text-align:right;
+}
+}
+@media(max-width:1023px){
+#holdings-page .holdings-table-panel .native-table-heading{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"title count" "since since";
+  gap:4px 10px;
+  align-items:baseline;
+  padding-bottom:8px;
+}
+#holdings-page .holdings-table-panel .native-table-heading h3{
+  grid-area:title;
+  margin:0;
+}
+#holdings-page .holdings-table-panel .machine-since{
+  grid-area:since;
+  justify-self:center;
+  margin:2px 0 0;
+  color:var(--green);
+  font-size:12px;
+  font-weight:500;
+  line-height:1.2;
+  text-align:center;
+  display:block;
+}
+#holdings-page .holdings-table-panel .machine-count{
+  grid-area:count;
+  justify-self:end;
+  margin:0;
+  display:block;
+  text-align:right;
+}
+}
