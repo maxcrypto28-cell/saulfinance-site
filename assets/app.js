@@ -778,20 +778,54 @@ function placeLandingCcLearn(){
         learn=document.querySelector('#holdings-page .cc-landing-learn, #native-holdings .cc-landing-learn, .cc-learn-below-pie');
         if(learn&&!host.contains(learn))host.appendChild(learn);
       }
-      if(learn){
-        if(learn.parentElement!==host)host.appendChild(learn);
-        learn.classList.remove('cc-learn-below-pie');
-        clearLandingCcLearnFit(learn);
-      }
       if(!learn)continue;
-      const hr=host.getBoundingClientRect();
-      const lw=learn.getBoundingClientRect().width||learn.offsetWidth||157;
-      const nasdaq=nasdaqIndexLastEl();
-      const nr=nasdaq&&nasdaq.getBoundingClientRect();
-      let mid=(nr&&nr.width>2)?((nr.left+nr.right)/2-hr.left):(hr.width/2);
-      const pad=10;
-      mid=Math.max(lw/2+pad, Math.min(hr.width-lw/2-pad, mid));
-      host.style.setProperty('--cc-learn-mid', mid.toFixed(2)+'px');
+      learn.classList.remove('cc-learn-below-pie');
+      clearLandingCcLearnFit(learn);
+      if(host.style)host.style.removeProperty('--cc-learn-mid');
+      const tickers=host.querySelector('.cc-landing-tickers');
+      const links=host.querySelector('.cc-landing-links');
+      const more=host.querySelector('.cc-landing-more');
+      const padBox=()=>{
+        const hr=host.getBoundingClientRect();
+        const cs=getComputedStyle(host);
+        return {
+          left:hr.left+parseFloat(cs.paddingLeft||0),
+          right:hr.right-parseFloat(cs.paddingRight||0),
+          top:hr.top+parseFloat(cs.paddingTop||0),
+          bottom:hr.bottom-parseFloat(cs.paddingBottom||0)
+        };
+      };
+      const inside=()=>{
+        const lr=learn.getBoundingClientRect();
+        const box=padBox();
+        return lr.right<=box.right+0.5 && lr.left>=box.left-0.5 && lr.bottom<=box.bottom+0.5;
+      };
+      const onTickerRow=()=>{
+        if(!tickers)return false;
+        const lr=learn.getBoundingClientRect();
+        const tr=tickers.getBoundingClientRect();
+        return Math.abs(lr.top-tr.top)<12 && inside();
+      };
+      if(tickers && learn.previousElementSibling!==tickers) tickers.after(learn);
+      else if(!tickers && more && learn.previousElementSibling!==more) more.after(learn);
+      learn.style.fontSize='';
+      if(tickers && !onTickerRow()){
+        for(const s of [11,10,9.5,9,8.5,8]){
+          learn.style.fontSize=s+'px';
+          if(onTickerRow())break;
+        }
+      }
+      if(tickers && !onTickerRow() && (more||links)){
+        learn.style.fontSize='';
+        if(more) more.after(learn);
+        else links.appendChild(learn);
+        if(!inside()){
+          for(const s of [11,10,9,8]){
+            learn.style.fontSize=s+'px';
+            if(inside())break;
+          }
+        }
+      }
     }
   }catch(e){}
 }

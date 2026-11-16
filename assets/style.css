@@ -1753,3 +1753,78 @@ body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-launch .laun
   flex:0 0 auto;
 }
 }
+
+
+/* cc76: desktop landing — shrink the covered-calls bar to the pie column,
+   lift The machine so its top aligns with the bar, and put the learn link
+   inside the smaller bar beside (or under) the tickers. Mobile unchanged. */
+@media(min-width:1024px){
+#holdings-page .cc-landing-tracker,
+#native-holdings .cc-landing-tracker{
+  grid-column:1;
+  grid-row:1;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  justify-self:stretch;
+  align-self:start;
+}
+#holdings-page .holdings-table-panel{
+  grid-column:2;
+  grid-row:1 / -1;
+  min-width:0;
+}
+#holdings-page .cc-landing-tracker .cc-landing-body,
+#native-holdings .cc-landing-tracker .cc-landing-body{
+  padding-right:0;
+  min-width:0;
+}
+#holdings-page .cc-landing-tracker .cc-landing-learn,
+#native-holdings .cc-landing-tracker .cc-landing-learn{
+  position:static;
+  left:auto;
+  right:auto;
+  top:auto;
+  bottom:auto;
+  transform:none;
+  margin:0;
+  padding:0;
+  display:inline-flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:3px;
+  font-size:10px;
+  line-height:1.2;
+  font-weight:500;
+  letter-spacing:.1px;
+  color:var(--green);
+  text-decoration:none;
+  text-align:left;
+  white-space:nowrap;
+  flex:0 0 auto;
+  z-index:auto;
+}
+#holdings-page .cc-landing-tracker .cc-landing-learn .cc-learn-text,
+#native-holdings .cc-landing-tracker .cc-landing-learn .cc-learn-text{
+  color:var(--green);
+  text-decoration:underline;
+  text-underline-offset:2px;
+}
+#holdings-page .cc-landing-tracker .cc-landing-learn:hover,
+#holdings-page .cc-landing-tracker .cc-landing-learn:hover .cc-learn-text,
+#native-holdings .cc-landing-tracker .cc-landing-learn:hover,
+#native-holdings .cc-landing-tracker .cc-landing-learn:hover .cc-learn-text{color:var(--green)}
+#holdings-page .cc-landing-tracker .cc-landing-learn .cc-yt-mark,
+#native-holdings .cc-landing-tracker .cc-landing-learn .cc-yt-mark{
+  position:static;
+  top:auto;
+  left:auto;
+  transform:none;
+  margin:0;
+  width:14px;
+  height:10px;
+  flex:0 0 auto;
+  display:block;
+}
+}
