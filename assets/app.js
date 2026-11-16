@@ -1866,6 +1866,53 @@ function shouldMergeLiveDay(src, now){
     return false;
   }catch(e){return false;}
 }
+// Weekly green-day counter (cc83). Visible only when the current ET week
+// (Monday reset) has at least one green trading day. Set false to force it off.
+const GREEN_DAYS_WEEKLY=true;
+
+function mondayOfEtWeek(ymd){
+  const m=String(ymd||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if(!m)return '';
+  const dt=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],12,0,0));
+  const back=(dt.getUTCDay()+6)%7;
+  dt.setUTCDate(dt.getUTCDate()-back);
+  const y=dt.getUTCFullYear();
+  const mo=String(dt.getUTCMonth()+1).padStart(2,'0');
+  const da=String(dt.getUTCDate()).padStart(2,'0');
+  return `${y}-${mo}-${da}`;
+}
+
+function weeklyGreenFromSrc(src, now){
+  // This week's closed trading days, plus today if today's change is green.
+  // Shown only when the week has at least one green day.
+  try{
+    if(!src)return '';
+    const t=(now==null?(typeof clockNow==='function'?clockNow():Date.now()):now);
+    const todayEt=typeof etYmd==='function'?etYmd(t):'';
+    const weekStart=mondayOfEtWeek(todayEt);
+    if(!weekStart)return '';
+    const rows=Array.isArray(src.closed_days)?src.closed_days:[];
+    const byDate=new Map();
+    for(const row of rows){
+      if(!row)continue;
+      const date=row.date!=null?String(row.date).slice(0,10):'';
+      const cad=row.day_change_cad!=null?Number(row.day_change_cad):NaN;
+      if(!date||!Number.isFinite(cad))continue;
+      if(date>=weekStart&&date<=todayEt) byDate.set(date,{date,cad});
+    }
+    const today=src.date!=null?String(src.date).slice(0,10):'';
+    const day=src.day_change_cad!=null?Number(src.day_change_cad):NaN;
+    if(today&&today>=weekStart&&today<=todayEt&&Number.isFinite(day)&&day>0){
+      byDate.set(today,{date:today,cad:day});
+    }
+    const window=[...byDate.values()].sort((a,b)=>a.date.localeCompare(b.date));
+    const n=window.length;
+    const x=window.filter(d=>d.cad>0).length;
+    if(!(n>=1)||!(x>=1))return '';
+    return '📈 '+x+' of '+n+' green days this week';
+  }catch(e){return '';}
+}
+
 function rollingGreenFromSrc(src, now){
   // Last N trading days, N grows 1..5 from inception then rolls at 5.
   // Once today's session has started, today's live (or close) day change
@@ -1902,8 +1949,9 @@ function rollingGreenFromSrc(src, now){
 }
 function rollingGreenLabel(data){
   try{
+    if(!GREEN_DAYS_WEEKLY)return '';
     const src=typeof lastGoodPnl==='function'?lastGoodPnl(data):data;
-    return rollingGreenFromSrc(src)||'';
+    return weeklyGreenFromSrc(src)||'';
   }catch(e){return '';}
 }
 function paintWinStreak(data=lastPnlData){
