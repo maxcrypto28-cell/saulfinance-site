@@ -1294,3 +1294,17 @@ body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-aside{
   overflow:visible;
 }
 }
+
+/* cc66: landing covered-calls chip — green learn link, vertically centered, slightly left.
+   Applies on desktop and mobile; the chip has enough room at 390. The Covered Calls
+   page explainer is unchanged. */
+.cc-landing-learn,
+#native-holdings .cc-landing-tracker .cc-landing-learn,
+.cc-landing-tracker-mob .cc-landing-learn{
+  color:var(--green);
+  top:50%;
+  right:18px;
+  transform:translateY(-50%);
+}
+.cc-landing-learn:hover,
+.cc-landing-learn:hover .cc-learn-text{color:var(--green)}
