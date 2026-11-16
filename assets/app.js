@@ -1270,6 +1270,10 @@ function setPnlStripVisible(show){
     if(!el)return;
     if(!show){el.hidden=true;el.textContent='';el.removeAttribute('aria-label');}
   });
+  if(!show){
+    const headerPnl=document.querySelector('.header-holdings-pnl');
+    if(headerPnl){headerPnl.hidden=true;headerPnl.textContent='';}
+  }
 }
 async function loadInception(){
   try{
@@ -1764,6 +1768,26 @@ function paintPnl(data, mode='daily'){
       }
     }
   }
+  try{paintHeaderLaunchPnl(data);}catch(e){}
+}
+function paintHeaderLaunchPnl(data){
+  const el=document.querySelector('.header-holdings-pnl');
+  if(!el)return;
+  let text='';
+  try{
+    const since=sinceFromData(data);
+    if(since&&since.cad!=null&&Number.isFinite(Number(since.cad))){
+      text=formatPnl(since.cad, since.pct);
+    }
+  }catch(e){}
+  const desktop=window.matchMedia('(min-width:1024px)').matches;
+  if(!desktop||!text||text==='—'){
+    el.hidden=true;
+    el.textContent='';
+    return;
+  }
+  el.hidden=false;
+  el.textContent=text;
 }
 async function fetchFallbackPnl(){
   try{
