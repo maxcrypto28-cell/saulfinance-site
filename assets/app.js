@@ -2006,8 +2006,8 @@ loadUpcomingDividends();
       if(!holdingsOn){svg.replaceChildren();svg.removeAttribute('viewBox');return;}
       const tab=document.querySelector('.topnav button[data-page="0"]');
       const title=document.querySelector('.header-holdings-title');
-      if(tab)targets.push({cls:'header-laser-tab',el:tab});
-      if(title)targets.push({cls:'header-laser-title',el:title});
+      if(tab)targets.push({cls:'header-laser-tab',el:tab,aim:'center'});
+      if(title)targets.push({cls:'header-laser-title',el:title,aim:'left'});
     }else{
       // Mobile: one beam to the date line under NEXT OPEN (#open-at).
       const dateLine=document.querySelector('#open-at')||document.querySelector('.market-clock-open span:last-child');
@@ -2017,10 +2017,16 @@ loadUpcomingDividends();
     const hr=header.getBoundingClientRect();
     const jr=jag.getBoundingClientRect();
     const w=hr.width,h=hr.height;
-    // Just outside the front edge of the crop, at mid-headlight.
-    // Source frame is 720x232; opaque nose tip x=713, lamp mid y≈116.
-    const startX=jr.left-hr.left+(713/720)*jr.width+2;
-    const startY=jr.top-hr.top+(116/232)*jr.height;
+    // Source frame is 720x232 (webp). Map lamp pixels through the live image box
+    // so origins track the car at every desktop width.
+    // Headlight (front upper lamp) ≈ (675, 113); fog lamp (lower bumper, near
+    // the front wheel) ≈ (679, 167). Nose tip x=713, mid-headlight y≈116.
+    const jagX=(sx)=>jr.left-hr.left+(sx/720)*jr.width;
+    const jagY=(sy)=>jr.top-hr.top+(sy/232)*jr.height;
+    const noseX=jagX(713)+2;
+    const midHeadY=jagY(116);
+    const headX=jagX(675), headY=jagY(113);
+    const fogX=jagX(679), fogY=jagY(167);
     svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
     svg.setAttribute('width',String(w));
     svg.setAttribute('height',String(h));
@@ -2037,8 +2043,10 @@ loadUpcomingDividends();
       defs.appendChild(clip);
     }
     const clipRect=clip.querySelector('rect');
-    // Clip at the start so haze never lands on the Jaguar; stay inside the header.
-    const clipX=Math.max(0,startX);
+    // Desktop: clip just left of the lamps so each beam is visible from its
+    // lamp, without painting haze back across the rest of the car. Mobile
+    // keeps the original clip at the front edge.
+    const clipX=Math.max(0, desktop?Math.min(headX,fogX)-2:noseX);
     clipRect.setAttribute('x',String(clipX));
     clipRect.setAttribute('y','0');
     clipRect.setAttribute('width',String(Math.max(0,w-clipX)));
@@ -2051,7 +2059,7 @@ loadUpcomingDividends();
       svg.appendChild(group);
     }
     const keep=new Set();
-    function beam(cls,x2,y2,delay,period){
+    function beam(cls,x1,y1,x2,y2,delay,period){
       keep.add(cls+'-haze'); keep.add(cls+'-core');
       let haze=group.querySelector('path.'+cls+'-haze');
       let core=group.querySelector('path.'+cls+'-core');
@@ -2065,7 +2073,7 @@ loadUpcomingDividends();
         core.setAttribute('class','header-laser header-laser-core '+cls+'-core');
         group.appendChild(core);
       }
-      const d='M '+startX.toFixed(2)+' '+startY.toFixed(2)+' L '+x2.toFixed(2)+' '+y2.toFixed(2);
+      const d='M '+x1.toFixed(2)+' '+y1.toFixed(2)+' L '+x2.toFixed(2)+' '+y2.toFixed(2);
       haze.setAttribute('d',d);
       core.setAttribute('d',d);
       const len=Math.max(1,core.getTotalLength());
@@ -2090,9 +2098,19 @@ loadUpcomingDividends();
     const period=n>=2?1000:500;
     targets.forEach((t,i)=>{
       const br=t.el.getBoundingClientRect();
-      const x2=(br.left+br.right)/2-hr.left;
+      // Title beam aims at the left edge (the G); other beams keep mid-target.
+      const x2=(t.aim==='left'?br.left:(br.left+br.right)/2)-hr.left;
       const y2=(br.top+br.bottom)/2-hr.top;
-      beam(t.cls,x2,y2,n>=2?i*(period/n):0,period);
+      let x1,y1;
+      if(desktop){
+        if(t.cls==='header-laser-title'){x1=headX;y1=headY;}
+        else if(t.cls==='header-laser-tab'){x1=fogX;y1=fogY;}
+        else {x1=noseX;y1=midHeadY;}
+      }else{
+        // Mobile unchanged: one origin just outside the front edge at mid-headlight.
+        x1=noseX;y1=midHeadY;
+      }
+      beam(t.cls,x1,y1,x2,y2,n>=2?i*(period/n):0,period);
     });
     // Drop stale beams when switching desktop/mobile.
     [...group.querySelectorAll('path')].forEach(p=>{
