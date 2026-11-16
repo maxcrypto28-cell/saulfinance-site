@@ -2291,6 +2291,32 @@ loadUpcomingDividends();
   // cc80: pin the desktop headlight path on pages 2-5 to the exact
   // Holdings (page 1) start/end, for the same viewport size.
   let holdingsTitleBeam=null;
+  function syncMobileCountdownBloom(desktop, headlightOn){
+    const el=document.querySelector('#open-countdown');
+    if(!el)return;
+    (el.getAnimations?el.getAnimations():[]).forEach(a=>{ if(a&&a._sffClockBloom) a.cancel(); });
+    el.style.removeProperty('box-shadow');
+    el.style.removeProperty('text-shadow');
+    el.style.removeProperty('filter');
+    if(desktop||!headlightOn)return;
+    const off='none';
+    // Very low-visibility radioactive halo. 500ms window starting when the
+    // headlight bolt arrives (offset 0.32), delayed 500ms to match that beam.
+    // Glyph-only halo (text-shadow + drop-shadow) so we don't paint a
+    // box behind the digits. Peak is very low-visibility #38ff77.
+    const peakGlow='0 0 4px color-mix(in srgb, #38ff77 35%, transparent), 0 0 10px color-mix(in srgb, #38ff77 18%, transparent)';
+    const anim=el.animate(
+      [
+        {textShadow:off,offset:0},
+        {textShadow:off,offset:0.32},
+        {textShadow:peakGlow,offset:0.45},
+        {textShadow:off,offset:0.82},
+        {textShadow:off,offset:1}
+      ],
+      {duration:1000,delay:500,iterations:Infinity,easing:'linear'}
+    );
+    anim._sffClockBloom=true;
+  }
   function layoutHeaderLasers(){
     const svg=document.querySelector('.header-lasers');
     if(!svg)return;
@@ -2298,6 +2324,7 @@ loadUpcomingDividends();
     if(reduce){
       svg.replaceChildren();
       svg.removeAttribute('viewBox');
+      try{syncMobileCountdownBloom(true,false);}catch(e){}
       return;
     }
     const header=document.querySelector('.site-header');
@@ -2311,9 +2338,14 @@ loadUpcomingDividends();
       if(tab)targets.push({cls:'header-laser-tab',el:tab,aim:'center'});
       if(title)targets.push({cls:'header-laser-title',el:title,aim:'left'});
     }else{
-      // Mobile: one beam to the date line under NEXT OPEN (#open-at).
-      const dateLine=document.querySelector('#open-at')||document.querySelector('.market-clock-open span:last-child');
-      if(dateLine)targets.push({cls:'header-laser-open',el:dateLine});
+      // cc82 mobile: fog lamp to the Holdings tab; headlight to the
+      // market-open countdown (#open-countdown), never the date line.
+      const tab=document.querySelector('.topnav button[data-page="0"]');
+      const countdown=document.querySelector('#open-countdown');
+      const cBox=countdown&&countdown.getBoundingClientRect();
+      const countdownOn=!!(countdown&&cBox&&cBox.width>2&&cBox.height>2&&getComputedStyle(countdown).display!=='none'&&getComputedStyle(countdown).visibility!=='hidden');
+      if(tab)targets.push({cls:'header-laser-tab',el:tab,aim:'center'});
+      if(countdownOn)targets.push({cls:'header-laser-title',el:countdown,aim:'center'});
     }
     if(!targets.length){svg.replaceChildren();return;}
     const hr=header.getBoundingClientRect();
@@ -2348,7 +2380,9 @@ loadUpcomingDividends();
     // Desktop: clip just left of the lamps so each beam is visible from its
     // lamp, without painting haze back across the rest of the car. Mobile
     // keeps the original clip at the front edge.
-    const clipX=Math.max(0, desktop?Math.min(headX,fogX)-2:noseX);
+    // Desktop clip stays just left of the lamps (beams go right). Mobile
+    // fog beam runs left to the Holdings tab, so the clip is the full header.
+    const clipX=Math.max(0, desktop?Math.min(headX,fogX)-2:0);
     clipRect.setAttribute('x',String(clipX));
     clipRect.setAttribute('y','0');
     clipRect.setAttribute('width',String(Math.max(0,w-clipX)));
@@ -2397,7 +2431,7 @@ loadUpcomingDividends();
       });
     }
     const n=targets.length;
-    const period=n>=2?1000:500;
+    const period=desktop?(n>=2?1000:500):1000;
     targets.forEach((t,i)=>{
       const br=t.el.getBoundingClientRect();
       // Title beam aims at the left edge (the G); other beams keep mid-target.
@@ -2420,11 +2454,15 @@ loadUpcomingDividends();
         else if(t.cls==='header-laser-tab'){x1=fogX;y1=fogY;}
         else {x1=noseX;y1=midHeadY;}
       }else{
-        // Mobile unchanged: one origin just outside the front edge at mid-headlight.
-        x1=noseX;y1=midHeadY;
+        // Mobile: origins are the actual headlight and fog-lamp pixels.
+        if(t.cls==='header-laser-title'){x1=headX;y1=headY;}
+        else if(t.cls==='header-laser-tab'){x1=fogX;y1=fogY;}
+        else {x1=noseX;y1=midHeadY;}
       }
-      beam(t.cls,x1,y1,x2,y2,n>=2?i*(period/n):0,period);
+      const delay=desktop?(n>=2?i*(period/n):0):(t.cls==='header-laser-title'?500:0);
+      beam(t.cls,x1,y1,x2,y2,delay,period);
     });
+    try{syncMobileCountdownBloom(desktop, targets.some(t=>t.cls==='header-laser-title'));}catch(e){}
     // Drop stale beams when switching desktop/mobile.
     [...group.querySelectorAll('path')].forEach(p=>{
       const cls=[...p.classList].find(c=>/^header-laser-(tab|title|open)-(haze|core)$/.test(c));
