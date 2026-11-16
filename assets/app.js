@@ -1596,7 +1596,7 @@ function paintIndexes(data){
     vsHtml=`<span class="vs-badge vs-${vs.dir}" title="${esc(tip)}"><span class="vs-label">VS</span><span class="vs-value">${esc(formatVsSpread(vs.spread))}</span></span>`;
   }
   const note=closed?'<span class="index-asof">Close</span>':'';
-  const html=`<span class="index-kicker">Indexes</span>${vsHtml}${note}<div class="index-items">${parts.join('')}</div>`;
+  const html=`<span class="index-kicker">Indexes</span><span class="index-kicker-sff">SFF vs Indices</span>${vsHtml}${note}<div class="index-items">${parts.join('')}</div>`;
   const aria=(closed?'Index levels at the close':'Index levels')+vsPhrase;
   for(const el of els){
     if(!el)continue;

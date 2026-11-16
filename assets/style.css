@@ -251,6 +251,7 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .vs-badge.vs-up .vs-value{color:var(--green)}
 .vs-badge.vs-down .vs-value{color:#ff5b5b}
 .vs-badge.vs-flat .vs-value{color:var(--text)}
+.index-kicker-sff{display:none!important}
 @media(max-width:1023px){
 .index-strip{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 8px}
 .index-kicker{order:1}
@@ -259,6 +260,28 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 .index-items{order:4;flex:1 1 100%;width:100%}
 .vs-badge .vs-value{font-size:11px}
 .vs-label{font-size:8px}
+/* cc85: mobile holdings strip only. Desktop header strip is unchanged. */
+#index-strip.has-vs>.index-kicker,
+#index-strip.has-vs>.index-asof{display:none!important}
+#index-strip.has-vs>.index-kicker-sff{
+  display:block!important;
+  order:1;
+  margin:0;
+  padding-right:2px;
+  flex-shrink:0;
+  font-size:9px;
+  line-height:normal;
+  font-weight:400;
+  letter-spacing:.4px;
+  font-family:ui-monospace,monospace;
+  text-transform:none;
+  color:#38ff77;
+}
+#index-strip.has-vs>.vs-badge{
+  /* Pull the existing badge in from the far right, without fully centering it. */
+  margin-left:auto;
+  margin-right:20%;
+}
 }
 .header-market-stack{display:none}
 @media(max-width:1023px){
