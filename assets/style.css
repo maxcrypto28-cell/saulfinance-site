@@ -1427,7 +1427,9 @@ body:has(.site-header) .header-lasers{
   overflow:visible;
 }
 @media(min-width:1024px){
-body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:none}
+/* cc78: pages 2-5 keep the fog-light beam; hide only the headlight/title beam. */
+body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-laser-title-haze,
+body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-laser-title-core{display:none}
 }
 .header-laser{
   fill:none;

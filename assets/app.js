@@ -132,6 +132,7 @@ $('refresh').addEventListener('click',load);document.addEventListener('visibilit
   history.replaceState(null,'',opts.keepHash?location.hash:`#${ids[page]}`);
   if(!opts.keepHash){try{if(typeof closeStockPerformance==='function')closeStockPerformance({fromNav:true});}catch(e){}}
   if(moveFocus)slides[stops[page]].querySelector('h2')?.focus({preventScroll:true});
+  try{if(typeof layoutHeaderLasers==='function')requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers));}catch(e){}
   return true;
  }
  nav.forEach(button=>button.addEventListener('click',()=>goTo(button.dataset.page)));
@@ -2278,11 +2279,12 @@ loadUpcomingDividends();
     const holdingsOn=!!document.querySelector('#holdings-page:not([aria-hidden="true"])');
     const targets=[];
     if(desktop){
-      if(!holdingsOn){svg.replaceChildren();svg.removeAttribute('viewBox');return;}
+      // cc78: on pages 2-5 hide the headlight (title) beam only; the fog
+      // (Holdings-tab) beam keeps firing with the same target and timing.
       const tab=document.querySelector('.topnav button[data-page="0"]');
       const title=document.querySelector('.header-holdings-title');
       if(tab)targets.push({cls:'header-laser-tab',el:tab,aim:'center'});
-      if(title)targets.push({cls:'header-laser-title',el:title,aim:'left'});
+      if(holdingsOn&&title)targets.push({cls:'header-laser-title',el:title,aim:'left'});
     }else{
       // Mobile: one beam to the date line under NEXT OPEN (#open-at).
       const dateLine=document.querySelector('#open-at')||document.querySelector('.market-clock-open span:last-child');
@@ -2370,7 +2372,10 @@ loadUpcomingDividends();
       });
     }
     const n=targets.length;
-    const period=n>=2?1000:500;
+    // Desktop always uses the two-beam cadence (period 1000, tab delay 0,
+    // title delay 500) so the fog beam's timing is unchanged on pages 2-5
+    // when the title beam is omitted. Mobile stays one 500ms beam.
+    const period=desktop?1000:(n>=2?1000:500);
     targets.forEach((t,i)=>{
       const br=t.el.getBoundingClientRect();
       // Title beam aims at the left edge (the G); other beams keep mid-target.
@@ -2385,7 +2390,8 @@ loadUpcomingDividends();
         // Mobile unchanged: one origin just outside the front edge at mid-headlight.
         x1=noseX;y1=midHeadY;
       }
-      beam(t.cls,x1,y1,x2,y2,n>=2?i*(period/n):0,period);
+      const delay=desktop?(t.cls==='header-laser-title'?500:0):(n>=2?i*(period/n):0);
+      beam(t.cls,x1,y1,x2,y2,delay,period);
     });
     // Drop stale beams when switching desktop/mobile.
     [...group.querySelectorAll('path')].forEach(p=>{
