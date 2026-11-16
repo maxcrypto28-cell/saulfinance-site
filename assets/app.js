@@ -656,7 +656,7 @@ function renderCoveredCalls(data){
 
   if(!open.length&&!history.length){
     const learn=coveredCallExplainerLink('cc-page-learn');
-    host.innerHTML=`${learn}<div class="cc-empty native-panel" role="status"><p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O, NNN. CRT.UN (250) has no listed Montréal options.</p></div>`;
+    host.innerHTML=`<div class="cc-empty native-panel" role="status">${learn}<p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O, NNN. CRT.UN (250) has no listed Montréal options.</p></div>`;
     return;
   }
 
@@ -742,9 +742,9 @@ function renderCoveredCalls(data){
   const histTable=history.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Closed / assigned</h3><span>${history.length} recorded</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Covered call history"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th><th scope="col">P&amp;L</th></tr></thead><tbody>${history.map(histRow).join('')}</tbody></table></div></section>`:'';
 
   const learn=coveredCallExplainerLink('cc-page-learn');
-  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,currencyHint)}</strong></div><p class="cc-income-line">${incomeLine}</p></section>`:'';
+  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><div class="cc-income-head"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,currencyHint)}</strong></div>${learn}</div><p class="cc-income-line">${incomeLine}</p></section>`:'';
 
-  host.innerHTML=`${learn}${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
+  host.innerHTML=`${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
   try{paintCoveredCallLive();}catch(e){}
 }
 function paintCoveredCallLive(){

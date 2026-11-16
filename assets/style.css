@@ -1514,3 +1514,56 @@ body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:
   text-align:right;
 }
 }
+
+/* cc68: Covered Calls page learn link sits inside the income panel,
+   on the same row as the headline and centered in the panel. Mobile
+   puts it on the first line inside the border if the row is tight. */
+#covered-calls .covered-calls-native{grid-template-rows:auto minmax(0,1fr) auto}
+#covered-calls .cc-income-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  column-gap:12px;
+  position:relative;
+}
+#covered-calls .cc-income-head{
+  grid-column:1;
+  justify-self:start;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:baseline;
+  gap:8px 16px;
+  min-width:0;
+}
+#covered-calls .cc-page-learn{
+  position:static;
+  grid-column:2;
+  justify-self:center;
+  align-self:center;
+  margin:0;
+  top:auto;
+  right:auto;
+  left:auto;
+  transform:none;
+}
+#covered-calls .cc-empty .cc-page-learn{display:flex;margin:0 auto 8px}
+@media(min-width:1024px){
+#covered-calls .cc-income{padding-right:16px}
+}
+@media(max-width:1023px){
+#covered-calls .cc-income-row{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  width:100%;
+  gap:4px;
+}
+#covered-calls .cc-page-learn{
+  order:-1;
+  align-self:center;
+  margin:0 auto 2px;
+  grid-column:auto;
+}
+#covered-calls .cc-income-head{gap:8px}
+#covered-calls .cc-income{padding-right:8px}
+}
