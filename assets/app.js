@@ -2021,7 +2021,7 @@ loadUpcomingDividends();
       svg.appendChild(group);
     }
     const keep=new Set();
-    function beam(cls,x2,y2){
+    function beam(cls,x2,y2,delay,period){
       keep.add(cls+'-haze'); keep.add(cls+'-core');
       let haze=group.querySelector('path.'+cls+'-haze');
       let core=group.querySelector('path.'+cls+'-core');
@@ -2052,16 +2052,18 @@ loadUpcomingDividends();
             {strokeDashoffset:-len, opacity:0, offset:0.48},
             {strokeDashoffset:-len, opacity:0, offset:1}
           ],
-          {duration:1500, iterations:Infinity, easing:'linear'}
+          {duration:period, delay:delay, iterations:Infinity, easing:'linear'}
         );
       });
     }
-    for(const t of targets){
+    const n=targets.length;
+    const period=n>=2?1000:500;
+    targets.forEach((t,i)=>{
       const br=t.el.getBoundingClientRect();
       const x2=(br.left+br.right)/2-hr.left;
       const y2=(br.top+br.bottom)/2-hr.top;
-      beam(t.cls,x2,y2);
-    }
+      beam(t.cls,x2,y2,n>=2?i*(period/n):0,period);
+    });
     // Drop stale beams when switching desktop/mobile.
     [...group.querySelectorAll('path')].forEach(p=>{
       const cls=[...p.classList].find(c=>/^header-laser-(tab|title|open)-(haze|core)$/.test(c));

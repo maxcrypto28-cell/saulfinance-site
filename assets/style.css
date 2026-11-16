@@ -1412,8 +1412,8 @@ body:has(#holdings-page:not([aria-hidden="true"])) .header-holdings-aside{
 }
 }
 
-/* cc67: headlight laser pulses — quick green poofs every 1.5s.
-   Desktop: to the Holdings tab and "Get rich slowly."
+/* cc69: headlight laser pulses — quick green poofs, 2 shots/sec overall (0.5s apart).
+   Desktop: to the Holdings tab and "Get Rich Slowly."
    Mobile: to the date line under NEXT OPEN. Hidden under reduced-motion. */
 .header-lasers{display:none}
 body:has(.site-header) .header-lasers{
@@ -1567,3 +1567,10 @@ body:not(:has(#holdings-page:not([aria-hidden="true"]))) .header-lasers{display:
 #covered-calls .cc-income-head{gap:8px}
 #covered-calls .cc-income{padding-right:8px}
 }
+
+/* cc69: Matrix rain covers the entire page, including the header above the
+   green road line, behind all content and the Jaguar. Opacity +20%. */
+.site-header{background:transparent}
+#matrix-rain{opacity:.696}
+.rain{opacity:.3}
+@media(prefers-reduced-motion:reduce){#matrix-rain{opacity:.42}}
