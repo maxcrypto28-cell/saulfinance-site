@@ -1243,6 +1243,75 @@ function pnlMarketOpen(now=clockNow()){
   // Reuse findCurrentClose: open when a session is in progress (incl. early closes).
   return !!findCurrentClose(now);
 }
+
+const LIVE_WAIT_HTML='<span class="live-wait" aria-hidden="true"><i></i><i></i><i></i></span>';
+const LIVE_WAIT_MS=8000;
+let liveWaitOn=false;
+let liveWaitTimer=0;
+function hasLivePnl(data){
+  try{
+    if(typeof lastGoodPnl==='function'&&lastGoodPnl(data))return true;
+  }catch(e){}
+  return !!(data&&(data.day_change_cad!=null||(data.indexes&&data.indexes.length)));
+}
+function clearLiveWait(el){
+  if(!el)return;
+  el.classList.remove('is-live-wait');
+  el.removeAttribute('aria-busy');
+}
+function fillLiveWait(el){
+  if(!el)return;
+  el.classList.add('is-live-wait');
+  el.setAttribute('aria-busy','true');
+  el.innerHTML=LIVE_WAIT_HTML;
+}
+function applyLiveWaitTimeout(){
+  document.querySelectorAll('.daily-pnl-value.is-live-wait').forEach(el=>{clearLiveWait(el);el.textContent='—';});
+  document.querySelectorAll('.header-holdings-pnl.is-live-wait').forEach(el=>{clearLiveWait(el);el.hidden=true;el.textContent='';});
+  document.querySelectorAll('.all-time-pnl.is-live-wait, .day-pct.is-live-wait').forEach(el=>{clearLiveWait(el);el.textContent='—';});
+  document.querySelectorAll('.ticker-px.is-live-wait').forEach(el=>{clearLiveWait(el);el.textContent='';});
+  document.querySelectorAll('.donut-center-value.is-live-wait').forEach(el=>{clearLiveWait(el);el.textContent='—';});
+  document.querySelectorAll('.index-strip.is-live-wait').forEach(el=>{
+    clearLiveWait(el);
+    el.hidden=true;
+    el.innerHTML='';
+    el.removeAttribute('aria-label');
+  });
+}
+function beginLiveWait(){
+  if(hasLivePnl(typeof lastPnlData!=='undefined'?lastPnlData:null))return;
+  liveWaitOn=true;
+  document.querySelectorAll('.daily-pnl-value').forEach(fillLiveWait);
+  const headerPnl=document.querySelector('.header-holdings-pnl');
+  if(headerPnl&&window.matchMedia('(min-width:1024px)').matches){
+    headerPnl.hidden=false;
+    fillLiveWait(headerPnl);
+  }
+  document.querySelectorAll('.all-time-pnl[data-all-time-symbol]').forEach(fillLiveWait);
+  document.querySelectorAll('.day-pct[data-day-pct-symbol]').forEach(fillLiveWait);
+  document.querySelectorAll('.ticker-px[data-ticker-px-symbol]').forEach(fillLiveWait);
+  document.querySelectorAll('.donut-center-value').forEach(el=>{
+    if(!el.textContent||el.textContent==='—'||el.classList.contains('is-live-wait')) fillLiveWait(el);
+  });
+  document.querySelectorAll('.index-strip').forEach(el=>{
+    el.hidden=false;
+    el.classList.add('is-live-wait');
+    el.setAttribute('aria-busy','true');
+    el.setAttribute('aria-label','Loading index levels');
+    el.innerHTML='<span class="index-kicker">Indexes</span>'+LIVE_WAIT_HTML;
+  });
+  clearTimeout(liveWaitTimer);
+  liveWaitTimer=setTimeout(()=>{
+    if(!liveWaitOn)return;
+    liveWaitOn=false;
+    applyLiveWaitTimeout();
+  },LIVE_WAIT_MS);
+}
+function endLiveWait(){
+  liveWaitOn=false;
+  clearTimeout(liveWaitTimer);
+}
+
 function setPnlStripVisible(show){
   const els=[...document.querySelectorAll('.daily-pnl-strip')];
   for(const el of els){
@@ -1441,6 +1510,7 @@ function paintDayPct(data=lastPnlData){
     el.removeAttribute('aria-label');
     const sym=el.getAttribute('data-day-pct-symbol');
     if(winners.has(sym)){
+      clearLiveWait(el);
       el.textContent='–';
       el.classList.add('day-pct-hot');
       el.title='Best performer OTD';
@@ -1448,11 +1518,13 @@ function paintDayPct(data=lastPnlData){
       continue;
     }
     if(!bySym.has(sym)){
-      el.textContent='–';
+      if(liveWaitOn) fillLiveWait(el);
+      else{clearLiveWait(el);el.textContent='–';}
       el.removeAttribute('aria-label');
       continue;
     }
     const p=bySym.get(sym);
+    clearLiveWait(el);
     el.textContent=formatHotPct(p);
     if(p>0)el.classList.add('day-pct-up');
     else if(p<0)el.classList.add('day-pct-down');
@@ -1490,15 +1562,18 @@ function paintAllTimePnl(data=lastPnlData){
       const sym=el.getAttribute('data-all-time-symbol');
       const rec=sym?bySym.get(sym):null;
       if(!rec){
-        el.textContent='—';
+        if(liveWaitOn) fillLiveWait(el);
+        else{clearLiveWait(el);el.textContent='—';}
         continue;
       }
       const dollar=typeof moneySigned==='function'?moneySigned(rec.cad,'CAD'):'';
       const pct=formatAllTimePct(rec.pct);
       if(!dollar||dollar==='—'||!pct){
-        el.textContent='—';
+        if(liveWaitOn) fillLiveWait(el);
+        else{clearLiveWait(el);el.textContent='—';}
         continue;
       }
+      clearLiveWait(el);
       el.innerHTML=`<span class="all-time-cad">${esc(dollar)}</span><span class="all-time-pct">${esc(pct)}</span>`;
       el.classList.add(rec.cad>0?'all-time-up':rec.cad<0?'all-time-down':'all-time-flat');
       el.setAttribute('aria-label',`${sym} all-time P&L ${dollar} ${pct}`);
@@ -1534,10 +1609,14 @@ function paintLivePrices(data=lastPnlData){
   for(const el of cells){
     if(!el)continue;
     el.classList.remove('px-up','px-down','px-flat');
-    el.textContent='';
     el.removeAttribute('title');
     const sym=el.getAttribute('data-ticker-px-symbol');
-    if(!byPx.has(sym))continue;
+    if(!byPx.has(sym)){
+      if(liveWaitOn) fillLiveWait(el);
+      else{clearLiveWait(el);el.textContent='';}
+      continue;
+    }
+    clearLiveWait(el);
     el.textContent=formatLivePrice(byPx.get(sym));
     const pct=byPct.has(sym)?byPct.get(sym):null;
     if(pct!=null&&pct>0)el.classList.add('px-up');
@@ -1576,7 +1655,18 @@ function paintIndexes(data){
   const rows=data&&Array.isArray(data.indexes)?data.indexes:[];
   const usable=rows.filter(r=>r&&r.label&&r.last!=null&&Number.isFinite(Number(r.last)));
   if(!usable.length){
-    for(const el of els){ if(!el)continue; el.hidden=true; el.innerHTML=''; el.removeAttribute('aria-label'); }
+    if(liveWaitOn){
+      for(const el of els){
+        if(!el)continue;
+        el.hidden=false;
+        el.classList.add('is-live-wait');
+        el.setAttribute('aria-busy','true');
+        el.setAttribute('aria-label','Loading index levels');
+        el.innerHTML='<span class="index-kicker">Indexes</span>'+LIVE_WAIT_HTML;
+      }
+      return;
+    }
+    for(const el of els){ if(!el)continue; clearLiveWait(el); el.hidden=true; el.innerHTML=''; el.removeAttribute('aria-label'); }
     return;
   }
   const closed=data&&data.session&&data.session!=='open';
@@ -1600,6 +1690,7 @@ function paintIndexes(data){
   const aria=(closed?'Index levels at the close':'Index levels')+vsPhrase;
   for(const el of els){
     if(!el)continue;
+    clearLiveWait(el);
     el.hidden=false;
     el.innerHTML=html;
     el.classList.toggle('index-strip-close', !!closed);
@@ -1745,14 +1836,15 @@ function paintPnl(data, mode='daily'){
     el.classList.remove('pnl-up','pnl-down','has-since');
     if(label)label.textContent=labelText;
     if(up==null){
-      if(value)value.textContent='—';
+      if(liveWaitOn){ if(value) fillLiveWait(value); }
+      else{ if(value){clearLiveWait(value);value.textContent='—';} }
       if(face)face.innerHTML='';
       if(meta)meta.textContent='';
       if(sinceEl){sinceEl.hidden=true;sinceEl.textContent='';sinceEl.classList.remove('since-up','since-down');}
       continue;
     }
     el.classList.add(up?'pnl-up':'pnl-down');
-    if(value)value.textContent=text;
+    if(value){clearLiveWait(value);value.textContent=text;}
     if(face)face.innerHTML=faceHtml;
     if(meta)meta.textContent=metaText;
     if(sinceEl){
@@ -1782,11 +1874,14 @@ function paintHeaderLaunchPnl(data){
   }catch(e){}
   const desktop=window.matchMedia('(min-width:1024px)').matches;
   if(!desktop||!text||text==='—'){
+    if(desktop&&liveWaitOn){el.hidden=false;fillLiveWait(el);return;}
+    clearLiveWait(el);
     el.hidden=true;
     el.textContent='';
     return;
   }
   el.hidden=false;
+  clearLiveWait(el);
   el.textContent=text;
 }
 async function fetchFallbackPnl(){
@@ -1808,10 +1903,13 @@ function paintDonutTotal(data){
   const mv=preferredLiveTotal(src);
   const els=[...document.querySelectorAll('.donut-center-value')];
   if(!els.length)return;
-  if(mv==null)return;
+  if(mv==null){
+    if(liveWaitOn){ for(const el of els){ if(el) fillLiveWait(el); } }
+    return;
+  }
   const text=money(mv);
   const asof=liveAsOfText(src);
-  for(const el of els){ if(el) el.textContent=text; }
+  for(const el of els){ if(el){ clearLiveWait(el); el.textContent=text; } }
   document.querySelectorAll('.donut-center-asof').forEach(el=>{ if(el) el.textContent=asof; });
   const cap=$('capital');
   if(cap) cap.textContent=text;
@@ -1970,6 +2068,7 @@ function paintWinStreak(data=lastPnlData){
 async function loadDailyPnl(){
   const open=pnlMarketOpen();
   setPnlStripVisible(true);
+  if(!hasLivePnl(typeof lastPnlData!=='undefined'?lastPnlData:null)) beginLiveWait();
   let data=await fetchPnlJson();
   // If the live API is a stale pre-market seed without inception fields, prefer same-origin close snapshot.
   if(!open){
@@ -1987,6 +2086,10 @@ async function loadDailyPnl(){
     if(liveMarketValue(fb)!=null){
       data=data?{...data,...fb}:fb;
     }
+  }
+  if(hasLivePnl(data)){
+    try{if(typeof lastPnlData!=='undefined') lastPnlData=data;}catch(e){}
+    endLiveWait();
   }
   try{paintPnl(data, open?'daily':'since');}catch(e){}
   try{paintWinStreak(data);}catch(e){}
