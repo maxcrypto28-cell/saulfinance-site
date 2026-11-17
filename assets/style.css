@@ -2004,7 +2004,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 }
 .index-strip-header .index-fist{
   display:inline-block;
-  transform:scaleX(-1);
+  transform:translateX(5px) scaleX(-1);
   transform-origin:center;
   font-size:1em;
   line-height:1;
