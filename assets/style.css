@@ -1968,3 +1968,49 @@ body:not(:has(#holdings-page[aria-hidden="false"])) .header-market-stack{
 /* Reclaim the cc60 offset that was reserved for the hanging stack on page 2. */
 #dividends.slide.content-slide{padding-top:14px}
 }
+
+/* cc90: when MARKET CLOSES is showing, the Live dashboard kicker sits
+   over the close clock. Move it under the clocks, in the dark band to
+   the right of the hanging strip and above the page. Font is unchanged.
+   After hours (close clock hidden) and mobile are unchanged. */
+@media(min-width:1024px){
+body:has(#close-clock:not([hidden])) .header-holdings-aside{
+  top:calc(100% + 8px);
+  right:calc(36px + 43px + 16px);
+}
+}
+
+/* cc90: desktop header index row — SFF vs Indices in accent green, with a
+   mirrored light-skin left fist punching toward the figures. Mobile keeps
+   the existing SFF vs Indices label with no fist. */
+.index-fist{display:none}
+@media(min-width:1024px){
+.index-strip-header .index-kicker{display:none!important}
+.index-strip-header .index-kicker-sff{
+  display:inline-flex!important;
+  align-items:center;
+  flex-shrink:0;
+  margin:0;
+  padding-right:2px;
+  gap:.2em;
+  font-size:9px;
+  line-height:normal;
+  font-weight:400;
+  letter-spacing:.4px;
+  font-family:ui-monospace,monospace;
+  text-transform:none;
+  color:#38ff77;
+  white-space:nowrap;
+}
+.index-strip-header .index-fist{
+  display:inline-block;
+  transform:scaleX(-1);
+  transform-origin:center;
+  font-size:1em;
+  line-height:1;
+  font-style:normal;
+  font-weight:400;
+  letter-spacing:0;
+  color:inherit;
+}
+}
