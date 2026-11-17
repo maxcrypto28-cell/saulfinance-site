@@ -1925,3 +1925,33 @@ body:has(.site-header) .header-lasers{
 @media(prefers-reduced-motion:reduce){
 .live-wait i{animation:none;opacity:.65;transform:none;box-shadow:none}
 }
+
+/* cc87: short laptop only. Keep the launch P&L fully above the green road
+   (the 118px header leaves too little gap under the launch line). Do not
+   move the tabs; lasers still aim at the title G and the Holdings tab.
+   Taller desktops and mobile keep the existing heading metrics. */
+@media(min-width:1024px) and (max-height:760px){
+.header-holdings-heading{top:0;gap:0}
+.header-holdings-kicker{line-height:1}
+.header-holdings-launch{margin:0}
+.header-holdings-pnl{margin:0}
+}
+
+/* cc87: use the leftover left-column space under the covered-calls chip
+   and above the Back button. 1440x900 / 1920 and mobile are unchanged. */
+@media(min-width:1024px) and (max-height:800px){
+#holdings-page.slide{padding-bottom:0}
+#holdings-page .slide-actions{min-height:0;margin:0}
+#holdings-page .holdings-native{gap:8px}
+#holdings-page .native-donut{
+  width:100%;
+  max-width:100%;
+  height:100%;
+  max-height:100%;
+  justify-self:stretch;
+  align-self:stretch;
+  aspect-ratio:720 / 600;
+  object-fit:contain;
+  object-position:left center;
+}
+}
