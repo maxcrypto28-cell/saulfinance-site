@@ -1955,3 +1955,16 @@ body:has(.site-header) .header-lasers{
   object-position:left center;
 }
 }
+
+/* cc88: hanging Since Nov 9 / best-performer / indexes stack is landing-page
+   only. It already hid on Covered Calls; hide it on pages 2, 4 and 5 too so
+   it cannot overlap those headings. Page 1 layout is unchanged. The in-page
+   mobile SFF vs Indices row lives inside #holdings-page, so it already
+   leaves with that slide. */
+@media(min-width:1024px){
+body:not(:has(#holdings-page[aria-hidden="false"])) .header-market-stack{
+  display:none!important;
+}
+/* Reclaim the cc60 offset that was reserved for the hanging stack on page 2. */
+#dividends.slide.content-slide{padding-top:14px}
+}
