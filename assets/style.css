@@ -2029,3 +2029,6 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 #covered-calls .cc-strategy ul{margin:6px 0 2px;padding-left:18px}
 #covered-calls .cc-strategy li{margin:2px 0}
 @media(max-width:1023px){#covered-calls .cc-strategy{font-size:11px;margin-top:2px}#covered-calls .cc-strategy ul{padding-left:15px}}
+
+/* cc97: desktop, center My strategy summary under the YouTube mark. */
+@media(min-width:1024px){#covered-calls .cc-strategy summary{justify-content:center}}
