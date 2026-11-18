@@ -2014,3 +2014,6 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
   color:inherit;
 }
 }
+
+/* cc94: ticker summary line under Covered call income is redundant with the cards; hidden on desktop too. */
+@media(min-width:1024px){#covered-calls .cc-income-line{display:none}}
