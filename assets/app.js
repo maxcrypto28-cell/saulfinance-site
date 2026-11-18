@@ -937,7 +937,7 @@ function renderCoveredCalls(data){
     return;
   }
 
-  const premiumSum=open.reduce((a,p)=>{const t=premiumTotal(p);return a+(t==null?0:t)},0);
+  const premiumSum=open.reduce((a,p)=>{const t=(p.premium_received&&p.premium_received.total_cad!=null)?Number(p.premium_received.total_cad):premiumTotal(p);return a+(t==null?0:t)},0);
   const incomeLine=open.map(p=>{
     const tkr=displayTicker(p.underlying||'');
     const strike=p.strike==null?'—':Number(p.strike).toLocaleString('en-CA',{minimumFractionDigits:0,maximumFractionDigits:2});
