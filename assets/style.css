@@ -2017,3 +2017,15 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 
 /* cc94: ticker summary line under Covered call income is redundant with the cards; hidden on desktop too. */
 @media(min-width:1024px){#covered-calls .cc-income-line{display:none}}
+
+/* cc95: "My strategy" rulebook dropdown under Covered call income. */
+#covered-calls .cc-strategy{flex:1 1 100%;width:100%;margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--mint)}
+#covered-calls .cc-strategy summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;user-select:none}
+#covered-calls .cc-strategy summary::-webkit-details-marker{display:none}
+#covered-calls .cc-strategy summary::after{content:"▾";color:#38ff77;font-size:12px}
+#covered-calls .cc-strategy[open] summary::after{content:"▴"}
+#covered-calls .cc-strategy-title{color:#38ff77;font-weight:600;letter-spacing:.3px}
+#covered-calls .cc-strategy-tag{font-style:italic;color:var(--mint)}
+#covered-calls .cc-strategy ul{margin:6px 0 2px;padding-left:18px}
+#covered-calls .cc-strategy li{margin:2px 0}
+@media(max-width:1023px){#covered-calls .cc-strategy{font-size:11px;margin-top:2px}#covered-calls .cc-strategy ul{padding-left:15px}}
