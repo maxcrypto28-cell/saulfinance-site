@@ -991,7 +991,7 @@ function renderCoveredCalls(data){
         ${metric('Premium / share', esc(moneyPerShare(per,cur)), '', 'cc-metric-secondary')}
         ${metric('Days to expiry', daysText, ' data-cc-field="days"', 'cc-metric-secondary')}
         ${metric('Underlying', live?money(live.price,live.currency):'—', ' data-cc-field="underlying"', 'cc-metric-secondary')}
-        ${metric('Moneyness', moneyNess?esc(moneyNess.label):'—', ' data-cc-field="moneyness"', 'cc-metric-secondary')}
+        ${metric('Altitude to strike', moneyNess?esc(moneyNess.label):'—', ' data-cc-field="moneyness"', 'cc-metric-secondary')}
         ${metric('Exit if assigned', exit==null?'—':money(exit,cur), '', 'cc-metric-secondary')}
         ${metric('Downside buffer', esc(moneyPerShare(per,cur)), '', 'cc-metric-secondary')}
         ${metric(exDivLabel(ex), esc(exText), '', 'cc-metric-secondary')}
