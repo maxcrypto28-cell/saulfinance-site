@@ -242,6 +242,8 @@ function daysToExpiration(opened,expiration){
  if(Number.isNaN(end.getTime())||Number.isNaN(start.getTime()))return null;
  const days=(end-start)/86400000;return days>0?days:null;
 }
+/* cc99: single source for covered call income in CAD (landing + Covered Calls page). USD calls carry premium_received.total_cad, the same CAD amount booked in the P&L tracker. */
+function premiumCadBooked(pos){const r=pos&&pos.premium_received;if(r&&typeof r==='object'&&r.total_cad!=null&&Number.isFinite(Number(r.total_cad)))return Number(r.total_cad);return premiumTotal(pos);}
 function premiumToCad(pos,fx){
  const t=premiumTotal(pos);if(t==null)return null;
  return (String(pos.currency||'CAD').toUpperCase()==='USD')?t*Number(fx||1):t;
@@ -699,10 +701,10 @@ function coveredCallSummary(data){
     if(!data||data._failed)return null;
     const positions=Array.isArray(data.positions)?data.positions:[];
     const open=positions.filter(isOpenCoveredCall);
-    const currency=(open[0]&&open[0].currency)?open[0].currency:'CAD';
+    const currency='CAD';
     let sum=0;
     for(const p of open){
-      const t=premiumTotal(p);
+      const t=premiumCadBooked(p);
       if(t!=null&&Number.isFinite(Number(t)))sum+=Number(t);
     }
     const tickers=open.map(p=>displayTicker(p.underlying||'')).filter(Boolean);
@@ -937,7 +939,7 @@ function renderCoveredCalls(data){
     return;
   }
 
-  const premiumSum=open.reduce((a,p)=>{const t=(p.premium_received&&p.premium_received.total_cad!=null)?Number(p.premium_received.total_cad):premiumTotal(p);return a+(t==null?0:t)},0);
+  const premiumSum=open.reduce((a,p)=>{const t=premiumCadBooked(p);return a+(t==null?0:t)},0);
   const incomeLine=open.map(p=>{
     const tkr=displayTicker(p.underlying||'');
     const strike=p.strike==null?'—':Number(p.strike).toLocaleString('en-CA',{minimumFractionDigits:0,maximumFractionDigits:2});
@@ -1019,7 +1021,7 @@ function renderCoveredCalls(data){
   const histTable=history.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Closed / assigned</h3><span>${history.length} recorded</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Covered call history"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th><th scope="col">P&amp;L</th></tr></thead><tbody>${history.map(histRow).join('')}</tbody></table></div></section>`:'';
 
   const learn=coveredCallExplainerLink('cc-page-learn');
-  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><div class="cc-income-head"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,currencyHint)}</strong></div>${learn}</div><details class="cc-strategy"><summary><span class="cc-strategy-title">My strategy</span><span class="cc-strategy-tag">Credits in. Shares stay.</span></summary><ul><li>Sell calls about one month out, with strikes 6–8% above the current price.</li><li>If the stock gets within 2% of the strike, roll out to next month at a higher strike.</li><li>Only roll for a net credit, never a debit.</li><li>Never let shares get called away.</li></ul></details><p class="cc-income-line">${incomeLine}</p></section>`:'';
+  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><div class="cc-income-head"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,'CAD')}</strong></div>${learn}</div><details class="cc-strategy"><summary><span class="cc-strategy-title">My strategy</span><span class="cc-strategy-tag">Credits in. Shares stay.</span></summary><ul><li>Sell calls about one month out, with strikes 6–8% above the current price.</li><li>If the stock gets within 2% of the strike, roll out to next month at a higher strike.</li><li>Only roll for a net credit, never a debit.</li><li>Never let shares get called away.</li></ul></details><p class="cc-income-line">${incomeLine}</p></section>`:'';
 
   host.innerHTML=`${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
   try{paintCoveredCallLive();}catch(e){}
