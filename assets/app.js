@@ -2641,3 +2641,85 @@ loadUpcomingDividends();
   const navBtns=[...document.querySelectorAll('.topnav [data-page]')];
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
+
+/* cc100: header cat — walks the green header line (road on desktop, border on mobile). */
+(function(){
+  const header=document.querySelector('.site-header');
+  if(!header)return;
+  const base='/assets/cat/',V='?v=cc100';
+  const WALK=['walk_r1','walk_r2','walk_r3','walk_r4'].map(n=>base+n+'.png'+V);
+  const POSE={idle:base+'idle.png'+V,sit:base+'sit.png'+V,lookup:base+'lookup.png'+V};
+  [...WALK,...Object.values(POSE)].forEach(s=>{const i=new Image();i.src=s;i.decode?.().catch(()=>{});});
+  const img=document.createElement('img');
+  img.className='sff-cat';img.alt='';img.setAttribute('aria-hidden','true');img.decoding='async';img.draggable=false;
+  img.src=POSE.idle;header.appendChild(img);
+  const desk=window.matchMedia('(min-width:1024px)');
+  const still=window.matchMedia('(prefers-reduced-motion: reduce)');
+  const AR=249/178,ORG=0.7; // canvas aspect; flip pivot (body centre) as fraction of width
+  let g={w:390,floor:97,hx1:-1,hx2:-1,hump:0,h:76,cw:106,tx:-1};
+  function geom(){
+    const hr=header.getBoundingClientRect();
+    g.w=header.clientWidth;
+    let h=76;
+    if(desk.matches){
+      g.floor=header.clientHeight-1.1;
+      const b=[...header.querySelectorAll('.topnav button')];
+      if(b.length){const f=b[0].getBoundingClientRect(),l=b[b.length-1].getBoundingClientRect();
+        g.hx1=f.left-hr.left-12;g.hx2=l.right-hr.left+12;g.hump=f.top-hr.top-8.6;}
+    }else{
+      g.floor=header.clientHeight;g.hx1=g.hx2=-1;
+      const oa=document.getElementById('open-at')||document.querySelector('.market-clock-open');
+      const ob=oa?oa.getBoundingClientRect().bottom-hr.top:40;
+      h=Math.max(36,Math.min(64,g.floor-ob-3));
+    }
+    g.h=h;g.cw=h*AR;img.style.height=h+'px';img.style.width=g.cw+'px';
+    const t=[document.querySelector('.header-holdings-title'),document.getElementById('holdings-title')].find(e=>e&&e.getBoundingClientRect().width>0);
+    g.tx=t?(r=>r.left+r.width/2-hr.left)(t.getBoundingClientRect()):-1;
+  }
+  const lo=()=>g.cw*ORG, hi=()=>g.w-g.cw*ORG; // range for body centre c
+  const floorAt=c=>(g.hx1>=0&&c>=g.hx1&&c<=g.hx2)?g.hump:g.floor;
+  let c=0,y=0,dir=1,state='walk',target=0,until=0,frame=0,ft=0,last=0,lookCool=0,src='';
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  function pickTarget(){
+    const a=lo(),b=hi();
+    let t=rnd(a,b),n=0;while(Math.abs(t-c)<120&&n++<6)t=rnd(a,b);
+    target=Math.max(a,Math.min(b,t));dir=target>=c?1:-1;state='walk';
+  }
+  function set(s){if(s!==src){src=s;img.src=s;}}
+  function draw(){
+    const x=c-g.cw*ORG;
+    img.style.transform=`translate3d(${x.toFixed(1)}px,${(y-g.h).toFixed(1)}px,0) scaleX(${dir})`;
+  }
+  function tick(now){
+    const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
+    if(state==='walk'){
+      const sp=desk.matches?55:38;
+      c+=dir*sp*dt;
+      ft+=dt;if(ft>=1/9){ft%=1/9;frame=(frame+1)%4;}
+      set(WALK[frame]);
+      if(g.tx>=0&&now>lookCool&&Math.abs(c-g.tx)<14){lookCool=now+12000;
+        if(Math.random()<0.6){state='pose';set(POSE.lookup);until=now+rnd(1000,2000);}}
+      if((dir>0&&c>=target)||(dir<0&&c<=target)){c=target;
+        if(Math.random()<0.55){state='pose';set(Math.random()<0.5?POSE.idle:POSE.sit);until=now+rnd(2000,4000);}
+        else pickTarget();}
+    }else if(now>=until){
+      const keep=dir;pickTarget();
+      if(src===POSE.lookup&&Math.random()<0.6){dir=keep;target=Math.max(lo(),Math.min(hi(),c+dir*rnd(150,400)));if(Math.abs(target-c)<20)pickTarget();}
+    }
+    c=Math.max(lo(),Math.min(hi(),c));
+    const fy=floorAt(c);y+=(fy-y)*Math.min(1,dt*14);if(Math.abs(fy-y)<0.3)y=fy;
+    draw();
+    if(!still.matches)requestAnimationFrame(tick);
+  }
+  function start(){
+    geom();
+    if(!c)c=rnd(lo(),hi());
+    y=floorAt(c);
+    if(still.matches){state='pose';set(POSE.sit);dir=1;c=hi();y=floorAt(c);draw();return;}
+    pickTarget();last=0;requestAnimationFrame(tick);
+  }
+  let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{geom();c=Math.max(lo(),Math.min(hi(),c));y=floorAt(c);if(target>hi()||target<lo())pickTarget();draw();},120);});
+  window.addEventListener('load',()=>{geom();y=floorAt(c);});
+  still.addEventListener?.('change',()=>{if(!still.matches)start();else{geom();state='pose';set(POSE.sit);draw();}});
+  start();
+})();
