@@ -2642,21 +2642,24 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100-cc102: header cat — walks the green header line (road on desktop, border on mobile). */
+/* cc100-cc103: header cat — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc102';
-  const WALK=[1,2,3,4,5,6,7,8].map(n=>base+'walk_r'+n+'.png'+V),NF=WALK.length,FPS=8; // cc102: exactly 8fps (125ms/frame), deliberate retro walk
-  const POSE={idle:base+'idle.png'+V,sit:base+'sit.png'+V,lookup:base+'lookup.png'+V};
-  [...WALK,...Object.values(POSE)].forEach(s=>{const i=new Image();i.src=s;i.decode?.().catch(()=>{});});
+  const base='/assets/cat/',V='?v=cc103',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
+  const F=(n,w,h,cx)=>({src:base+n+'.png'+V,w,h,cx});
+  const WALK=[1,2,3,4,5,6,7,8].map(n=>F('walk_r'+n,253,164,134.9)),NF=WALK.length;
+  const POSE={idle:F('idle',253,164,134.9),sit:F('sit',253,164,134.9),lookup:F('lookup',253,164,134.9)};
+  const LEAP=[F('leap_1',119,157,64),F('leap_2',190,116,107.7),F('leap_3',182,155,100.8),F('leap_4',255,113,135),F('leap_5',182,98,97)];
+  const SEQ=[0,0,1,1,2,3,3,4,4],AIR0=4,AIRN=3; // leap frame per 125ms tick; airborne ticks 4-6
+  [...WALK,...Object.values(POSE),...LEAP].forEach(f=>{const i=new Image();i.src=f.src;i.decode?.().catch(()=>{});});
   const img=document.createElement('img');
   img.className='sff-cat';img.alt='';img.setAttribute('aria-hidden','true');img.decoding='async';img.draggable=false;
-  img.src=POSE.idle;header.appendChild(img);
+  img.src=POSE.idle.src;header.appendChild(img);
   const desk=window.matchMedia('(min-width:1024px)');
   const still=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const AR=253/164,ORG=134.9/253; // canvas aspect; flip pivot = torso centre as fraction of width
-  let g={w:390,floor:97,hx1:-1,hx2:-1,hump:0,h:76,cw:106,tx:-1};
+  const ORG=134.9/253;
+  let g={w:390,floor:97,hx1:-1,hx2:-1,hump:0,h:76,k:0.5,cw:106,tx:-1};
   function geom(){
     const hr=header.getBoundingClientRect();
     g.w=header.clientWidth;
@@ -2672,42 +2675,66 @@ loadUpcomingDividends();
       const ob=oa?oa.getBoundingClientRect().bottom-hr.top:40;
       h=Math.max(36,Math.min(64,g.floor-ob-3));
     }
-    g.h=h;g.cw=h*AR;img.style.height=h+'px';img.style.width=g.cw+'px';
+    g.h=h;g.k=h/164;g.cw=253*g.k;cur=null;
     const t=[document.querySelector('.header-holdings-title'),document.getElementById('holdings-title')].find(e=>e&&e.getBoundingClientRect().width>0);
     g.tx=t?(r=>r.left+r.width/2-hr.left)(t.getBoundingClientRect()):-1;
   }
   const EXT=Math.max(ORG,1-ORG);const lo=()=>g.cw*EXT, hi=()=>g.w-g.cw*EXT; // keeps whole cat on the line either facing
   const floorAt=c=>(g.hx1>=0&&c>=g.hx1&&c<=g.hx2)?g.hump:g.floor;
-  let c=0,y=0,dir=1,state='walk',target=0,until=0,frame=0,ft=0,last=0,lookCool=0,src='';
+  let c=0,y=0,dir=1,state='walk',target=0,until=0,walkUntil=0,frame=0,ft=0,last=0,lookCool=0,cur=null,fr=POSE.idle,L=null;
   const rnd=(a,b)=>a+Math.random()*(b-a);
   function pickTarget(){
     const a=lo(),b=hi();
     let t=rnd(a,b),n=0;while(Math.abs(t-c)<120&&n++<6)t=rnd(a,b);
     target=Math.max(a,Math.min(b,t));dir=target>=c?1:-1;state='walk';
   }
-  function set(s){if(s!==src){src=s;img.src=s;}}
+  function pose(p,ms,now){state='pose';fr=p;until=now+ms;}
+  function resume(now){walkUntil=now+rnd(3000,5000);}
   function draw(){
-    const x=c-g.cw*ORG;
-    img.style.transform=`translate3d(${x.toFixed(1)}px,${(y-g.h).toFixed(1)}px,0) scaleX(${dir})`;
+    const k=g.k;
+    if(cur!==fr){cur=fr;img.src=fr.src;img.style.width=(fr.w*k)+'px';img.style.height=(fr.h*k)+'px';img.style.transformOrigin=(fr.cx/fr.w*100).toFixed(2)+'% 100%';}
+    img.style.transform=`translate3d(${(c-fr.cx*k).toFixed(1)}px,${(y-fr.h*k).toFixed(1)}px,0) scaleX(${dir})`;
+  }
+  function edgeAhead(){ // road step within reach in the walking direction
+    if(g.hx1<0)return null;const d=g.cw*0.45;
+    for(const e of [g.hx1,g.hx2]){const ahead=(e-c)*dir;if(ahead>0&&ahead<=d&&floorAt(e-dir)!==floorAt(e+dir))return e;}
+    return null;
   }
   function tick(now){
     const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
     if(state==='walk'){
-      const sp=g.h*0.7; // ~stride per 8-frame cycle, scaled to size
-      c+=dir*sp*dt;
-      ft+=dt;if(ft>=1/FPS){ft%=1/FPS;frame=(frame+1)%NF;}
-      set(WALK[frame]);
-      if(g.tx>=0&&now>lookCool&&Math.abs(c-g.tx)<14){lookCool=now+12000;
-        if(Math.random()<0.6){state='pose';set(POSE.lookup);until=now+rnd(1000,2000);}}
-      if((dir>0&&c>=target)||(dir<0&&c<=target)){c=target;
-        if(Math.random()<0.55){state='pose';set(Math.random()<0.5?POSE.idle:POSE.sit);until=now+rnd(1000,2000);}
-        else pickTarget();}
-    }else if(now>=until){
-      const keep=dir;pickTarget();
-      if(src===POSE.lookup&&Math.random()<0.6){dir=keep;target=Math.max(lo(),Math.min(hi(),c+dir*rnd(150,400)));if(Math.abs(target-c)<20)pickTarget();}
+      const e=edgeAhead();
+      if(e!==null){const d=g.cw*0.45,c1=Math.max(lo(),Math.min(hi(),e+dir*d));L={t0:now,c0:c,c1,f0:floorAt(c),f1:floorAt(c1)};state='leap';}
+      else{
+        c+=dir*g.h*0.7*dt; // ~stride per 8-frame cycle, scaled to size
+        ft+=dt;if(ft>=1/FPS){ft%=1/FPS;frame=(frame+1)%NF;}
+        fr=WALK[frame];
+        if(g.tx>=0&&now>lookCool&&Math.abs(c-g.tx)<14){lookCool=now+12000;if(Math.random()<0.6)pose(POSE.lookup,rnd(2000,3000),now);}
+        else if(now>=walkUntil){const r=Math.random(),nearT=g.tx>=0&&Math.abs(c-g.tx)<60;
+          pose(nearT&&r<0.5?POSE.lookup:(r<0.5?POSE.sit:r<0.88?POSE.idle:POSE.lookup),rnd(2000,3000),now);}
+        else if((dir>0&&c>=target)||(dir<0&&c<=target)){c=target;pickTarget();}
+      }
     }
-    c=Math.max(lo(),Math.min(hi(),c));
-    const fy=floorAt(c);y+=(fy-y)*Math.min(1,dt*14);if(Math.abs(fy-y)<0.3)y=fy;
+    if(state==='leap'){
+      const el=now-L.t0,ti=Math.floor(el/TICK);
+      if(ti>=SEQ.length){c=L.c1;y=L.f1;L=null;
+        if(Math.random()<0.4)pose(Math.random()<0.6?POSE.sit:POSE.idle,rnd(1000,1500),now);
+        else{state='walk';if((target-c)*dir<=20)pickTarget();}
+      }else{
+        fr=LEAP[SEQ[ti]];
+        const u=Math.max(0,Math.min(1,(el-AIR0*TICK)/(AIRN*TICK)));
+        c=L.c0+(L.c1-L.c0)*u;
+        y=L.f0+(L.f1-L.f0)*u-Math.sin(Math.PI*u)*g.h*0.35;
+      }
+    }else if(state==='pose'&&now>=until){
+      resume(now);
+      if((target-c)*dir>40&&Math.random()<0.7)state='walk'; // carry on toward the current target
+      else pickTarget();
+    }
+    if(state!=='leap'){
+      c=Math.max(lo(),Math.min(hi(),c));
+      const fy=floorAt(c);y+=(fy-y)*Math.min(1,dt*14);if(Math.abs(fy-y)<0.3)y=fy;
+    }
     draw();
     if(!still.matches)requestAnimationFrame(tick);
   }
@@ -2715,11 +2742,11 @@ loadUpcomingDividends();
     geom();
     if(!c)c=rnd(lo(),hi());
     y=floorAt(c);
-    if(still.matches){state='pose';set(POSE.sit);dir=1;c=hi();y=floorAt(c);draw();return;}
-    pickTarget();last=0;requestAnimationFrame(tick);
+    if(still.matches){state='pose';fr=POSE.sit;dir=1;c=hi();y=floorAt(c);draw();return;}
+    pickTarget();resume(performance.now());last=0;requestAnimationFrame(tick);
   }
-  let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{geom();c=Math.max(lo(),Math.min(hi(),c));y=floorAt(c);if(target>hi()||target<lo())pickTarget();draw();},120);});
-  window.addEventListener('load',()=>{geom();y=floorAt(c);});
-  still.addEventListener?.('change',()=>{if(!still.matches)start();else{geom();state='pose';set(POSE.sit);draw();}});
+  let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{geom();if(state==='leap'){c=L.c1;state='walk';L=null;}c=Math.max(lo(),Math.min(hi(),c));y=floorAt(c);if(target>hi()||target<lo())pickTarget();draw();},120);});
+  window.addEventListener('load',()=>{geom();if(state!=='leap')y=floorAt(c);});
+  still.addEventListener?.('change',()=>{if(!still.matches)start();else{geom();state='pose';fr=POSE.sit;L=null;draw();}});
   start();
 })();
