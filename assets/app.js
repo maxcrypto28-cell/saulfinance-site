@@ -2642,12 +2642,12 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100: header cat — walks the green header line (road on desktop, border on mobile). */
+/* cc100/cc101: header cat — walks the green header line (road on desktop, border on mobile). */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc100';
-  const WALK=['walk_r1','walk_r2','walk_r3','walk_r4'].map(n=>base+n+'.png'+V);
+  const base='/assets/cat/',V='?v=cc101';
+  const WALK=[1,2,3,4,5,6,7,8].map(n=>base+'walk_r'+n+'.png'+V),NF=WALK.length,FPS=13;
   const POSE={idle:base+'idle.png'+V,sit:base+'sit.png'+V,lookup:base+'lookup.png'+V};
   [...WALK,...Object.values(POSE)].forEach(s=>{const i=new Image();i.src=s;i.decode?.().catch(()=>{});});
   const img=document.createElement('img');
@@ -2655,12 +2655,12 @@ loadUpcomingDividends();
   img.src=POSE.idle;header.appendChild(img);
   const desk=window.matchMedia('(min-width:1024px)');
   const still=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const AR=249/178,ORG=0.7; // canvas aspect; flip pivot (body centre) as fraction of width
+  const AR=232/164,ORG=134.5/232; // canvas aspect; flip pivot = torso centre as fraction of width
   let g={w:390,floor:97,hx1:-1,hx2:-1,hump:0,h:76,cw:106,tx:-1};
   function geom(){
     const hr=header.getBoundingClientRect();
     g.w=header.clientWidth;
-    let h=76;
+    let h=80;
     if(desk.matches){
       g.floor=header.clientHeight-1.1;
       const b=[...header.querySelectorAll('.topnav button')];
@@ -2676,7 +2676,7 @@ loadUpcomingDividends();
     const t=[document.querySelector('.header-holdings-title'),document.getElementById('holdings-title')].find(e=>e&&e.getBoundingClientRect().width>0);
     g.tx=t?(r=>r.left+r.width/2-hr.left)(t.getBoundingClientRect()):-1;
   }
-  const lo=()=>g.cw*ORG, hi=()=>g.w-g.cw*ORG; // range for body centre c
+  const EXT=Math.max(ORG,1-ORG);const lo=()=>g.cw*EXT, hi=()=>g.w-g.cw*EXT; // keeps whole cat on the line either facing
   const floorAt=c=>(g.hx1>=0&&c>=g.hx1&&c<=g.hx2)?g.hump:g.floor;
   let c=0,y=0,dir=1,state='walk',target=0,until=0,frame=0,ft=0,last=0,lookCool=0,src='';
   const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -2693,9 +2693,9 @@ loadUpcomingDividends();
   function tick(now){
     const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
     if(state==='walk'){
-      const sp=desk.matches?55:38;
+      const sp=g.h*0.65; // ~stride per 8-frame cycle, scaled to size
       c+=dir*sp*dt;
-      ft+=dt;if(ft>=1/9){ft%=1/9;frame=(frame+1)%4;}
+      ft+=dt;if(ft>=1/FPS){ft%=1/FPS;frame=(frame+1)%NF;}
       set(WALK[frame]);
       if(g.tx>=0&&now>lookCool&&Math.abs(c-g.tx)<14){lookCool=now+12000;
         if(Math.random()<0.6){state='pose';set(POSE.lookup);until=now+rnd(1000,2000);}}
