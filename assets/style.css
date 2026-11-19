@@ -2035,3 +2035,6 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 
 /* cc100-cc103: header cat */
 .sff-cat{position:absolute;left:0;top:0;height:76px;width:auto;max-width:none;pointer-events:none;user-select:none;z-index:4;transform-origin:53.3% 100%;will-change:transform;image-rendering:auto}
+
+/* cc104: desktop donut — let right-side leader lines/labels extend past the svg box (they are aligned to the covered-calls chip edge) */
+@media(min-width:1024px){#native-holdings .native-donut{overflow:visible}}
