@@ -2642,12 +2642,12 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100/cc101: header cat — walks the green header line (road on desktop, border on mobile). */
+/* cc100-cc102: header cat — walks the green header line (road on desktop, border on mobile). */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc101';
-  const WALK=[1,2,3,4,5,6,7,8].map(n=>base+'walk_r'+n+'.png'+V),NF=WALK.length,FPS=13;
+  const base='/assets/cat/',V='?v=cc102';
+  const WALK=[1,2,3,4,5,6,7,8].map(n=>base+'walk_r'+n+'.png'+V),NF=WALK.length,FPS=8; // cc102: exactly 8fps (125ms/frame), deliberate retro walk
   const POSE={idle:base+'idle.png'+V,sit:base+'sit.png'+V,lookup:base+'lookup.png'+V};
   [...WALK,...Object.values(POSE)].forEach(s=>{const i=new Image();i.src=s;i.decode?.().catch(()=>{});});
   const img=document.createElement('img');
@@ -2655,7 +2655,7 @@ loadUpcomingDividends();
   img.src=POSE.idle;header.appendChild(img);
   const desk=window.matchMedia('(min-width:1024px)');
   const still=window.matchMedia('(prefers-reduced-motion: reduce)');
-  const AR=232/164,ORG=134.5/232; // canvas aspect; flip pivot = torso centre as fraction of width
+  const AR=253/164,ORG=134.9/253; // canvas aspect; flip pivot = torso centre as fraction of width
   let g={w:390,floor:97,hx1:-1,hx2:-1,hump:0,h:76,cw:106,tx:-1};
   function geom(){
     const hr=header.getBoundingClientRect();
@@ -2693,14 +2693,14 @@ loadUpcomingDividends();
   function tick(now){
     const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
     if(state==='walk'){
-      const sp=g.h*0.65; // ~stride per 8-frame cycle, scaled to size
+      const sp=g.h*0.7; // ~stride per 8-frame cycle, scaled to size
       c+=dir*sp*dt;
       ft+=dt;if(ft>=1/FPS){ft%=1/FPS;frame=(frame+1)%NF;}
       set(WALK[frame]);
       if(g.tx>=0&&now>lookCool&&Math.abs(c-g.tx)<14){lookCool=now+12000;
         if(Math.random()<0.6){state='pose';set(POSE.lookup);until=now+rnd(1000,2000);}}
       if((dir>0&&c>=target)||(dir<0&&c<=target)){c=target;
-        if(Math.random()<0.55){state='pose';set(Math.random()<0.5?POSE.idle:POSE.sit);until=now+rnd(2000,4000);}
+        if(Math.random()<0.55){state='pose';set(Math.random()<0.5?POSE.idle:POSE.sit);until=now+rnd(1000,2000);}
         else pickTarget();}
     }else if(now>=until){
       const keep=dir;pickTarget();
