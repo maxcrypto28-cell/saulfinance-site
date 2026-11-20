@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-17T08:55:00-07:00",
+  "updated_at": "2026-11-20T08:35:00-07:00",
   "notes": "Open covered calls sold in the Wealthsimple TFSA. Premiums are net as shown on the brokerage activity. Options are listed on the Montréal Exchange. IV at sale is unknown. Option marks are Montréal Exchange LAST TRADE only (not a live mid), as of after the 2026-11-12 regular close. Ex-dividend figures marked approximate are labeled with a tilde in the UI.",
   "positions": [
     {
@@ -200,6 +200,39 @@
       "close_date": null,
       "realized_pnl": null,
       "notes": "Wealthsimple limit sell to open 1 x C$0.08, less C$0.04 fee = C$7.96 net credit, filled 2026-11-18. 1 contract covers 100 of 115 shares. Montréal Exchange."
+    },
+    {
+      "id": "cc-cu-2026-12-18-58c",
+      "underlying": "CU.TO",
+      "name": "Canadian Utilities Limited",
+      "option_type": "call",
+      "exchange": "MX",
+      "shares_covered": 100,
+      "contracts": 1,
+      "strike": 58,
+      "expiration": "2026-12-18",
+      "premium_received": {
+        "per_share": 0.1296,
+        "total": 12.96
+      },
+      "currency": "CAD",
+      "opened_date": "2026-11-20",
+      "status": "open",
+      "iv_at_sale": null,
+      "option_mark": null,
+      "option_mark_as_of": null,
+      "option_mark_source": null,
+      "option_mark_note": null,
+      "option_open_interest": null,
+      "ex_dividend_date": null,
+      "ex_dividend_date_approximate": null,
+      "ex_dividend_amount": null,
+      "ex_dividend_amount_approximate": null,
+      "ex_dividend_source": null,
+      "close_price": null,
+      "close_date": null,
+      "realized_pnl": null,
+      "notes": "Wealthsimple limit sell to open 1 x C$0.13 less C$0.04 fee = C$12.96 net credit, filled 2026-11-20 8:27. 1 contract covers 100 shares. Montréal Exchange."
     }
   ]
 }
