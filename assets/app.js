@@ -2677,11 +2677,11 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100-cc110: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
+/* cc100-cc111: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc110',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
+  const base='/assets/cat/',V='?v=cc111',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
   const F=(n,w,h,cx)=>({src:base+n+'.png'+V,w,h,cx});
   const WALK=[1,2,3,4,5,6,7,8].map(n=>F('walk_r'+n,253,164,134.9)),NF=WALK.length;
   const POSE={idle:F('idle',253,164,134.9),sit:F('sit',253,164,134.9),lookup:F('lookup',253,164,134.9)};
@@ -2741,10 +2741,16 @@ loadUpcomingDividends();
     btn.style.left=Math.max(4,Math.round(x))+'px';btn.style.top=Math.max(2,Math.round(y))+'px';
     const tb=desk.matches&&header.querySelector('.topnav button');
     if(tb){const r=tb.getBoundingClientRect(),pl=document.getElementById('header-launch-pnl');
-      const hit=()=>{if(!pl||pl.hidden)return 0;const a=pl.getBoundingClientRect(),q=btnTab.getBoundingClientRect();return a.width&&q.right>a.left-6&&q.left<a.right&&q.bottom>a.top&&q.top<a.bottom?q.right-(a.left-6):0;};
+      const box=e=>{if(!e||e.hidden)return null;const q=document.createRange();q.selectNodeContents(e);const a=q.getBoundingClientRect();return a.width?a:null;};
+      const over=(a,pad)=>{if(!a)return 0;const q=btnTab.getBoundingClientRect();return q.right>a.left-pad&&q.left<a.right+pad&&q.bottom>a.top&&q.top<a.bottom?q.right-(a.left-pad):0;};
       btnTab.classList.remove('is-compact');
-      const put=()=>{btnTab.style.left=Math.round(r.left-hr.left)+'px';btnTab.style.top=Math.round(r.top-hr.top-8.6-btnTab.offsetHeight-6)+'px';};
-      put();if(hit()){btnTab.classList.add('is-compact');put();const o=hit();if(o)btnTab.style.left=Math.round(r.left-hr.left-o)+'px';}} // narrow desktop: never cover the launch P&L line
+      // cc111: on the "SAUL FINANCE FUND" title line (same vertical centre), left edge at the Holdings tab or just right of the title
+      const t=box(header.querySelector('.brand-title-block h1')),blk=[header.querySelector('.header-holdings-kicker'),header.querySelector('.header-holdings-title'),header.querySelector('.header-holdings-launch'),pl].map(box);
+      const onTitle=()=>{if(!t)return false;btnTab.style.left=Math.round(Math.max(r.left,t.right+10)-hr.left)+'px';btnTab.style.top=Math.round((t.top+t.bottom)/2-btnTab.offsetHeight/2-hr.top)+'px';return !blk.some(a=>over(a,8));};
+      if(!onTitle()){btnTab.classList.add('is-compact');
+        if(!onTitle()){btnTab.classList.remove('is-compact'); // too narrow (≈1024-1180px): keep the cc110 spot above the Holdings tab
+          const put=()=>{btnTab.style.left=Math.round(r.left-hr.left)+'px';btnTab.style.top=Math.round(r.top-hr.top-8.6-btnTab.offsetHeight-6)+'px';};
+          put();if(over(box(pl),6)){btnTab.classList.add('is-compact');put();const o=over(box(pl),6);if(o)btnTab.style.left=Math.round(r.left-hr.left-o)+'px';}}}} // never cover the launch P&L line
   }
   {const pl=document.getElementById('header-launch-pnl');if(pl&&window.MutationObserver)new MutationObserver(()=>requestAnimationFrame(()=>placeBtn(header.getBoundingClientRect()))).observe(pl,{attributes:true,childList:true,characterData:true,subtree:true});} // cc110: re-place when the launch P&L line fills in
   const EXT=Math.max(ORG,1-ORG);const lo=()=>g.cw*EXT, hi=()=>g.w-g.cw*EXT; // keeps whole cat on the line either facing
