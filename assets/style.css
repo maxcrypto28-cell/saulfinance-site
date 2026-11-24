@@ -2069,3 +2069,16 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 @media(min-width:1024px){
 .allocation-table th+th,.allocation-table th+td,.allocation-table td+td{border-left:1px solid rgba(56,255,119,.26)}
 }
+/* cc112: Rev the Car hold button + overlay (positioned in the header; no layout change) */
+.site-header .sff-rev-btn{position:absolute;z-index:3;display:flex;align-items:center;gap:2px;min-height:0;margin:0;padding:2px 3px;border:1px solid rgba(56,255,119,.55);border-radius:4px;background:rgba(5,16,9,.78);cursor:pointer;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;line-height:0;box-shadow:0 0 6px rgba(56,255,119,.18);transition:box-shadow .15s,transform .1s}
+.site-header .sff-rev-btn:hover{border-color:var(--green);box-shadow:0 0 10px rgba(56,255,119,.4)}
+.site-header .sff-rev-btn.is-held{transform:translateY(1px) scale(.96);border-color:var(--green);box-shadow:0 0 12px rgba(56,255,119,.6)}
+.sff-rev-btn img{display:block;pointer-events:none}
+.sff-rev-btn .rev-pedal{height:20px;width:auto}
+.sff-rev-btn .rev-icon{height:auto;width:22px}
+.sff-rev-btn.is-held .rev-pedal{transform:rotate(-14deg) translateY(1px);transform-origin:50% 100%}
+@media(max-width:1023.98px){.sff-rev-btn .rev-pedal{height:15px}.sff-rev-btn .rev-icon{width:17px}.site-header .sff-rev-btn{padding:1px 2px;gap:1px}}
+.sff-rev-wheel,.sff-rev-smoke{position:absolute;left:0;top:0;pointer-events:none;user-select:none;max-width:none}
+.sff-rev-wheel{z-index:2;transform-origin:50% 50%}
+.sff-rev-wheel[hidden]{display:none}
+.sff-rev-smoke{z-index:2;height:auto;opacity:0;transform-origin:85% 33%;will-change:transform,opacity}

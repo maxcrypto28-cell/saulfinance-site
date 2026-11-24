@@ -2677,11 +2677,11 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100-cc111: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
+/* cc100-cc112: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc111',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
+  const base='/assets/cat/',V='?v=cc113',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
   const F=(n,w,h,cx)=>({src:base+n+'.png'+V,w,h,cx});
   const WALK=[1,2,3,4,5,6,7,8].map(n=>F('walk_r'+n,253,164,134.9)),NF=WALK.length;
   const POSE={idle:F('idle',253,164,134.9),sit:F('sit',253,164,134.9),lookup:F('lookup',253,164,134.9)};
@@ -2798,14 +2798,14 @@ loadUpcomingDividends();
       header.appendChild(s);setTimeout(()=>s.remove(),HAPPY+600);}
   }
   function cooldown(ms){BTNS.forEach(b=>b.disabled=true);clearTimeout(coolT);coolUntil=Math.max(coolUntil,performance.now()+ms);
-    coolT=setTimeout(()=>{BTNS.forEach(b=>b.disabled=false);mark('ready');},Math.max(0,coolUntil-performance.now()));}
+    coolT=setTimeout(()=>{if(state==='feed'||feedReq)return;BTNS.forEach(b=>b.disabled=false);mark('ready');},Math.max(0,coolUntil-performance.now()));}
+  function treatSpot(){ // cc112: one fixed spot on the line beneath the header (desktop: middle of the right-hand floor past the tabs; mobile: centre)
+    if(desk.matches&&g.hx2>=0){const a=Math.max(g.hx2,lo()),b=hi();return a<b?(a+b)/2:hi();}
+    return Math.max(lo(),Math.min(hi(),g.w/2));
+  }
   function beginFeed(now){
-    feedReq=false;const [a,b]=segment(),reach=EAT_FRONT*g.k,gap=g.cw*rnd(0.9,1.6);
-    // treat goes ahead of the cat where there is room on this segment; the cat stops with its mouth at the treat
-    let d=(b-c)>=(c-a)?1:-1;if(dir&&((dir>0?b-c:c-a)>gap+reach))d=dir;
-    let stop=Math.max(a,Math.min(b,c+d*gap));if(Math.abs(stop-c)<g.cw*0.3){d=-d;stop=Math.max(a,Math.min(b,c+d*gap));}
-    const tx=stop+d*reach;dir=d;
-    FD={ph:'drop',t0:now,tx,stop,d};state='feed';fr=POSE.idle;
+    feedReq=false;const tx=treatSpot();dir=(tx-c)>=0?1:-1;
+    FD={ph:'drop',t0:now,tx,L:null,v:Math.max(g.h*1.4,Math.abs(tx-c)/4)};state='feed';fr=POSE.idle; // run: 2x walk speed, faster on long cross-header runs (≤~4s)
     treat.hidden=false;treatDraw(tx,floorAt(tx)-g.h*0.9,1);mark('drop');
   }
   function feedTick(now,dt){
@@ -2816,10 +2816,16 @@ loadUpcomingDividends();
       else{treatDraw(FD.tx,fy,1);FD.ph='crouch';FD.t0=now;fr=FEED.crouch;mark('crouch');}
     }else if(FD.ph==='crouch'){fr=FEED.crouch;
       if(el>=CROUCH){FD.ph='run';FD.t0=now;mark('run');}
-    }else if(FD.ph==='run'){
-      fr=FEED.run[Math.floor(el/TICK)%2];
-      c+=FD.d*g.h*1.4*dt; // 2x walk speed
-      if((FD.stop-c)*FD.d<=0){c=FD.stop;FD.ph='eat';FD.t0=now;mark('eat');}
+    }else if(FD.ph==='run'){ // cc112: run from wherever he is (roof, hump, floor) to the fixed treat, leaping any step on the way
+      const reach=EAT_FRONT*g.k,sd=(FD.tx-c)>=0?1:-1,stop=Math.max(lo(),Math.min(hi(),FD.tx-sd*reach));
+      if(Math.abs(stop-c)<1.5||el>15000){c=stop;dir=sd;FD.ph='eat';FD.t0=now;mark('eat');}
+      else{dir=stop>c?1:-1;const e=edgeAhead();
+        if(e!==null&&(e-c)*dir<(stop-c)*dir){const d=g.cw*0.45,c1=Math.max(lo(),Math.min(hi(),e+dir*d));FD.L={t0:now,c0:c,c1,f0:floorAt(c),f1:floorAt(c1)};FD.ph='leap';}
+        else{fr=FEED.run[Math.floor(el/TICK)%2];const step=FD.v*dt;
+          c=Math.abs(stop-c)<=step?stop:c+dir*step;}}
+    }else if(FD.ph==='leap'){const L2=FD.L,le=now-L2.t0,ti=Math.floor(le/TICK);
+      if(ti>=SEQ.length){c=L2.c1;y=L2.f1;FD.L=null;FD.ph='run';}
+      else{fr=LEAP[SEQ[ti]];const u=Math.max(0,Math.min(1,(le-AIR0*TICK)/(AIRN*TICK)));c=L2.c0+(L2.c1-L2.c0)*u;y=L2.f0+(L2.f1-L2.f0)*u-Math.sin(Math.PI*u)*g.h*0.35;}
     }else if(FD.ph==='eat'){
       fr=FEED.eat[Math.min(23,Math.floor(el/TICK))%3]; // 24 ticks @8fps = exactly 3.0s
       treatDraw(FD.tx,fy,Math.max(0,1-el/EAT).toFixed(3));
@@ -2834,9 +2840,9 @@ loadUpcomingDividends();
     feedReq=true;mark('wait');
   };
   BTNS.forEach(b=>b.addEventListener('click',onFeed));
-  function feedStill(){ // reduced motion: treat appears beside the cat, happy pose, static hearts — no running
-    geom();const [a,b]=segment(),tx=Math.max(a,c-(EAT_FRONT+30)*g.k);
-    treat.hidden=false;treatDraw(tx,floorAt(tx),1);fr=POSE.sit;dir=-1;draw();mark('drop');
+  function feedStill(){ // reduced motion: treat appears at the fixed spot, happy pose, static hearts — no running
+    geom();const tx=treatSpot();
+    treat.hidden=false;treatDraw(tx,floorAt(tx),1);fr=POSE.sit;dir=tx>=c?1:-1;draw();mark('drop');
     setTimeout(()=>{fr=FEED.happy;draw();hearts(c,floorAt(c),true);mark('happy');
       setTimeout(()=>{treat.hidden=true;fr=POSE.sit;dir=1;draw();mark('done');},HAPPY);},500);
   }
@@ -2875,7 +2881,7 @@ loadUpcomingDividends();
       if((target-c)*dir>40&&Math.random()<0.7)state='walk'; // carry on toward the current target
       else pickTarget();
     }
-    if(state!=='leap'){
+    if(state!=='leap'&&!(state==='feed'&&FD&&FD.ph==='leap')){
       c=Math.max(lo(),Math.min(hi(),c));
       const fy=floorAt(c);y+=(fy-y)*Math.min(1,dt*14);if(Math.abs(fy-y)<0.3)y=fy;
     }
@@ -2893,4 +2899,69 @@ loadUpcomingDividends();
   window.addEventListener('load',()=>{geom();if(state!=='leap')y=floorAt(c);});
   still.addEventListener?.('change',()=>{if(!still.matches)start();else{geom();state='pose';fr=POSE.sit;L=null;draw();}});
   start();
+})();
+
+/* cc112: "Rev the Car" — hold-only pedal button; overlays a spinning rear wheel + tyre smoke on the existing Jaguar (the Jaguar itself is untouched). */
+(function(){
+  const header=document.querySelector('.site-header'),car=header&&header.querySelector('.brand-jaguar-img');
+  if(!header||!car)return;
+  const B='/assets/jaguar/',V='?v=cc113',CAP=3500; // effect ramps up to full over ~3.5s of holding
+  const still=window.matchMedia('(prefers-reduced-motion: reduce)'),desk=window.matchMedia('(min-width:1024px)');
+  const RW={x:.197,y:.693,d:.15}; // rear-wheel centre / diameter as fractions of the car image box (measured from jaguar-wheels)
+  const btn=document.createElement('button');
+  btn.type='button';btn.className='sff-rev-btn';btn.setAttribute('aria-label','Rev the car (press and hold)');btn.title='Rev the Car — press and hold';
+  btn.innerHTML=`<img class="rev-pedal" src="${B}pedal.png${V}" alt="" draggable="false"><img class="rev-icon" src="${B}jaguar_icon.png${V}" alt="" draggable="false">`;
+  header.appendChild(btn);
+  const wheel=document.createElement('img');
+  wheel.className='sff-rev-wheel';wheel.alt='';wheel.setAttribute('aria-hidden','true');wheel.draggable=false;wheel.src=B+'wheel_spin.png'+V;wheel.hidden=true;header.appendChild(wheel);
+  ['smoke_light','smoke_heavy'].forEach(n=>{const i=new Image();i.src=B+n+'.png'+V;});
+  const jag=car.closest('.brand-jaguar')||car;
+  let held=false,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[];
+  function box(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect();return {hr,r,cx:r.left-hr.left+RW.x*r.width,cy:r.top-hr.top+RW.y*r.height,d:RW.d*r.width};}
+  function place(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect(),bw=btn.offsetWidth,bh=btn.offsetHeight;
+    if(!r.width){btn.hidden=true;return;}btn.hidden=false;
+    // behind (left of) the Jaguar's rear bumper, under the boot line and clear of the title, tabs and the cat's walking line
+    const x=Math.max(2,r.left-hr.left-bw+4),y=desk.matches?r.bottom-hr.top-bh-14:r.top-hr.top+(r.height-bh)/2;
+    btn.style.left=Math.round(x)+'px';btn.style.top=Math.round(y)+'px';}
+  function puff(b,u,now){
+    const heavy=Math.random()<Math.max(0,(u-0.3)/0.5),el=document.createElement('img');
+    el.className='sff-rev-smoke';el.alt='';el.setAttribute('aria-hidden','true');el.draggable=false;el.src=B+(heavy?'smoke_heavy':'smoke_light')+'.png'+V;
+    const w=b.d*(1.1+2.6*u)*(heavy?1.25:1)*(0.85+Math.random()*0.3);
+    el.style.width=w.toFixed(1)+'px';header.appendChild(el);
+    puffs.push({el,born:now,life:900+700*u,x:b.cx-b.d*0.35,y:b.cy+b.d*0.45,w,vx:-b.d*(1.0+2.4*u)*(0.7+Math.random()*0.6),vy:-b.d*(0.15+0.5*u)*Math.random(),op:(heavy?0.55:0.4)+0.4*u});
+    if(puffs.length>14){const p=puffs.shift();p.el.remove();}
+  }
+  function frame(now){
+    const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
+    const b=box(),u=held?Math.min(1,(now-t0)/CAP):0;
+    if(held){
+      ang=(ang+dt*360*(1.5+8.5*u*u))%360; // 1.5 → 10 rev/s
+      wheel.style.width=wheel.style.height=b.d.toFixed(1)+'px';
+      wheel.style.transform=`translate3d(${(b.cx-b.d/2).toFixed(1)}px,${(b.cy-b.d/2).toFixed(1)}px,0) rotate(${ang.toFixed(1)}deg)`;
+      if(now>=nextPuff){puff(b,u,now);nextPuff=now+(260-170*u);}
+      const s=u>0.15?(Math.random()-0.5)*1.6*u:0;jag.style.transform=`translate(${s.toFixed(2)}px,${(Math.random()*-0.9*u).toFixed(2)}px)`; // subtle rev shake
+    }
+    puffs=puffs.filter(p=>{const a=(now-p.born)/p.life;if(a>=1||(!held&&p.fade&&now>p.fade)){p.el.remove();return false;}
+      const g=1+a*0.9,x=p.x+p.vx*a*p.life/1000,y=p.y+p.vy*a*p.life/1000;
+      const op=p.fade?Math.max(0,p.fop*(1-(now-p.fs)/300)):p.op*(a<0.15?a/0.15:1-(a-0.15)/0.85);
+      p.el.style.opacity=op.toFixed(3);p.el.style.transform=`translate3d(${(x-p.w*g*0.85).toFixed(1)}px,${(y-p.w*g*0.33).toFixed(1)}px,0) scale(${g.toFixed(3)})`;return true;});
+    if(held||puffs.length)raf=requestAnimationFrame(frame);else raf=0;
+  }
+  function start(){if(held)return;held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held');
+    if(still.matches){const b=box();wheel.hidden=true;puff(b,0.2,t0);const p=puffs[puffs.length-1];p.life=1e9;p.vx=p.vy=0;p.el.style.opacity='0.5';
+      p.el.style.transform=`translate3d(${(p.x-p.w*0.85).toFixed(1)}px,${(p.y-p.w*0.33).toFixed(1)}px,0)`;return;} // reduced motion: one static light puff while held
+    wheel.hidden=false;if(!raf)raf=requestAnimationFrame(frame);}
+  function stop(){if(!held)return;held=false;btn.classList.remove('is-held');wheel.hidden=true;jag.style.transform='';
+    const now=performance.now();
+    if(still.matches){puffs.forEach(p=>p.el.remove());puffs=[];return;}
+    puffs.forEach(p=>{p.fade=now+300;p.fs=now;p.fop=parseFloat(p.el.style.opacity)||0;}); // smoke fades out quickly
+    if(!raf)raf=requestAnimationFrame(frame);}
+  btn.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();start();});
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>btn.addEventListener(t,stop));
+  btn.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();if(!e.repeat)start();}});
+  btn.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();stop();}});
+  btn.addEventListener('blur',stop);btn.addEventListener('contextmenu',e=>e.preventDefault());
+  window.addEventListener('blur',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+  let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(place,120);});
+  window.addEventListener('load',place);(car.complete?place():car.addEventListener('load',place,{once:true}));place();
 })();
