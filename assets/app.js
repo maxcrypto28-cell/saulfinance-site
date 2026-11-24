@@ -747,7 +747,7 @@ function bindLandingCcNav(){
       if(!host||host.hidden)return;
       if(e.target.closest('a'))return;
       e.preventDefault();
-      const btn=document.querySelector('.topnav [data-page="2"]');
+      const btn=document.querySelector('.topnav [aria-controls="covered-calls"]');
       if(btn)btn.click();
       else location.hash='#covered-calls';
     }catch(err){}
