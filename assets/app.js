@@ -929,6 +929,13 @@ function paintLandingCcTracker(data){
     try{document.querySelectorAll('.cc-landing-tracker').forEach(el=>{if(el)el.hidden=true;});}catch(e2){}
   }
 }
+// cc115: distance from the live underlying price up to the call strike (% of price); colour = how close to action
+function ccDistance(price,strike){
+  if(!Number.isFinite(Number(price))||!Number.isFinite(Number(strike))||!(Number(price)>0))return {text:'—',cls:'cc-dist-na',title:'Live price unavailable'};
+  const pct=(Number(strike)-Number(price))/Number(price)*100;
+  const cls=pct>=8?'cc-dist-green':(pct>5?'cc-dist-orange':'cc-dist-red');
+  return {text:(pct>=0?'+':'')+pct.toFixed(1)+'%',cls,title:pct>=8?'8%+ below the strike':(pct>5?'5–8% below the strike':'Within 5% of the strike — action needed')};
+}
 function renderCoveredCalls(data){
   COVERED_CALLS=data||{updated_at:null,positions:[]};COVERED_CALLS._loaded=true;
   try{paintLandingCcTracker(COVERED_CALLS);}catch(e){}
@@ -984,14 +991,18 @@ function renderCoveredCalls(data){
     }
     const href=stockAnalysisUrl({symbol:p.underlying,currency:cur});
     const title=href?`<a class="cc-ticker sa-link" href="${esc(href)}" target="_blank" rel="noopener">${esc(tkr)}</a>`:`<span class="cc-ticker">${esc(tkr)}</span>`;
+    const dist=ccDistance(live&&live.price,strike),mid='cc-m-'+String(p.id||tkr).replace(/[^\w-]/g,'');
+    const sum=(k,v,attrs='')=>`<span class="cc-sum"${attrs}><small>${k}</small><b>${v}</b></span>`;
     const metric=(label,value,attrs='',cls='')=>`<div class="cc-metric${cls?' '+cls:''}"${attrs}><span>${label}</span><strong>${value}</strong></div>`;
     return `<article class="native-panel cc-card" data-cc-id="${esc(p.id||tkr)}" data-cc-underlying="${esc(p.underlying||tkr)}" data-cc-strike="${strike==null?'':esc(String(strike))}" data-cc-expiry="${esc(p.expiration||'')}" data-cc-exdiv="${esc(ex&&ex.kind==='before_expiry'?ex.date:'')}" data-cc-currency="${esc(cur)}">
       <header class="cc-card-head">
         <span class="ticker-dot" style="background:${esc(color)}"></span>
         <div class="cc-card-title">${title}<span class="cc-card-name">${esc(name)}</span></div>
+        ${sum('Strike',strike==null?'—':money(strike,cur))}${sum('Expiry',esc(formatShortDate(p.expiration)))}${sum('Premium','<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>')}${sum('To strike',esc(dist.text),' data-cc-field="dist" title="'+esc(dist.title)+'" data-cc-dist="'+dist.cls+'"')}
         <span class="cc-status cc-status-open">Open</span>
+        <button type="button" class="cc-toggle" aria-expanded="false" aria-controls="${esc(mid)}" aria-label="Show all details for ${esc(tkr)}"><span aria-hidden="true">▾</span></button>
       </header>
-      <div class="cc-metrics">
+      <div class="cc-metrics" id="${esc(mid)}">
         ${metric('Contracts / shares', esc(contracts)+' · '+esc(shares), '', 'cc-metric-secondary')}
         ${metric('Strike', strike==null?'—':money(strike,cur), '', 'cc-metric-key')}
         ${metric('Expiry', esc(formatShortDate(p.expiration)), '', 'cc-metric-key')}
@@ -1030,6 +1041,10 @@ function renderCoveredCalls(data){
   const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><div class="cc-income-head"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,'CAD')}</strong></div>${learn}</div><details class="cc-strategy"><summary><span class="cc-strategy-title">My strategy</span><span class="cc-strategy-tag">Credits in. Shares stay.</span></summary><ul><li>Sell calls about one month out, with strikes 6–8% above the current price.</li><li>If the stock gets within 2% of the strike, roll out to next month at a higher strike.</li><li>Only roll for a net credit, never a debit.</li><li>Never let shares get called away.</li></ul></details><p class="cc-income-line">${incomeLine}</p></section>`:'';
 
   host.innerHTML=`${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
+  if(!host.dataset.ccToggle){host.dataset.ccToggle='1'; // cc115: desktop compact rows expand on click / Enter / Space
+    host.addEventListener('click',e=>{const head=e.target.closest('.cc-card-head');if(!head||e.target.closest('a'))return;
+      const card=head.closest('.cc-card'),b=card&&card.querySelector('.cc-toggle');if(!b||getComputedStyle(b).display==='none')return;
+      const on=!card.classList.contains('is-open');card.classList.toggle('is-open',on);b.setAttribute('aria-expanded',String(on));});}
   try{paintCoveredCallLive();}catch(e){}
 }
 function paintCoveredCallLive(){
@@ -1052,6 +1067,8 @@ function paintCoveredCallLive(){
       const mEl=card.querySelector('[data-cc-field="moneyness"] strong');
       const moneyNess=(live&&Number.isFinite(strike))?callMoneyness(live.price,strike):null;
       if(mEl) mEl.textContent=moneyNess?moneyNess.label:'—';
+      const dEl=card.querySelector('[data-cc-field="dist"]');
+      if(dEl){const d=ccDistance(live&&live.price,strike);dEl.querySelector('b').textContent=d.text;dEl.dataset.ccDist=d.cls;dEl.title=d.title;}
       const earlyEl=card.querySelector('[data-cc-field="early"] strong');
       const early=!!(exdiv&&moneyNess&&moneyNess.side==='ITM');
       if(earlyEl) earlyEl.textContent=early?'ITM into an ex-div before expiry':'—';
