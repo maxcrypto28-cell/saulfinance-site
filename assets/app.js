@@ -2942,10 +2942,24 @@ loadUpcomingDividends();
       mark('scare');return true;
     }catch(e){SC=null;if(state==='scare')state='walk';return false;}
   }
-  function scareEnd(){if(!SC&&state!=='scare')return;SC=null;if(state==='scare'){state='walk';dir=-1;const n=performance.now();pickTarget();resume(n);mark('scare-end');}}
+  function hiss(){const AC=window.sffAudio(false);if(!AC)return; // cc133: synthesized cat hiss (high-passed white noise, attack/sustain/decay ~0.95 s)
+    try{const t=AC.currentTime+0.02,D=0.95,out=AC.createGain();out.gain.value=0.15;out.connect(AC.destination);
+      const nb=AC.createBuffer(1,Math.round(AC.sampleRate*(D+0.1)),AC.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      const ns=AC.createBufferSource();ns.buffer=nb;const hp=AC.createBiquadFilter();hp.type='highpass';hp.frequency.value=2500;hp.Q.value=0.8;
+      const pk=AC.createBiquadFilter();pk.type='peaking';pk.frequency.value=4800;pk.Q.value=1.5;pk.gain.value=6;
+      const env=AC.createGain();env.gain.setValueAtTime(0.0001,t);env.gain.exponentialRampToValueAtTime(1,t+0.06);env.gain.setValueAtTime(1,t+0.62);env.gain.exponentialRampToValueAtTime(0.0001,t+D);
+      const fl=AC.createOscillator(),fd=AC.createGain();fl.frequency.value=31;fd.gain.value=0.15;fl.connect(fd);fd.connect(env.gain); // slight breathy flutter
+      ns.connect(hp);hp.connect(pk);pk.connect(env);env.connect(out);ns.start(t);fl.start(t);ns.stop(t+D+0.05);fl.stop(t+D+0.05);
+      setTimeout(()=>{try{out.disconnect();}catch(e){}},(D+0.4)*1000);}catch(e){}}
+  function scareFinish(){SC=null;if(state==='scare'){state='walk';dir=-1;const n=performance.now();pickTarget();resume(n);mark('scare-end');}}
+  function scareEnd(){if(!SC){if(state==='scare')scareFinish();return;}
+    if(SC.hissUntil){if(document.hidden)scareFinish();return;} // already hissing: let it finish (the rev reset calls end() again)
+    if(document.hidden||!desk.matches){scareFinish();return;} // tab hidden / mobile / already hissing: straight back to normal
+    SC.hop=null;c=Math.max(lo(),Math.min(hi(),c));SC.hissUntil=performance.now()+1000;fr=SCARE.pounce;dir=-1;hiss();mark('scare-hiss');} // cc133: hold the pounce and hiss, then walk on
   function scareTick(now){
     const el=now-SC.t0;
-    if(el>=SC.total+400){scareEnd();return;} // safety: never outlive the rev sequence
+    if(SC.hissUntil){fr=SCARE.pounce;dir=-1;if(now>=SC.hissUntil)scareFinish();return;}
+    if(el>=SC.total+600){scareEnd();return;} // safety: never outlive the rev sequence
     const h=SC.hop;
     if(h){const u=Math.min(1,(now-h.t0)/h.dur);fr=LEAP[[1,2,3,3,4][Math.min(4,Math.floor(u*5))]];dir=1;
       c=h.c0+(h.c1-h.c0)*u;y=h.f0+(h.f1-h.f0)*u-Math.sin(Math.PI*u)*g.h*0.3;
@@ -3170,7 +3184,8 @@ loadUpcomingDividends();
       rmT2=setTimeout(()=>{held=false;audioStop();reset();},T_END);return;}
     wheel.hidden=false;if(!raf)raf=requestAnimationFrame(frame);}
   let rmT2=0;
-  function finish(now){if(!held)return;held=false;audioStop();wheel.hidden=true;jag.style.transform='';endT=now;
+  function finish(now){if(!held)return;held=false;try{window.sffCatScare&&window.sffCatScare.end();}catch(e){} // cc133: car sequence over at 8.0 s -> scared Truffles hisses
+    audioStop();wheel.hidden=true;jag.style.transform='';endT=now;
     puffs.forEach(p=>{p.fade=now+T_FADE;p.fs=now;p.fop=parseFloat(p.el.style.opacity)||0;});if(!raf)raf=requestAnimationFrame(frame);}
   function abort(){clearTimeout(rmT);clearTimeout(rmT2);if(held){held=false;audioStop();}if(raf){cancelAnimationFrame(raf);raf=0;}reset();}
   btn.addEventListener('click',e=>{e.preventDefault();start();}); // native button click covers mouse, touch, Enter and Space

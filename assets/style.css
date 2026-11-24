@@ -2156,3 +2156,13 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .site-header .brand-jaguar{position:relative}
 .site-header .brand-jaguar-img{position:relative;z-index:1}
 .sff-jag-back{position:absolute;left:0;top:0;z-index:0;pointer-events:none;background:var(--bg,#050b07);-webkit-mask:url(/assets/jaguar-mask.png?v=cc130) center/100% 100% no-repeat;mask:url(/assets/jaguar-mask.png?v=cc130) center/100% 100% no-repeat}
+/* cc133: thin separator between the green gain line and the hottest-stock line (only when both show) */
+.daily-pnl-strip:has(.daily-pnl-since.last-close:not([hidden]))+.daily-pnl-hot .hot-line{position:relative}
+.daily-pnl-strip:has(.daily-pnl-since.last-close:not([hidden]))+.daily-pnl-hot .hot-line::before{content:"";position:absolute;left:0;right:0;top:-3px;height:1px;background:rgba(0,255,120,.25);pointer-events:none}
+@media(min-width:1024px){.daily-pnl-header .daily-pnl-since.last-close{line-height:1.02}}
+@media(max-width:1023.98px){ /* mobile hot line clips overflow: give the rule room inside its own padding (net layout shift 0) */
+.daily-pnl-strip:has(.daily-pnl-since.last-close:not([hidden]))+.daily-pnl-hot{padding-top:8px;margin-top:-8px}
+.daily-pnl-strip:has(.daily-pnl-since.last-close:not([hidden]))+.daily-pnl-hot .hot-line::before{top:-5px}}
+/* cc133: matrix rain 20% brighter (canvas .87→1.0 capped, reduced-motion .525→.63, side text .375→.45) */
+#matrix-rain{opacity:1}.rain{opacity:.45}
+@media(prefers-reduced-motion:reduce){#matrix-rain{opacity:.63}}
