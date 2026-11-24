@@ -1902,6 +1902,7 @@ function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine=''){
     }
   }
   try{paintHeaderLaunchPnl(data);}catch(e){}
+  try{paintFxBadge(data);}catch(e){}
 }
 function paintHeaderLaunchPnl(data){
   const el=document.querySelector('.header-holdings-pnl');
@@ -3206,3 +3207,35 @@ loadUpcomingDividends();
   if(window.ResizeObserver)new ResizeObserver(fit).observe(car);
   window.addEventListener('resize',fit);window.addEventListener('load',fit);(car.complete?fit():car.addEventListener('load',fit,{once:true}));fit();
 })();
+/* cc135: desktop FX badge under the pie (between the PEP and CU outside labels):
+   FX-only P&L since Nov 9 (published fx_pnl_cad = USD holdings' USD MV x (fx_now - Nov 9 baseline fx)) + currency weights. */
+let FX_SEED=null,FX_SEED_T=0;
+function fxSeedRefresh(){ // live PNL API only relays an allow-listed field set, so the FX fields come from the CORS-open pnl-data seed (same publisher)
+  if(Date.now()-FX_SEED_T<300000)return;FX_SEED_T=Date.now();
+  fetch(PNL_SEED+'?t='+Math.floor(Date.now()/300000),{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{if(d&&d.currency_weights){FX_SEED=d;paintFxBadge();}}).catch(()=>{});
+}
+function paintFxBadge(data){
+  data=data||lastPnlData;
+  if(!(data&&data.currency_weights&&data.fx_pnl_cad!=null)){fxSeedRefresh();data=FX_SEED;}
+  const svg=document.querySelector('#native-holdings .native-donut');
+  let el=document.querySelector('.fx-badge');
+  const fx=data&&Number(data.fx_pnl_cad),w=data&&data.currency_weights;
+  if(!svg||!window.matchMedia('(min-width:1024px)').matches||!Number.isFinite(fx)||!w||w.USD==null||w.CAD==null){if(el)el.hidden=true;return;}
+  const host=svg.parentElement;if(!host)return;
+  if(!el){el=document.createElement('div');el.className='fx-badge';host.appendChild(el);
+    if(window.ResizeObserver)new ResizeObserver(()=>{try{paintFxBadge();}catch(e){}}).observe(svg);}
+  else if(el.parentElement!==host)host.appendChild(el);
+  const up=fx>=0,amt='$'+Math.round(Math.abs(fx)).toLocaleString('en-US');
+  el.innerHTML=`<span class="fx-pnl ${up?'is-up':'is-down'}">${up?'+':'\u2212'}${amt} FX</span><span class="fx-mix">\u{1F1FA}\u{1F1F8} ${Math.round(w.USD)}% \u00b7 \u{1F1E8}\u{1F1E6} ${Math.round(w.CAD)}%</span>`;
+  el.title=`FX P&L since Nov 9: USD holdings revalued from ${data.fx_inception_cad_per_usd??'Nov 9'} to ${data.fx_cad_per_usd??'now'} CAD per USD`;
+  el.hidden=false;
+  const op=el.offsetParent||document.body,opr=op.getBoundingClientRect(),hr={left:opr.left+op.clientLeft-op.scrollLeft,top:opr.top+op.clientTop-op.scrollTop},texts=[...svg.querySelectorAll('text')]; // host may be display:contents: position against the real containing block
+  const find=t=>{const n=texts.find(x=>x.textContent.trim()===t&&x.getBoundingClientRect().width>0);return n&&n.getBoundingClientRect();};
+  const pep=find('PEP'),cu=find('CU'),ring=svg.querySelector('path')?.getBoundingClientRect();
+  const sr=svg.getBoundingClientRect();
+  const cx=ring&&ring.width?(()=>{const ps=[...svg.querySelectorAll('path')].map(q=>q.getBoundingClientRect()).filter(r=>r.width);const l=Math.min(...ps.map(r=>r.left)),r=Math.max(...ps.map(r=>r.right));return (l+r)/2;})():sr.left+sr.width/2;
+  const rowMid=pep&&cu?((pep.top+pep.bottom)/2+(cu.top+cu.bottom)/2)/2:(pep?(pep.top+pep.bottom)/2:sr.bottom-20);
+  el.style.left=Math.round(cx-hr.left-el.offsetWidth/2)+'px';
+  el.style.top=Math.round(rowMid-hr.top-el.offsetHeight/2)+'px';
+}
+window.addEventListener('resize',()=>{try{paintFxBadge();}catch(e){}});

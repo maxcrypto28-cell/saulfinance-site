@@ -2172,3 +2172,9 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .site-header .sff-feed-btn .cat-emo:first-child{margin-left:0}.site-header .sff-feed-btn .cat-emo.is-flip{margin-right:0;transform:scaleX(-1)}}
 /* cc134: mobile — green gain line moves to the bottom of the P&L strip, directly above the best-performer line (divider between them) */
 @media(max-width:1023.98px){#daily-pnl-strip .daily-pnl-since.last-close{order:5}}
+/* cc135: FX badge under the desktop pie */
+.fx-badge{display:none}
+@media(min-width:1024px){.fx-badge{position:absolute;z-index:2;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 9px;border:1px solid rgba(56,255,119,.28);border-radius:6px;background:rgba(5,11,7,.82);font:600 12px/1.15 ui-monospace,monospace;color:#8cbca0;white-space:nowrap;pointer-events:auto}
+.fx-badge[hidden]{display:none}
+.fx-badge .fx-pnl.is-up{color:var(--green)}.fx-badge .fx-pnl.is-down{color:#ff5b5b}
+.fx-badge .fx-mix{font-weight:500;font-size:11px;color:#a9cdb6}}
