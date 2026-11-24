@@ -2135,3 +2135,9 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .sff-rev-hint span{padding-bottom:1px}
 @media(min-width:1024px){.sff-rev-hint{display:flex}}
 @media(max-width:1023.98px){.sff-rev-blow,.sff-rev-hood{display:none!important}}
+/* cc124: desktop covered calls — chevron inline just before the ticker; 'Days left' column between Expiry and Premium */
+@media(min-width:1024px){
+#covered-calls .cc-card-head{grid-template-columns:auto minmax(150px,1.6fr) repeat(5,minmax(70px,1fr)) auto;gap:10px}
+#covered-calls .cc-card-title{align-items:center;gap:8px}
+#covered-calls .cc-card-title .cc-toggle{flex:none;width:20px;height:20px;margin-right:-3px;border-radius:5px}
+}

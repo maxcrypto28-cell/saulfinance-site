@@ -997,10 +997,9 @@ function renderCoveredCalls(data){
     return `<article class="native-panel cc-card" data-cc-id="${esc(p.id||tkr)}" data-cc-underlying="${esc(p.underlying||tkr)}" data-cc-strike="${strike==null?'':esc(String(strike))}" data-cc-expiry="${esc(p.expiration||'')}" data-cc-exdiv="${esc(ex&&ex.kind==='before_expiry'?ex.date:'')}" data-cc-currency="${esc(cur)}">
       <header class="cc-card-head">
         <span class="ticker-dot" style="background:${esc(color)}"></span>
-        <div class="cc-card-title">${title}<span class="cc-card-name">${esc(name)}</span></div>
-        ${sum('Strike',strike==null?'—':money(strike,cur))}${sum('Expiry',esc(formatShortDate(p.expiration)))}${sum('Premium','<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>')}${sum('To strike',esc(dist.text),' data-cc-field="dist" title="'+esc(dist.title)+'" data-cc-dist="'+dist.cls+'"')}
+        <div class="cc-card-title"><button type="button" class="cc-toggle" aria-expanded="false" aria-controls="${esc(mid)}" aria-label="Show all details for ${esc(tkr)}"><span aria-hidden="true">▾</span></button>${title}<span class="cc-card-name">${esc(name)}</span></div>
+        ${sum('Strike',strike==null?'—':money(strike,cur))}${sum('Expiry',esc(formatShortDate(p.expiration)))}${sum('Days left',esc(ccDaysLeft(p.expiration)),' data-cc-field="days"')}${sum('Premium','<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>')}${sum('To strike',esc(dist.text),' data-cc-field="dist" title="'+esc(dist.title)+'" data-cc-dist="'+dist.cls+'"')}
         <span class="cc-status cc-status-open">Open</span>
-        <button type="button" class="cc-toggle" aria-expanded="false" aria-controls="${esc(mid)}" aria-label="Show all details for ${esc(tkr)}"><span aria-hidden="true">▾</span></button>
       </header>
       <div class="cc-metrics" id="${esc(mid)}">
         ${metric('Contracts / shares', esc(contracts)+' · '+esc(shares), '', 'cc-metric-secondary')}
@@ -1047,7 +1046,13 @@ function renderCoveredCalls(data){
       const on=!card.classList.contains('is-open');card.classList.toggle('is-open',on);b.setAttribute('aria-expanded',String(on));});}
   try{paintCoveredCallLive();}catch(e){}
 }
+function ccDaysLeft(exp){ // cc124: days to expiration, counted from today's date in Pacific time
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(exp||''));if(!m)return '—';
+  const t=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Vancouver',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()).split('-').map(Number);
+  const d=Math.round((Date.UTC(+m[1],m[2]-1,+m[3])-Date.UTC(t[0],t[1]-1,t[2]))/864e5);return d<0?'Expired':d+'d';
+}
 function paintCoveredCallLive(){
+  document.querySelectorAll('#covered-calls .cc-card [data-cc-field="days"] b').forEach(b=>{const c=b.closest('.cc-card');const v=ccDaysLeft(c&&c.dataset.ccExpiry);if(b.textContent!==v)b.textContent=v;});
   const cards=document.querySelectorAll('#covered-calls .cc-card[data-cc-underlying]');
   if(!cards.length)return;
   for(const card of cards){
