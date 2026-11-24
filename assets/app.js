@@ -3143,3 +3143,14 @@ loadUpcomingDividends();
   let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(place,120);});
   window.addEventListener('load',place);(car.complete?place():car.addEventListener('load',place,{once:true}));place();
 })();
+
+/* cc130: solid backing under the header Jaguar so the matrix rain can't show through the car's semi-transparent pixels.
+   A dark silhouette (CSS mask from /assets/jaguar-mask.png, the union of every frame's alpha) sits directly under the car image. */
+(function(){
+  const car=document.querySelector('.site-header .brand-jaguar-img'),pic=car&&car.closest('.brand-jaguar');if(!car||!pic)return;
+  const back=document.createElement('span');back.className='sff-jag-back';back.setAttribute('aria-hidden','true');pic.insertBefore(back,pic.firstChild);
+  const fit=()=>{const pr=pic.getBoundingClientRect(),r=car.getBoundingClientRect();if(!r.width){back.style.display='none';return;}back.style.display='';
+    back.style.left=(r.left-pr.left)+'px';back.style.top=(r.top-pr.top)+'px';back.style.width=r.width+'px';back.style.height=r.height+'px';};
+  if(window.ResizeObserver)new ResizeObserver(fit).observe(car);
+  window.addEventListener('resize',fit);window.addEventListener('load',fit);(car.complete?fit():car.addEventListener('load',fit,{once:true}));fit();
+})();

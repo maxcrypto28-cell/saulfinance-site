@@ -2152,3 +2152,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .header-holdings-aside .page-one-heading-copy>span{display:block;text-align:center}
 .header-holdings-aside .page-one-heading-copy>span:first-child{margin-bottom:1px}
 }
+/* cc130: opaque backing under the header Jaguar (rain no longer bleeds through the car; still visible all around it) */
+.site-header .brand-jaguar{position:relative}
+.site-header .brand-jaguar-img{position:relative;z-index:1}
+.sff-jag-back{position:absolute;left:0;top:0;z-index:0;pointer-events:none;background:var(--bg,#050b07);-webkit-mask:url(/assets/jaguar-mask.png?v=cc130) center/100% 100% no-repeat;mask:url(/assets/jaguar-mask.png?v=cc130) center/100% 100% no-repeat}
