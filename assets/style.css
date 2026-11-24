@@ -2143,3 +2143,6 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 }
 /* cc127: green SVG smiley on the after-close gain line (matches the headline face) */
 .daily-pnl-since.last-close .daily-pnl-face{display:inline-flex;vertical-align:-.16em;font-size:1.1em;color:var(--green)}
+/* cc128: hottest-stock ticker + name link (same look, subtle hover underline) */
+.daily-pnl-hot .hot-link{color:inherit;text-decoration:none;pointer-events:auto;cursor:pointer}
+.daily-pnl-hot .hot-link:hover,.daily-pnl-hot .hot-link:focus-visible{text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}

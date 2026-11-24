@@ -1758,7 +1758,16 @@ function paintHotOtd(data=lastPnlData, marketOpen=lastPnlOpen){
       const name=withName?(desktop?holdingFullName(w.symbol):holdingShortName(w.symbol)):'';
       return name? (w.symbol+' '+name+' '+formatHotPct(w.pct)) : (w.symbol+' '+formatHotPct(w.pct));
     });
-    return '🔥 '+items.join(' · ')+' · Best performer OTD';
+    return '🔥 '+items.join(' · ')+' · Best performer OTD 🔥';
+  };
+  // cc128: same line as HTML, ticker + company name linked to the same stockanalysis URL used by the pie / Machine ticker links
+  const buildHtml=withName=>{
+    const items=winners.map(w=>{
+      const name=withName?(desktop?holdingFullName(w.symbol):holdingShortName(w.symbol)):'';
+      const h=holdingLookup(w.symbol),url=h?stockAnalysisUrl(h):'',lbl=esc(name?(w.symbol+' '+name):w.symbol);
+      return (url?`<a class="hot-link" href="${esc(url)}" target="_blank" rel="noopener">${lbl}</a>`:lbl)+' '+esc(formatHotPct(w.pct));
+    });
+    return '<span class="hot-line">🔥 '+items.join(' · ')+' · Best performer OTD 🔥</span>';
   };
   const nodes=[...document.querySelectorAll('.daily-pnl-hot')];
   nodes.forEach(el=>{
@@ -1766,7 +1775,7 @@ function paintHotOtd(data=lastPnlData, marketOpen=lastPnlOpen){
     if(!winners.length){el.hidden=true;el.textContent='';el.removeAttribute('aria-label');return;}
     el.hidden=false;
     const line=build(true);
-    el.textContent=line;
+    el.innerHTML=buildHtml(true);
     el.setAttribute('aria-label',line);
   });
   if(!desktop && winners.length){
@@ -1785,7 +1794,7 @@ function paintHotOtd(data=lastPnlData, marketOpen=lastPnlOpen){
       if(probe.scrollWidth>cap+1){
         const line=build(false);
         nodes.forEach(el=>{
-          el.textContent=line;
+          el.innerHTML=buildHtml(false);
           el.setAttribute('aria-label',line);
         });
       }
