@@ -3019,7 +3019,7 @@ loadUpcomingDividends();
     snd.o1.frequency.setTargetAtTime(f,t,0.06);snd.o2.frequency.setTargetAtTime(f/2,t,0.06);
     snd.lp.frequency.setTargetAtTime(380+1700*u,t,0.08);snd.lope.frequency.setTargetAtTime(f/4*(0.85+Math.random()*0.3),t,0.05);
     snd.eng.gain.setTargetAtTime(0.55+0.35*u,t,0.1);
-    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.9)/2.5))*0.42,t,0.12); // cc122: screech fades in from ~0.9s, full by ~3.4s (stops at the 4.5s blowout)
+    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-1.0)/2.8))*0.42,t,0.12); // cc125: screech fades in from ~1.0s, full by ~3.8s (stops at the 5s blowout)
   }
   function audioKill(s,fade){
     if(!s||!AC)return;const t=AC.currentTime;
@@ -3031,7 +3031,7 @@ loadUpcomingDividends();
   // cc119: ONE CLICK plays a fixed 6.0 s sequence (Max t731u/t732u):
   //   0-3 s rear wheel spins up + tyre smoke builds (light -> heavy) | 3.0 s rear tyre blows (blowout flash -> blown tyre) + hood smoke
   //   3-6 s blown tyre + hood smoke hold | 6.0 s everything fades and resets. Clicks during the sequence are ignored (button dims).
-  const T_BLOW=4500,T_END=7500, /* cc122: blowout at 4.5 s, reset at 7.5 s (Max t736u) */ T_FADE=450,BLOW_FLASH=260;
+  const T_BLOW=5000,T_END=8000, /* cc125: blowout at 5.0 s, reset at 8.0 s (Max t740u) */ T_FADE=450,BLOW_FLASH=260;
   const blowImg=mkOv('sff-rev-blow','wheel_blowout_right.png'),blownImg=mkOv('sff-rev-blow','wheel_blown_right.png'),hood=mkOv('sff-rev-hood','hood_smoke_right.png');
   function mkOv(cls,f){const i=document.createElement('img');i.className=cls;i.alt='';i.setAttribute('aria-hidden','true');i.draggable=false;i.src=B+f+V;i.hidden=true;header.appendChild(i);return i;}
   let held=false,blown=false,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[],endT=0;
