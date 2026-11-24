@@ -2141,3 +2141,5 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 #covered-calls .cc-card-title{align-items:center;gap:8px}
 #covered-calls .cc-card-title .cc-toggle{flex:none;width:20px;height:20px;margin-right:-3px;border-radius:5px}
 }
+/* cc127: green SVG smiley on the after-close gain line (matches the headline face) */
+.daily-pnl-since.last-close .daily-pnl-face{display:inline-flex;vertical-align:-.16em;font-size:1.1em;color:var(--green)}
