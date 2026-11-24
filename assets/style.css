@@ -2042,3 +2042,6 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 /* cc106: donut ticker labels are links (look unchanged until hover) */
 .native-donut .donut-link{cursor:pointer}
 .native-donut .donut-link:hover .donut-ticker,.native-donut .donut-link:hover .donut-ticker-mobile,.native-donut .donut-link:focus-visible .donut-ticker{fill:#38ff77;text-decoration:underline}
+
+/* cc108: tiny white last-close line (green sessions only, off-hours) */
+.daily-pnl-since.last-close{color:#e1f3e6;opacity:.82;font-size:10px}

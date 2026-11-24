@@ -1797,7 +1797,7 @@ function paintDonutSlices(s){
   }
 }
 
-function paintPnl(data, mode='daily', labelOverride=null){
+function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine=''){
   const els=[...document.querySelectorAll('.daily-pnl-strip')]; if(!els.length)return;
   let text='—', faceHtml='', metaText='', up=null, sinceLine='', sinceUp=null;
   const labelText=labelOverride||(mode==='since'?(INCEPTION.label||'Since Nov 9'):'Daily PNL');
@@ -1826,6 +1826,7 @@ function paintPnl(data, mode='daily', labelOverride=null){
     else if(data.price_as_of)bits.push(String(data.price_as_of));
     metaText=bits.join(' · ');
   }
+  if(mode==='since'&&up!=null&&lastCloseLine){sinceLine=lastCloseLine;sinceUp=null;} // cc108: tiny white 'Last close' line (green days only)
   if(mode==='daily'&&up!=null){
     try{
       const since=sinceFromData(data);
@@ -1856,11 +1857,11 @@ function paintPnl(data, mode='daily', labelOverride=null){
     if(face)face.innerHTML=faceHtml;
     if(meta)meta.textContent=metaText;
     if(sinceEl){
-      sinceEl.classList.remove('since-up','since-down');
+      sinceEl.classList.remove('since-up','since-down','last-close');
       if(sinceLine){
         sinceEl.hidden=false;
         sinceEl.textContent=sinceLine;
-        sinceEl.classList.add(sinceUp?'since-up':'since-down');
+        sinceEl.classList.add(sinceUp==null?'last-close':(sinceUp?'since-up':'since-down'));
         el.classList.add('has-since');
       }else{
         sinceEl.hidden=true;
@@ -2090,7 +2091,7 @@ function lastCompletedSessionPnl(data,now=clockNow()){
     if(!hit)return null;
     const [y,m,dd]=d.split('-').map(Number);
     const nice=new Date(Date.UTC(y,m-1,dd,12)).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
-    hit.date=d;hit.label=d===etDate(t)?'Today':nice+' close';
+    hit.date=d;hit.short=nice;hit.label=d===etDate(t)?'Today':nice+' close';
     return hit;
   }catch(e){return null;}
 }
@@ -2121,12 +2122,12 @@ async function loadDailyPnl(){
     endLiveWait();
   }
   try{
-    // cc107: outside the regular session, keep the last completed session's P&L if it closed green; red/flat -> since-inception totals.
-    let mode=open?'daily':'since',pdata=data,lbl=null;
+    // cc108: outside the regular session always show the since-inception total; add a tiny 'Last close' line only when that session closed green.
+    let extra='';
     if(!open){const ls=lastCompletedSessionPnl(data);
-      if(ls&&ls.cad>0){mode='daily';lbl=ls.label;
-        pdata={...data,day_change_cad:ls.cad,day_change_pct:ls.pct,delayed:false,session:'closed',updated_et:null,price_as_of:ls.as_of};}}
-    paintPnl(pdata, mode, lbl);
+      if(ls&&ls.cad>0){const f=formatPnl(ls.cad,ls.pct),i=f.indexOf(', ');
+        extra='Last close '+(i>0?f.slice(0,i)+' ('+f.slice(i+2)+')':f)+' · '+ls.short;}}
+    paintPnl(data, open?'daily':'since', null, extra);
   }catch(e){}
   try{paintWinStreak(data);}catch(e){}
   try{paintDonutTotal(data);}catch(e){}
