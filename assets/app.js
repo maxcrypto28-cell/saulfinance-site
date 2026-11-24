@@ -2642,11 +2642,11 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100-cc103: header cat — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
+/* cc100-cc105: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc103',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
+  const base='/assets/cat/',V='?v=cc105',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
   const F=(n,w,h,cx)=>({src:base+n+'.png'+V,w,h,cx});
   const WALK=[1,2,3,4,5,6,7,8].map(n=>F('walk_r'+n,253,164,134.9)),NF=WALK.length;
   const POSE={idle:F('idle',253,164,134.9),sit:F('sit',253,164,134.9),lookup:F('lookup',253,164,134.9)};
@@ -2659,7 +2659,8 @@ loadUpcomingDividends();
   const desk=window.matchMedia('(min-width:1024px)');
   const still=window.matchMedia('(prefers-reduced-motion: reduce)');
   const ORG=134.9/253;
-  let g={w:390,floor:97,hx1:-1,hx2:-1,hump:0,h:76,k:0.5,cw:106,tx:-1};
+  const ROOF=[[.014,.297],[.049,.272],[.083,.272],[.118,.259],[.153,.177],[.188,.142],[.222,.108],[.257,.099],[.292,.078],[.326,.056],[.361,.039],[.396,.03],[.431,.03],[.465,.034],[.5,.052],[.535,.099],[.569,.134],[.604,.168],[.639,.224],[.674,.302],[.708,.31],[.743,.28],[.778,.289],[.812,.302],[.847,.319],[.882,.384],[.917,.397],[.951,.405],[.986,.47]]; // cc105: Jaguar top silhouette (fractions of the car image box), measured from jaguar-wheels.webp
+  let g={w:390,floor:97,hx1:-1,hx2:-1,hump:0,h:76,k:0.5,cw:106,tx:-1,car:null};
   function geom(){
     const hr=header.getBoundingClientRect();
     g.w=header.clientWidth;
@@ -2676,11 +2677,20 @@ loadUpcomingDividends();
       h=Math.max(36,Math.min(64,g.floor-ob-3));
     }
     g.h=h;g.k=h/164;g.cw=253*g.k;cur=null;
+    // cc105: invisible barrier at the car — its roofline becomes floor when the car sits in the cat's walking band
+    g.car=null;
+    const car=header.querySelector('.brand-jaguar-img');
+    if(car){const r=car.getBoundingClientRect();
+      if(r.width>20&&r.height>10&&r.bottom-hr.top>g.floor-h*0.5&&r.top-hr.top<g.floor){
+        const pts=ROOF.map(([fx,fy])=>[r.left-hr.left+fx*r.width,r.top-hr.top+fy*r.height]);
+        g.car={l:pts[0][0],r:pts[pts.length-1][0],pts};}}
     const t=[document.querySelector('.header-holdings-title'),document.getElementById('holdings-title')].find(e=>e&&e.getBoundingClientRect().width>0);
     g.tx=t?(r=>r.left+r.width/2-hr.left)(t.getBoundingClientRect()):-1;
   }
   const EXT=Math.max(ORG,1-ORG);const lo=()=>g.cw*EXT, hi=()=>g.w-g.cw*EXT; // keeps whole cat on the line either facing
-  const floorAt=c=>(g.hx1>=0&&c>=g.hx1&&c<=g.hx2)?g.hump:g.floor;
+  const roadAt=c=>(g.hx1>=0&&c>=g.hx1&&c<=g.hx2)?g.hump:g.floor;
+  function roofAt(c){const p=g.car.pts;for(let i=1;i<p.length;i++){if(c<=p[i][0]){const a=p[i-1],b=p[i],u=(c-a[0])/(b[0]-a[0]||1);return a[1]+(b[1]-a[1])*Math.max(0,Math.min(1,u));}}return p[p.length-1][1];}
+  const floorAt=c=>(g.car&&c>=g.car.l&&c<=g.car.r)?Math.min(roadAt(c),roofAt(c)):roadAt(c);
   let c=0,y=0,dir=1,state='walk',target=0,until=0,walkUntil=0,frame=0,ft=0,last=0,lookCool=0,cur=null,fr=POSE.idle,L=null;
   const rnd=(a,b)=>a+Math.random()*(b-a);
   function pickTarget(){
@@ -2696,15 +2706,18 @@ loadUpcomingDividends();
     img.style.transform=`translate3d(${(c-fr.cx*k).toFixed(1)}px,${(y-fr.h*k).toFixed(1)}px,0) scaleX(${dir})`;
   }
   function edgeAhead(){ // road step within reach in the walking direction
-    if(g.hx1<0)return null;const d=g.cw*0.45;
-    for(const e of [g.hx1,g.hx2]){const ahead=(e-c)*dir;if(ahead>0&&ahead<=d&&floorAt(e-dir)!==floorAt(e+dir))return e;}
-    return null;
+    const d=g.cw*0.45,es=[];if(g.hx1>=0)es.push(g.hx1,g.hx2);if(g.car)es.push(g.car.l,g.car.r);
+    let best=null;
+    for(const e of es){const ahead=(e-c)*dir;if(ahead>0&&ahead<=d&&Math.abs(floorAt(e-dir*1.5)-floorAt(e+dir*1.5))>3&&(best===null||ahead<(best-c)*dir))best=e;}
+    return best;
   }
   function tick(now){
     const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
     if(state==='walk'){
       const e=edgeAhead();
-      if(e!==null){const d=g.cw*0.45,c1=Math.max(lo(),Math.min(hi(),e+dir*d));L={t0:now,c0:c,c1,f0:floorAt(c),f1:floorAt(c1)};state='leap';}
+      if(e!==null){const d=g.cw*0.45,c1=Math.max(lo(),Math.min(hi(),e+dir*d));
+        if((c1-e)*dir<d*0.5){dir=-dir;target=dir>0?rnd(c+120,hi()):rnd(lo(),c-120);target=Math.max(lo(),Math.min(hi(),target));} // no room to land past the edge (car end at the screen edge): turn back
+        else{L={t0:now,c0:c,c1,f0:floorAt(c),f1:floorAt(c1)};state='leap';}}
       else{
         c+=dir*g.h*0.7*dt; // ~stride per 8-frame cycle, scaled to size
         ft+=dt;if(ft>=1/FPS){ft%=1/FPS;frame=(frame+1)%NF;}
@@ -2719,7 +2732,7 @@ loadUpcomingDividends();
       const el=now-L.t0,ti=Math.floor(el/TICK);
       if(ti>=SEQ.length){c=L.c1;y=L.f1;L=null;
         if(Math.random()<0.4)pose(Math.random()<0.6?POSE.sit:POSE.idle,rnd(1000,1500),now);
-        else{state='walk';if((target-c)*dir<=20)pickTarget();}
+        else{state='walk';if((target-c)*dir<=20){const room=dir>0?hi()-c:c-lo();if(room>120)target=c+dir*rnd(120,room);else pickTarget();}} // cc105: keep heading the same way after a landing (no instant leap back)
       }else{
         fr=LEAP[SEQ[ti]];
         const u=Math.max(0,Math.min(1,(el-AIR0*TICK)/(AIRN*TICK)));
