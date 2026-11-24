@@ -2946,7 +2946,7 @@ loadUpcomingDividends();
   btn.innerHTML=`<img class="rev-pedal" src="${B}pedal.png${V}" alt="" draggable="false"><img class="rev-icon" src="${B}jaguar_icon_right.png${V}" alt="" draggable="false">`;
   header.appendChild(btn);
   const hint=document.createElement('span'); // cc114: label under the green border, arrow pointing up at the pedal (desktop)
-  hint.className='sff-rev-hint';hint.setAttribute('aria-hidden','true');hint.innerHTML='<svg class="rev-arrow" viewBox="0 0 14 18" width="14" height="18" aria-hidden="true"><path d="M7 0 14 8H9.5V18h-5V8H0z" fill="currentColor"/></svg><span>Rev the Car \u00b7 click once</span>';header.appendChild(hint);
+  hint.className='sff-rev-hint';hint.setAttribute('aria-hidden','true');hint.innerHTML='<svg class="rev-arrow" viewBox="0 0 14 18" width="14" height="18" aria-hidden="true"><path d="M7 0 14 8H9.5V18h-5V8H0z" fill="currentColor"/></svg><span>Rev the Car \u00b7 Click Once!</span>';header.appendChild(hint);
   const wheel=document.createElement('img');
   wheel.className='sff-rev-wheel';wheel.alt='';wheel.setAttribute('aria-hidden','true');wheel.draggable=false;wheel.src=B+'wheel_spin.png'+V;wheel.hidden=true;header.appendChild(wheel);
   ['smoke_light','smoke_heavy'].forEach(n=>{const i=new Image();i.src=B+n+'.png'+V;});
