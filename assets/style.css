@@ -2058,3 +2058,14 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .sff-cat-heart.still{animation:sffHeartStill 2s linear forwards}
 @keyframes sffHeart{0%{opacity:0;transform:translate(0,4px) scale(.6)}15%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx,0),-34px) scale(1.05)}}
 @keyframes sffHeartStill{0%{opacity:0}10%{opacity:1}80%{opacity:1}100%{opacity:0}}
+/* cc112: desktop holdings table compact — the "Best performer OTD" badge no longer widens the Ticker column; it wraps under that row's price */
+@media(min-width:1024px){
+.allocation-table tbody th[scope="row"]:has(.hot-otd){padding-bottom:7px}
+.allocation-table tbody th[scope="row"] .hot-otd{display:flex;align-items:flex-start;margin:17px 0 0;white-space:normal;font-size:9px;line-height:1.15;max-width:76px}
+.allocation-table th,.allocation-table td{padding-left:4px;padding-right:4px}
+.allocation-table thead th.day-pct-col,.allocation-table tbody td.day-pct,.allocation-table thead th.all-time-col,.allocation-table tbody td.all-time-pnl{padding-left:4px;padding-right:6px}
+}
+/* cc112: thin green column dividers in the desktop holdings table */
+@media(min-width:1024px){
+.allocation-table th+th,.allocation-table th+td,.allocation-table td+td{border-left:1px solid rgba(56,255,119,.26)}
+}
