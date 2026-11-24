@@ -2835,6 +2835,18 @@ loadUpcomingDividends();
       const am=AC.createGain();am.gain.value=0.5;const mod=AC.createOscillator(),md=AC.createGain();mod.frequency.value=25;md.gain.value=0.5;mod.connect(md);md.connect(am.gain);
       ns.connect(lp);lp.connect(am);lo.connect(lg);lg.connect(am);am.connect(out);
       [ns,lo,mod].forEach(n=>{n.start(t);n.stop(t+D+0.05);});setTimeout(()=>{try{out.disconnect();}catch(e){}},(D+0.4)*1000);}catch(e){}}
+  function munch(dur){const AC=window.sffAudio(false);if(!AC)return; // cc126: rhythmic crunches for the eating phase (~5/s, jittered filtered-noise bursts)
+    try{const t0=AC.currentTime+0.03,out=AC.createGain();out.gain.value=0.14;out.connect(AC.destination);
+      const nb=AC.createBuffer(1,Math.round(AC.sampleRate*0.09),AC.sampleRate),d=nb.getChannelData(0);
+      for(let i=0;i<d.length;i++){const k=i/d.length;d[i]=(Math.random()*2-1)*Math.pow(1-k,2.2)*(Math.random()<0.35?1:0.45);} // grainy crunch texture
+      let t=t0;const end=t0+dur-0.08;
+      while(t<end){const ns=AC.createBufferSource();ns.buffer=nb;ns.playbackRate.value=0.8+Math.random()*0.45; // slight pitch jitter
+        const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1500+Math.random()*1700;bp.Q.value=1.4;
+        const hp=AC.createBiquadFilter();hp.type='highpass';hp.frequency.value=380;
+        const g=AC.createGain(),v=0.7+Math.random()*0.3;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.006);g.gain.exponentialRampToValueAtTime(0.0001,t+0.075+Math.random()*0.03);
+        ns.connect(bp);bp.connect(hp);hp.connect(g);g.connect(out);ns.start(t);ns.stop(t+0.12);
+        t+=0.2*(0.8+Math.random()*0.4);} // ~5 crunches/s with timing jitter
+      setTimeout(()=>{try{out.disconnect();}catch(e){}},(dur+0.5)*1000);}catch(e){}}
   // cc109: Feed the Cat — treat drop, crouch, run (2x walk), eat 3.0s, happy + hearts 2s, resume.
   let feedReq=false,FD=null,coolUntil=0,coolT=0;
   const DROP=600,CROUCH=375,EAT=3000,HAPPY=2000,COOL=10000;
@@ -2882,7 +2894,7 @@ loadUpcomingDividends();
       if(el>=CROUCH){FD.ph='run';FD.t0=now;mark('run');}
     }else if(FD.ph==='run'){ // cc112: run from wherever he is (roof, hump, floor) to the fixed treat, leaping any step on the way
       const reach=EAT_FRONT*g.k,sd=(FD.tx-c)>=0?1:-1,stop=Math.max(lo(),Math.min(hi(),FD.tx-sd*reach));
-      if(Math.abs(stop-c)<1.5||el>15000){c=stop;dir=sd;FD.ph='eat';FD.t0=now;mark('eat');}
+      if(Math.abs(stop-c)<1.5||el>15000){c=stop;dir=sd;FD.ph='eat';FD.t0=now;mark('eat');munch(EAT/1000);}
       else{dir=stop>c?1:-1;const e=edgeAhead();
         if(e!==null&&(e-c)*dir<(stop-c)*dir){const d=g.cw*0.45,c1=Math.max(lo(),Math.min(hi(),e+dir*d));FD.L={t0:now,c0:c,c1,f0:floorAt(c),f1:floorAt(c1)};FD.ph='leap';}
         else{fr=FEED.run[Math.floor(el/TICK)%2];const step=FD.v*dt;
