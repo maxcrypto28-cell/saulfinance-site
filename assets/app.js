@@ -2937,15 +2937,15 @@ loadUpcomingDividends();
 (function(){
   const header=document.querySelector('.site-header'),car=header&&header.querySelector('.brand-jaguar-img');
   if(!header||!car)return;
-  const B='/assets/jaguar/',V='?v=cc113',CAP=3500; // effect ramps up to full over ~3.5s of holding
+  const B='/assets/jaguar/',V='?v=cc113',CAP=4500,MAXON=20000; // cc117: toggle; effect ramps to full over ~4.5s, then holds at max; safety auto-off after 20s
   const still=window.matchMedia('(prefers-reduced-motion: reduce)'),desk=window.matchMedia('(min-width:1024px)');
   const RW={x:.197,y:.693,d:.15}; // rear-wheel centre / diameter as fractions of the car image box (measured from jaguar-wheels)
   const btn=document.createElement('button');
-  btn.type='button';btn.className='sff-rev-btn';btn.setAttribute('aria-label','Rev the car (press and hold)');btn.title='Rev the Car — press and hold';
+  btn.type='button';btn.className='sff-rev-btn';btn.setAttribute('aria-label','Rev the car (click to start / stop)');btn.setAttribute('aria-pressed','false');btn.title='Rev the Car — click to start, click again to stop';
   btn.innerHTML=`<img class="rev-pedal" src="${B}pedal.png${V}" alt="" draggable="false"><img class="rev-icon" src="${B}jaguar_icon.png${V}" alt="" draggable="false">`;
   header.appendChild(btn);
   const hint=document.createElement('span'); // cc114: label under the green border, arrow pointing up at the pedal (desktop)
-  hint.className='sff-rev-hint';hint.setAttribute('aria-hidden','true');hint.textContent='\u2191 Rev the Car \u00b7 hold';header.appendChild(hint);
+  hint.className='sff-rev-hint';hint.setAttribute('aria-hidden','true');hint.textContent='\u2191 Rev the Car \u00b7 click';header.appendChild(hint);
   const wheel=document.createElement('img');
   wheel.className='sff-rev-wheel';wheel.alt='';wheel.setAttribute('aria-hidden','true');wheel.draggable=false;wheel.src=B+'wheel_spin.png'+V;wheel.hidden=true;header.appendChild(wheel);
   ['smoke_light','smoke_heavy'].forEach(n=>{const i=new Image();i.src=B+n+'.png'+V;});
@@ -2983,7 +2983,7 @@ loadUpcomingDividends();
     snd.o1.frequency.setTargetAtTime(f,t,0.06);snd.o2.frequency.setTargetAtTime(f/2,t,0.06);
     snd.lp.frequency.setTargetAtTime(380+1700*u,t,0.08);snd.lope.frequency.setTargetAtTime(f/4*(0.85+Math.random()*0.3),t,0.05);
     snd.eng.gain.setTargetAtTime(0.55+0.35*u,t,0.1);
-    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.8)/1.2))*0.42,t,0.12);
+    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.9)/3.6))*0.42,t,0.12); // screech fades in from ~0.9s to full by ~4.5s
   }
   function audioKill(s,fade){
     if(!s||!AC)return;const t=AC.currentTime;
@@ -2992,7 +2992,7 @@ loadUpcomingDividends();
       s.nodes.forEach(n=>{try{n.stop(t+fade+0.05);}catch(e){}});setTimeout(()=>{try{s.master.disconnect();}catch(e){}},(fade+0.2)*1000);}catch(e){}
   }
   function audioStop(){const s=snd;snd=null;audioKill(s,0.3);} // quick rev-down + fade (~0.3 s), all nodes stopped
-  let held=false,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[];
+  let held=false,offT=0,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[];
   function box(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect();return {hr,r,cx:r.left-hr.left+RW.x*r.width,cy:r.top-hr.top+RW.y*r.height,d:RW.d*r.width};}
   function place(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect(),bw=btn.offsetWidth,bh=btn.offsetHeight;
     if(!r.width){btn.hidden=true;return;}btn.hidden=false;
@@ -3026,21 +3026,20 @@ loadUpcomingDividends();
       p.el.style.opacity=op.toFixed(3);p.el.style.transform=`translate3d(${(x-p.w*g*0.85).toFixed(1)}px,${(y-p.w*g*0.33).toFixed(1)}px,0) scale(${g.toFixed(3)})`;return true;});
     if(held||puffs.length)raf=requestAnimationFrame(frame);else raf=0;
   }
-  function start(){if(held)return;held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held');audioStart();
+  function start(){if(held)return;held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held','is-on');btn.setAttribute('aria-pressed','true');audioStart();
+    clearTimeout(offT);offT=setTimeout(stop,MAXON);
     if(still.matches){const b=box();wheel.hidden=true;puff(b,0.2,t0);const p=puffs[puffs.length-1];p.life=1e9;p.vx=p.vy=0;p.el.style.opacity='0.5';
       p.el.style.transform=`translate3d(${(p.x-p.w*0.85).toFixed(1)}px,${(p.y-p.w*0.33).toFixed(1)}px,0)`;return;} // reduced motion: one static light puff while held
     wheel.hidden=false;if(!raf)raf=requestAnimationFrame(frame);}
-  function stop(){if(!held)return;held=false;btn.classList.remove('is-held');audioStop();wheel.hidden=true;jag.style.transform='';
+  function stop(){clearTimeout(offT);if(!held)return;held=false;btn.classList.remove('is-held','is-on');btn.setAttribute('aria-pressed','false');audioStop();wheel.hidden=true;jag.style.transform='';
     const now=performance.now();
     if(still.matches){puffs.forEach(p=>p.el.remove());puffs=[];return;}
     puffs.forEach(p=>{p.fade=now+300;p.fs=now;p.fop=parseFloat(p.el.style.opacity)||0;}); // smoke fades out quickly
     if(!raf)raf=requestAnimationFrame(frame);}
-  btn.addEventListener('pointerdown',e=>{if(e.button>0)return;e.preventDefault();start();});
-  ['pointerup','pointercancel','pointerleave'].forEach(t=>btn.addEventListener(t,stop));
-  btn.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();if(!e.repeat)start();}});
-  btn.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();stop();}});
-  btn.addEventListener('blur',stop);btn.addEventListener('contextmenu',e=>e.preventDefault());
-  window.addEventListener('blur',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+  // cc117: ON/OFF toggle (click / tap / Enter / Space via native button click); no pointerleave/blur auto-stop
+  btn.addEventListener('click',()=>{held?stop():start();});
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',stop);
   let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(place,120);});
   window.addEventListener('load',place);(car.complete?place():car.addEventListener('load',place,{once:true}));place();
 })();

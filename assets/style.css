@@ -2119,3 +2119,6 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 @media(min-width:1024px) and (max-width:1279.98px){.daily-pnl-since.last-close{font-size:11px}}
 @media(max-width:1023.98px){.daily-pnl-since.last-close{line-height:1}}
 @media(max-width:380px){.daily-pnl-since.last-close{font-size:12.5px}}
+/* cc117: Rev the Car toggle — visibly 'on' pedal state */
+.site-header .sff-rev-btn.is-on{border-color:#7dffa6;background:rgba(10,48,22,.9);box-shadow:0 0 8px #38ff77,0 0 18px rgba(56,255,119,.75)}
+.sff-rev-btn.is-on .rev-pedal{animation:none;filter:drop-shadow(0 0 2px #b9ffd0) drop-shadow(0 0 6px #38ff77) drop-shadow(0 0 12px rgba(56,255,119,.9)) brightness(1.35)}
