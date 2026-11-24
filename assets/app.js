@@ -2677,20 +2677,27 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100-cc105: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
+/* cc100-cc109: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc105',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
+  const base='/assets/cat/',V='?v=cc109',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
   const F=(n,w,h,cx)=>({src:base+n+'.png'+V,w,h,cx});
   const WALK=[1,2,3,4,5,6,7,8].map(n=>F('walk_r'+n,253,164,134.9)),NF=WALK.length;
   const POSE={idle:F('idle',253,164,134.9),sit:F('sit',253,164,134.9),lookup:F('lookup',253,164,134.9)};
   const LEAP=[F('leap_1',119,157,64),F('leap_2',190,116,107.7),F('leap_3',182,155,100.8),F('leap_4',255,113,135),F('leap_5',182,98,97)];
   const SEQ=[0,0,1,1,2,3,3,4,4],AIR0=4,AIRN=3; // leap frame per 125ms tick; airborne ticks 4-6
-  [...WALK,...Object.values(POSE),...LEAP].forEach(f=>{const i=new Image();i.src=f.src;i.decode?.().catch(()=>{});});
+  // cc109: Feed the Cat frames (feet at canvas bottom; cx = body centre)
+  const FEED={crouch:F('crouch',189,97,101.5),run:[F('run_1',242,118,134),F('run_2',232,129,130.3)],eat:[F('eat_1',139,97,62.3),F('eat_2',165,92,83.2),F('eat_3',149,110,72.3)],happy:F('happy_look',114,137,54.9)};
+  const TREAT=F('treat',56,39,27.3),EAT_FRONT=(139-62.3-6); // treat ~27px wide on desktop; mouth reach in frame px
+  [...WALK,...Object.values(POSE),...LEAP,FEED.crouch,...FEED.run,...FEED.eat,FEED.happy,TREAT].forEach(f=>{const i=new Image();i.src=f.src;i.decode?.().catch(()=>{});});
   const img=document.createElement('img');
   img.className='sff-cat';img.alt='';img.setAttribute('aria-hidden','true');img.decoding='async';img.draggable=false;
   img.src=POSE.idle.src;header.appendChild(img);
+  const treat=document.createElement('img');
+  treat.className='sff-cat-treat';treat.alt='';treat.setAttribute('aria-hidden','true');treat.draggable=false;treat.src=TREAT.src;treat.hidden=true;header.appendChild(treat);
+  const btn=document.createElement('button');
+  btn.type='button';btn.className='sff-feed-btn';btn.textContent='Feed the Cat';btn.setAttribute('aria-label','Feed the cat a treat');header.appendChild(btn);
   const desk=window.matchMedia('(min-width:1024px)');
   const still=window.matchMedia('(prefers-reduced-motion: reduce)');
   const ORG=134.9/253;
@@ -2721,6 +2728,16 @@ loadUpcomingDividends();
         g.car={l:pts[0][0],r:pts[pts.length-1][0],pts};}}
     const t=[document.querySelector('.header-holdings-title'),document.getElementById('holdings-title')].find(e=>e&&e.getBoundingClientRect().width>0);
     g.tx=t?(r=>r.left+r.width/2-hr.left)(t.getBoundingClientRect()):-1;
+    placeBtn(hr);
+  }
+  function placeBtn(hr){ // cc109: absolutely positioned, so the header layout never moves
+    const bw=btn.offsetWidth,bh=btn.offsetHeight;let x,y;
+    if(desk.matches){const s=header.querySelector('.brand-row .sff'),ck=header.querySelector('.market-clocks');
+      const sr=s&&s.getBoundingClientRect(),cr=ck&&ck.getBoundingClientRect();
+      x=(sr&&sr.width?sr.right-hr.left:g.w-36)-bw;y=Math.max(sr?sr.bottom:0,cr?cr.bottom:0)-hr.top+8;}
+    else{const o=header.querySelector('.market-clock-open'),orc=o&&o.getBoundingClientRect();
+      x=(orc&&orc.width?orc.left-hr.left:g.w-160)-bw-6;y=(orc&&orc.height?orc.top-hr.top+(orc.height-bh)/2:34);}
+    btn.style.left=Math.max(4,Math.round(x))+'px';btn.style.top=Math.max(2,Math.round(y))+'px';
   }
   const EXT=Math.max(ORG,1-ORG);const lo=()=>g.cw*EXT, hi=()=>g.w-g.cw*EXT; // keeps whole cat on the line either facing
   const roadAt=c=>(g.hx1>=0&&c>=g.hx1&&c<=g.hx2)?g.hump:g.floor;
@@ -2746,9 +2763,73 @@ loadUpcomingDividends();
     for(const e of es){const ahead=(e-c)*dir;if(ahead>0&&ahead<=d&&Math.abs(floorAt(e-dir*1.5)-floorAt(e+dir*1.5))>3&&(best===null||ahead<(best-c)*dir))best=e;}
     return best;
   }
+  // cc109: Feed the Cat — treat drop, crouch, run (2x walk), eat 3.0s, happy + hearts 2s, resume.
+  let feedReq=false,FD=null,coolUntil=0,coolT=0;
+  const DROP=600,CROUCH=375,EAT=3000,HAPPY=2000,COOL=10000;
+  const mark=p=>{header.dataset.catFeed=p;};
+  function segment(){ // flat-ish stretch of line the cat is on (no step or car edge inside)
+    const es=[0,g.w];if(g.hx1>=0)es.push(g.hx1,g.hx2);if(g.car)es.push(g.car.l,g.car.r);
+    let a=0,b=g.w;for(const e of es){if(e<=c&&e>a)a=e;if(e>c&&e<b)b=e;}
+    return [Math.max(a,lo()),Math.min(b,hi())];
+  }
+  function treatDraw(x,yb,op){const k=g.k,w=TREAT.w*k,h=TREAT.h*k;treat.style.width=w+'px';treat.style.height=h+'px';
+    treat.style.transform=`translate3d(${(x-w/2).toFixed(1)}px,${(yb-h+1*k).toFixed(1)}px,0)`;treat.style.opacity=op;}
+  function hearts(x,yb,staticy){
+    const n=6+Math.floor(Math.random()*3);
+    for(let i=0;i<n;i++){const s=document.createElement('span');s.className='sff-cat-heart'+(staticy?' still':'');s.setAttribute('aria-hidden','true');
+      s.textContent=i%2?'\u{1F49A}':'\u2764\uFE0F';
+      const hx=x+(Math.random()-0.5)*g.cw*0.75,hy=yb-g.h*(0.55+Math.random()*0.45);
+      s.style.left=hx.toFixed(1)+'px';s.style.top=hy.toFixed(1)+'px';s.style.fontSize=Math.round(Math.max(10,g.h*0.17+Math.random()*4))+'px';
+      s.style.animationDelay=(i*0.12).toFixed(2)+'s';s.style.setProperty('--dx',((Math.random()-0.5)*24).toFixed(0)+'px');
+      header.appendChild(s);setTimeout(()=>s.remove(),HAPPY+600);}
+  }
+  function cooldown(ms){btn.disabled=true;clearTimeout(coolT);coolUntil=Math.max(coolUntil,performance.now()+ms);
+    coolT=setTimeout(()=>{btn.disabled=false;mark('ready');},Math.max(0,coolUntil-performance.now()));}
+  function beginFeed(now){
+    feedReq=false;const [a,b]=segment(),reach=EAT_FRONT*g.k,gap=g.cw*rnd(0.9,1.6);
+    // treat goes ahead of the cat where there is room on this segment; the cat stops with its mouth at the treat
+    let d=(b-c)>=(c-a)?1:-1;if(dir&&((dir>0?b-c:c-a)>gap+reach))d=dir;
+    let stop=Math.max(a,Math.min(b,c+d*gap));if(Math.abs(stop-c)<g.cw*0.3){d=-d;stop=Math.max(a,Math.min(b,c+d*gap));}
+    const tx=stop+d*reach;dir=d;
+    FD={ph:'drop',t0:now,tx,stop,d};state='feed';fr=POSE.idle;
+    treat.hidden=false;treatDraw(tx,floorAt(tx)-g.h*0.9,1);mark('drop');
+  }
+  function feedTick(now,dt){
+    const el=now-FD.t0,fy=floorAt(FD.tx);
+    if(FD.ph==='drop'){
+      if(el<400){const u=el/400;treatDraw(FD.tx,fy-g.h*0.9*(1-u*u),1);}
+      else if(el<DROP){treatDraw(FD.tx,fy-Math.sin(Math.PI*(el-400)/200)*g.h*0.1,1);}
+      else{treatDraw(FD.tx,fy,1);FD.ph='crouch';FD.t0=now;fr=FEED.crouch;mark('crouch');}
+    }else if(FD.ph==='crouch'){fr=FEED.crouch;
+      if(el>=CROUCH){FD.ph='run';FD.t0=now;mark('run');}
+    }else if(FD.ph==='run'){
+      fr=FEED.run[Math.floor(el/TICK)%2];
+      c+=FD.d*g.h*1.4*dt; // 2x walk speed
+      if((FD.stop-c)*FD.d<=0){c=FD.stop;FD.ph='eat';FD.t0=now;mark('eat');}
+    }else if(FD.ph==='eat'){
+      fr=FEED.eat[Math.min(23,Math.floor(el/TICK))%3]; // 24 ticks @8fps = exactly 3.0s
+      treatDraw(FD.tx,fy,Math.max(0,1-el/EAT).toFixed(3));
+      if(el>=EAT){treat.hidden=true;FD.ph='happy';FD.t0=now;fr=FEED.happy;mark('happy');hearts(c,floorAt(c),false);}
+    }else if(FD.ph==='happy'){fr=FEED.happy;
+      if(el>=HAPPY){FD=null;mark('done');pickTarget();resume(now);cooldown(2500);}
+    }
+  }
+  btn.addEventListener('click',()=>{
+    if(btn.disabled)return;cooldown(COOL);
+    if(still.matches){feedStill();return;}
+    feedReq=true;mark('wait');
+  });
+  function feedStill(){ // reduced motion: treat appears beside the cat, happy pose, static hearts — no running
+    geom();const [a,b]=segment(),tx=Math.max(a,c-(EAT_FRONT+30)*g.k);
+    treat.hidden=false;treatDraw(tx,floorAt(tx),1);fr=POSE.sit;dir=-1;draw();mark('drop');
+    setTimeout(()=>{fr=FEED.happy;draw();hearts(c,floorAt(c),true);mark('happy');
+      setTimeout(()=>{treat.hidden=true;fr=POSE.sit;dir=1;draw();mark('done');},HAPPY);},500);
+  }
   function tick(now){
     const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
-    if(state==='walk'){
+    if(feedReq&&state!=='leap'&&state!=='feed')beginFeed(now); // mid-leap: waits for the landing
+    if(state==='feed'&&FD)feedTick(now,dt);
+    else if(state==='walk'){
       const e=edgeAhead();
       if(e!==null){const d=g.cw*0.45,c1=Math.max(lo(),Math.min(hi(),e+dir*d));
         if((c1-e)*dir<d*0.5){dir=-dir;target=dir>0?rnd(c+120,hi()):rnd(lo(),c-120);target=Math.max(lo(),Math.min(hi(),target));} // no room to land past the edge (car end at the screen edge): turn back
@@ -2793,7 +2874,7 @@ loadUpcomingDividends();
     if(still.matches){state='pose';fr=POSE.sit;dir=1;c=hi();y=floorAt(c);draw();return;}
     pickTarget();resume(performance.now());last=0;requestAnimationFrame(tick);
   }
-  let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{geom();if(state==='leap'){c=L.c1;state='walk';L=null;}c=Math.max(lo(),Math.min(hi(),c));y=floorAt(c);if(target>hi()||target<lo())pickTarget();draw();},120);});
+  let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{geom();if(state==='leap'){c=L.c1;state='walk';L=null;}if(state==='feed'){FD=null;treat.hidden=true;state='walk';mark('done');}c=Math.max(lo(),Math.min(hi(),c));y=floorAt(c);if(target>hi()||target<lo())pickTarget();draw();},120);});
   window.addEventListener('load',()=>{geom();if(state!=='leap')y=floorAt(c);});
   still.addEventListener?.('change',()=>{if(!still.matches)start();else{geom();state='pose';fr=POSE.sit;L=null;draw();}});
   start();
