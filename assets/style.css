@@ -2114,3 +2114,8 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 #covered-calls .cc-card:not(.is-open) .cc-metrics{display:none}
 #covered-calls .cc-metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
+/* cc116: after-close green-day line — larger, site green, ~65% of the headline number */
+.daily-pnl-since.last-close{color:var(--green);opacity:1;font-weight:600;font-size:14px;line-height:1.2;white-space:nowrap;text-shadow:0 0 6px rgba(56,255,119,.35)}
+@media(min-width:1024px) and (max-width:1279.98px){.daily-pnl-since.last-close{font-size:11px}}
+@media(max-width:1023.98px){.daily-pnl-since.last-close{line-height:1}}
+@media(max-width:380px){.daily-pnl-since.last-close{font-size:12.5px}}

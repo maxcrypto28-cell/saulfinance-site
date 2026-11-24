@@ -2143,7 +2143,7 @@ async function loadDailyPnl(){
     let extra='';
     if(!open){const ls=lastCompletedSessionPnl(data);
       if(ls&&ls.cad>0){const f=formatPnl(ls.cad,ls.pct),i=f.indexOf(', ');
-        extra='Last close '+(i>0?f.slice(0,i)+' ('+f.slice(i+2)+')':f)+' · '+ls.short;}}
+        extra=(ls.label==='Today'?'Today\u2019s gain ':'Last session\u2019s gain ')+(i>0?f.slice(0,i)+' ('+f.slice(i+2)+')':f)+' · '+ls.short+' \u{1F60A}';}} // cc116: larger green 'Today's gain' line
     paintPnl(data, open?'daily':'since', null, extra);
   }catch(e){}
   try{paintWinStreak(data);}catch(e){}
