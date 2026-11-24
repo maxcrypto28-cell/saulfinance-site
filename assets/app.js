@@ -1797,10 +1797,10 @@ function paintDonutSlices(s){
   }
 }
 
-function paintPnl(data, mode='daily'){
+function paintPnl(data, mode='daily', labelOverride=null){
   const els=[...document.querySelectorAll('.daily-pnl-strip')]; if(!els.length)return;
   let text='—', faceHtml='', metaText='', up=null, sinceLine='', sinceUp=null;
-  const labelText=mode==='since'?(INCEPTION.label||'Since Nov 9'):'Daily PNL';
+  const labelText=labelOverride||(mode==='since'?(INCEPTION.label||'Since Nov 9'):'Daily PNL');
   if(mode==='since'){
     const since=sinceFromData(data);
     if(since){
@@ -2073,6 +2073,27 @@ function paintWinStreak(data=lastPnlData){
   }
 }
 
+// cc107: most recent completed regular session's day change, from real feed values only (closed_days, or an off-hours daily publish for that date).
+function lastCompletedSessionPnl(data,now=clockNow()){
+  try{
+    if(!data)return null;
+    const t=+now,ss=(OPEN_CALENDAR&&OPEN_CALENDAR.sessions)||[];let st=null;
+    for(const s of ss){if(s[0]<=t)st=s[0];else break;}
+    if(st==null||t>OPEN_CALENDAR.end)return null;
+    const etDate=ms=>new Date(ms).toLocaleDateString('en-CA',{timeZone:'America/New_York'});
+    const d=etDate(st);
+    let hit=null;
+    const cd=(Array.isArray(data.closed_days)?data.closed_days:[]).find(x=>x&&x.date===d);
+    if(cd&&cd.day_change_cad!=null&&Number.isFinite(Number(cd.day_change_cad)))hit={cad:Number(cd.day_change_cad),pct:cd.day_change_pct,as_of:cd.as_of||(d+' close')};
+    else if(data.session&&data.session!=='open'&&data.day_change_cad!=null&&Number.isFinite(Number(data.day_change_cad))&&String(data.price_as_of||'').startsWith(d+' close'))
+      hit={cad:Number(data.day_change_cad),pct:data.day_change_pct,as_of:String(data.price_as_of)};
+    if(!hit)return null;
+    const [y,m,dd]=d.split('-').map(Number);
+    const nice=new Date(Date.UTC(y,m-1,dd,12)).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'});
+    hit.date=d;hit.label=d===etDate(t)?'Today':nice+' close';
+    return hit;
+  }catch(e){return null;}
+}
 async function loadDailyPnl(){
   const open=pnlMarketOpen();
   setPnlStripVisible(true);
@@ -2099,7 +2120,14 @@ async function loadDailyPnl(){
     try{if(typeof lastPnlData!=='undefined') lastPnlData=data;}catch(e){}
     endLiveWait();
   }
-  try{paintPnl(data, open?'daily':'since');}catch(e){}
+  try{
+    // cc107: outside the regular session, keep the last completed session's P&L if it closed green; red/flat -> since-inception totals.
+    let mode=open?'daily':'since',pdata=data,lbl=null;
+    if(!open){const ls=lastCompletedSessionPnl(data);
+      if(ls&&ls.cad>0){mode='daily';lbl=ls.label;
+        pdata={...data,day_change_cad:ls.cad,day_change_pct:ls.pct,delayed:false,session:'closed',updated_et:null,price_as_of:ls.as_of};}}
+    paintPnl(pdata, mode, lbl);
+  }catch(e){}
   try{paintWinStreak(data);}catch(e){}
   try{paintDonutTotal(data);}catch(e){}
   try{paintHotOtd(data, open);}catch(e){}
