@@ -2166,3 +2166,9 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 /* cc133: matrix rain 20% brighter (canvas .87→1.0 capped, reduced-motion .525→.63, side text .375→.45) */
 #matrix-rain{opacity:1}.rain{opacity:.45}
 @media(prefers-reduced-motion:reduce){#matrix-rain{opacity:.63}}
+/* cc134: tiny Truffles (static sit frame) either side of the treat button label (desktop; button height unchanged) */
+.sff-feed-btn .cat-emo{display:none}
+@media(min-width:1024px){.site-header .sff-feed-btn .cat-emo{display:inline-block;height:1.1em;width:auto;vertical-align:-.2em;margin:-2px .4em 0;pointer-events:none}
+.site-header .sff-feed-btn .cat-emo:first-child{margin-left:0}.site-header .sff-feed-btn .cat-emo.is-flip{margin-right:0;transform:scaleX(-1)}}
+/* cc134: mobile — green gain line moves to the bottom of the P&L strip, directly above the best-performer line (divider between them) */
+@media(max-width:1023.98px){#daily-pnl-strip .daily-pnl-since.last-close{order:5}}

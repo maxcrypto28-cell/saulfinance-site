@@ -2731,7 +2731,7 @@ loadUpcomingDividends();
   const treat=document.createElement('img');
   treat.className='sff-cat-treat';treat.alt='';treat.setAttribute('aria-hidden','true');treat.draggable=false;treat.src=TREAT.src;treat.hidden=true;header.appendChild(treat);
   // cc110: two treat buttons (header right + above the Holdings tab, desktop) sharing one sequence and one cooldown
-  const mkBtn=cls=>{const b=document.createElement('button');b.type='button';b.className='sff-feed-btn '+cls;b.textContent='Give Truffles a Treat';header.appendChild(b);return b;};
+  const mkBtn=cls=>{const b=document.createElement('button');b.type='button';b.className='sff-feed-btn '+cls;b.innerHTML='<img class="cat-emo" src="/assets/cat/truffles_icon.png?v=cc134" alt="" aria-hidden="true" draggable="false">Give Truffles a Treat<img class="cat-emo is-flip" src="/assets/cat/truffles_icon.png?v=cc134" alt="" aria-hidden="true" draggable="false">'; /* cc134: tiny Truffles either side (right one mirrored to face the text) */b.setAttribute('aria-label','Give Truffles a Treat');header.appendChild(b);return b;};
   const btn=mkBtn('is-right'),btnTab=mkBtn('is-tab'),BTNS=[btn,btnTab];
   const desk=window.matchMedia('(min-width:1024px)');
   const still=window.matchMedia('(prefers-reduced-motion: reduce)');
