@@ -2677,11 +2677,11 @@ loadUpcomingDividends();
   navBtns.forEach(btn=>btn.addEventListener('click',()=>requestAnimationFrame(()=>requestAnimationFrame(layoutHeaderLasers))));
 })();
 
-/* cc100-cc109: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
+/* cc100-cc110: header cat (Truffles) — walks the green header line (road on desktop, border on mobile); cc103 adds a 5-frame leap at the road steps. */
 (function(){
   const header=document.querySelector('.site-header');
   if(!header)return;
-  const base='/assets/cat/',V='?v=cc109',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
+  const base='/assets/cat/',V='?v=cc110',FPS=8,TICK=1000/FPS; // exactly 8fps (125ms/frame) everywhere
   const F=(n,w,h,cx)=>({src:base+n+'.png'+V,w,h,cx});
   const WALK=[1,2,3,4,5,6,7,8].map(n=>F('walk_r'+n,253,164,134.9)),NF=WALK.length;
   const POSE={idle:F('idle',253,164,134.9),sit:F('sit',253,164,134.9),lookup:F('lookup',253,164,134.9)};
@@ -2696,8 +2696,9 @@ loadUpcomingDividends();
   img.src=POSE.idle.src;header.appendChild(img);
   const treat=document.createElement('img');
   treat.className='sff-cat-treat';treat.alt='';treat.setAttribute('aria-hidden','true');treat.draggable=false;treat.src=TREAT.src;treat.hidden=true;header.appendChild(treat);
-  const btn=document.createElement('button');
-  btn.type='button';btn.className='sff-feed-btn';btn.textContent='Feed the Cat';btn.setAttribute('aria-label','Feed the cat a treat');header.appendChild(btn);
+  // cc110: two treat buttons (header right + above the Holdings tab, desktop) sharing one sequence and one cooldown
+  const mkBtn=cls=>{const b=document.createElement('button');b.type='button';b.className='sff-feed-btn '+cls;b.textContent='Give Truffles a Treat';header.appendChild(b);return b;};
+  const btn=mkBtn('is-right'),btnTab=mkBtn('is-tab'),BTNS=[btn,btnTab];
   const desk=window.matchMedia('(min-width:1024px)');
   const still=window.matchMedia('(prefers-reduced-motion: reduce)');
   const ORG=134.9/253;
@@ -2738,7 +2739,14 @@ loadUpcomingDividends();
     else{const o=header.querySelector('.market-clock-open'),orc=o&&o.getBoundingClientRect();
       x=(orc&&orc.width?orc.left-hr.left:g.w-160)-bw-6;y=(orc&&orc.height?orc.top-hr.top+(orc.height-bh)/2:34);}
     btn.style.left=Math.max(4,Math.round(x))+'px';btn.style.top=Math.max(2,Math.round(y))+'px';
+    const tb=desk.matches&&header.querySelector('.topnav button');
+    if(tb){const r=tb.getBoundingClientRect(),pl=document.getElementById('header-launch-pnl');
+      const hit=()=>{if(!pl||pl.hidden)return 0;const a=pl.getBoundingClientRect(),q=btnTab.getBoundingClientRect();return a.width&&q.right>a.left-6&&q.left<a.right&&q.bottom>a.top&&q.top<a.bottom?q.right-(a.left-6):0;};
+      btnTab.classList.remove('is-compact');
+      const put=()=>{btnTab.style.left=Math.round(r.left-hr.left)+'px';btnTab.style.top=Math.round(r.top-hr.top-8.6-btnTab.offsetHeight-6)+'px';};
+      put();if(hit()){btnTab.classList.add('is-compact');put();const o=hit();if(o)btnTab.style.left=Math.round(r.left-hr.left-o)+'px';}} // narrow desktop: never cover the launch P&L line
   }
+  {const pl=document.getElementById('header-launch-pnl');if(pl&&window.MutationObserver)new MutationObserver(()=>requestAnimationFrame(()=>placeBtn(header.getBoundingClientRect()))).observe(pl,{attributes:true,childList:true,characterData:true,subtree:true});} // cc110: re-place when the launch P&L line fills in
   const EXT=Math.max(ORG,1-ORG);const lo=()=>g.cw*EXT, hi=()=>g.w-g.cw*EXT; // keeps whole cat on the line either facing
   const roadAt=c=>(g.hx1>=0&&c>=g.hx1&&c<=g.hx2)?g.hump:g.floor;
   function roofAt(c){const p=g.car.pts;for(let i=1;i<p.length;i++){if(c<=p[i][0]){const a=p[i-1],b=p[i],u=(c-a[0])/(b[0]-a[0]||1);return a[1]+(b[1]-a[1])*Math.max(0,Math.min(1,u));}}return p[p.length-1][1];}
@@ -2783,8 +2791,8 @@ loadUpcomingDividends();
       s.style.animationDelay=(i*0.12).toFixed(2)+'s';s.style.setProperty('--dx',((Math.random()-0.5)*24).toFixed(0)+'px');
       header.appendChild(s);setTimeout(()=>s.remove(),HAPPY+600);}
   }
-  function cooldown(ms){btn.disabled=true;clearTimeout(coolT);coolUntil=Math.max(coolUntil,performance.now()+ms);
-    coolT=setTimeout(()=>{btn.disabled=false;mark('ready');},Math.max(0,coolUntil-performance.now()));}
+  function cooldown(ms){BTNS.forEach(b=>b.disabled=true);clearTimeout(coolT);coolUntil=Math.max(coolUntil,performance.now()+ms);
+    coolT=setTimeout(()=>{BTNS.forEach(b=>b.disabled=false);mark('ready');},Math.max(0,coolUntil-performance.now()));}
   function beginFeed(now){
     feedReq=false;const [a,b]=segment(),reach=EAT_FRONT*g.k,gap=g.cw*rnd(0.9,1.6);
     // treat goes ahead of the cat where there is room on this segment; the cat stops with its mouth at the treat
@@ -2814,11 +2822,12 @@ loadUpcomingDividends();
       if(el>=HAPPY){FD=null;mark('done');pickTarget();resume(now);cooldown(2500);}
     }
   }
-  btn.addEventListener('click',()=>{
-    if(btn.disabled)return;cooldown(COOL);
+  const onFeed=e=>{
+    if(e.currentTarget.disabled)return;cooldown(COOL);
     if(still.matches){feedStill();return;}
     feedReq=true;mark('wait');
-  });
+  };
+  BTNS.forEach(b=>b.addEventListener('click',onFeed));
   function feedStill(){ // reduced motion: treat appears beside the cat, happy pose, static hearts — no running
     geom();const [a,b]=segment(),tx=Math.max(a,c-(EAT_FRONT+30)*g.k);
     treat.hidden=false;treatDraw(tx,floorAt(tx),1);fr=POSE.sit;dir=-1;draw();mark('drop');
