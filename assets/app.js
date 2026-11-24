@@ -2815,6 +2815,21 @@ loadUpcomingDividends();
       const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3200;
       o.connect(env);env.connect(f1);env.connect(f2);f1.connect(g1);f2.connect(g2);g1.connect(lp);g2.connect(lp);lp.connect(out);
       o.start(t);vib.start(t);o.stop(t+D+0.05);vib.stop(t+D+0.05);setTimeout(()=>{try{out.disconnect();}catch(e){}},(D+0.4)*1000);}catch(e){}}
+  function chirp(){const AC=window.sffAudio(false);if(!AC)return; // cc123: curious 'mrrp?' trill on treat drop (~0.25 s, rising, light tremolo)
+    try{const t=AC.currentTime+0.02,D=0.26,out=AC.createGain();out.gain.value=0.17;out.connect(AC.destination);
+      const o=AC.createOscillator();o.type='triangle';o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(610,t+0.1);o.frequency.exponentialRampToValueAtTime(980,t+D);
+      const tr=AC.createOscillator(),td=AC.createGain(),env=AC.createGain();tr.frequency.value=28;td.gain.value=0.35;
+      env.gain.setValueAtTime(0.0001,t);env.gain.exponentialRampToValueAtTime(0.65,t+0.03);env.gain.setValueAtTime(0.65,t+D*0.7);env.gain.exponentialRampToValueAtTime(0.0001,t+D);
+      tr.connect(td);td.connect(env.gain);const bp=AC.createBiquadFilter();bp.type='bandpass';bp.frequency.value=900;bp.Q.value=1.2;
+      o.connect(env);env.connect(bp);bp.connect(out);o.start(t);tr.start(t);o.stop(t+D+0.05);tr.stop(t+D+0.05);setTimeout(()=>{try{out.disconnect();}catch(e){}},(D+0.4)*1000);}catch(e){}}
+  function purr(){const AC=window.sffAudio(false);if(!AC)return; // cc123: soft ~1.8 s purr — ~25 Hz amplitude-modulated low-passed noise + low oscillator
+    try{const t=AC.currentTime+0.02,D=1.8,out=AC.createGain();out.gain.setValueAtTime(0.0001,t);out.gain.exponentialRampToValueAtTime(0.16,t+0.25);out.gain.setValueAtTime(0.16,t+D-0.5);out.gain.exponentialRampToValueAtTime(0.0001,t+D);out.connect(AC.destination);
+      const nb=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      const ns=AC.createBufferSource();ns.buffer=nb;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=320;lp.Q.value=1;
+      const lo=AC.createOscillator();lo.type='sine';lo.frequency.value=52;const lg=AC.createGain();lg.gain.value=0.5;
+      const am=AC.createGain();am.gain.value=0.5;const mod=AC.createOscillator(),md=AC.createGain();mod.frequency.value=25;md.gain.value=0.5;mod.connect(md);md.connect(am.gain);
+      ns.connect(lp);lp.connect(am);lo.connect(lg);lg.connect(am);am.connect(out);
+      [ns,lo,mod].forEach(n=>{n.start(t);n.stop(t+D+0.05);});setTimeout(()=>{try{out.disconnect();}catch(e){}},(D+0.4)*1000);}catch(e){}}
   // cc109: Feed the Cat — treat drop, crouch, run (2x walk), eat 3.0s, happy + hearts 2s, resume.
   let feedReq=false,FD=null,coolUntil=0,coolT=0;
   const DROP=600,CROUCH=375,EAT=3000,HAPPY=2000,COOL=10000;
@@ -2850,7 +2865,7 @@ loadUpcomingDividends();
   function beginFeed(now){
     feedReq=false;const tx=treatSpot();dir=(tx-c)>=0?1:-1;
     FD={ph:'drop',t0:now,tx,L:null,v:Math.max(g.h*1.4,Math.abs(tx-c)/4)};state='feed';fr=POSE.idle; // run: 2x walk speed, faster on long cross-header runs (≤~4s)
-    treat.hidden=false;treatDraw(tx,floorAt(tx)-g.h*0.9,1);mark('drop');
+    treat.hidden=false;treatDraw(tx,floorAt(tx)-g.h*0.9,1);mark('drop');chirp();
   }
   function feedTick(now,dt){
     const el=now-FD.t0,fy=floorAt(FD.tx);
@@ -2873,7 +2888,7 @@ loadUpcomingDividends();
     }else if(FD.ph==='eat'){
       fr=FEED.eat[Math.min(23,Math.floor(el/TICK))%3]; // 24 ticks @8fps = exactly 3.0s
       treatDraw(FD.tx,fy,Math.max(0,1-el/EAT).toFixed(3));
-      if(el>=EAT){treat.hidden=true;FD.ph='happy';FD.t0=now;fr=FEED.happy;mark('happy');meow();hearts(c,floorAt(c),false);}
+      if(el>=EAT){treat.hidden=true;FD.ph='happy';FD.t0=now;fr=FEED.happy;mark('happy');meow();setTimeout(purr,650);hearts(c,floorAt(c),false);}
     }else if(FD.ph==='happy'){fr=FEED.happy;
       if(el>=HAPPY){FD=null;mark('done');pickTarget();resume(now);cooldown(2500);}
     }
@@ -2888,8 +2903,8 @@ loadUpcomingDividends();
   BTNS.forEach(b=>b.addEventListener('click',onFeed));
   function feedStill(){ // reduced motion: treat appears at the fixed spot, happy pose, static hearts — no running
     geom();const tx=treatSpot();
-    treat.hidden=false;treatDraw(tx,floorAt(tx),1);fr=POSE.sit;dir=tx>=c?1:-1;draw();mark('drop');
-    setTimeout(()=>{fr=FEED.happy;draw();hearts(c,floorAt(c),true);mark('happy');meow();
+    treat.hidden=false;treatDraw(tx,floorAt(tx),1);fr=POSE.sit;dir=tx>=c?1:-1;draw();mark('drop');chirp();
+    setTimeout(()=>{fr=FEED.happy;draw();hearts(c,floorAt(c),true);mark('happy');meow();setTimeout(purr,650);
       setTimeout(()=>{treat.hidden=true;fr=POSE.sit;dir=1;draw();mark('done');},HAPPY);},500);
   }
   function tick(now){
