@@ -2082,3 +2082,13 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .sff-rev-wheel{z-index:2;transform-origin:50% 50%}
 .sff-rev-wheel[hidden]{display:none}
 .sff-rev-smoke{z-index:2;height:auto;opacity:0;transform-origin:85% 33%;will-change:transform,opacity}
+/* cc114: Rev the Car label + green glow on the pedal */
+.sff-rev-hint{position:absolute;z-index:3;display:none;pointer-events:none;user-select:none;white-space:nowrap;font:600 9.5px/1 ui-monospace,monospace;letter-spacing:.03em;color:var(--green);text-shadow:0 0 5px rgba(56,255,119,.45),0 1px 2px #050b07}
+@media(min-width:1024px){.sff-rev-hint{display:block}}
+.sff-rev-btn .rev-pedal{filter:drop-shadow(0 0 1.5px #38ff77) drop-shadow(0 0 4px rgba(56,255,119,.7));animation:sffPedalGlow 2.4s ease-in-out infinite}
+@keyframes sffPedalGlow{50%{filter:drop-shadow(0 0 2px #6bff99) drop-shadow(0 0 7px rgba(56,255,119,.95))}}
+@media(prefers-reduced-motion:reduce){.sff-rev-btn .rev-pedal{animation:none}}
+/* cc114: matrix rain 25% brighter (×1.25: canvas .696→.87, reduced-motion .42→.525, side text .3→.375) */
+#matrix-rain{opacity:.87}
+.rain{opacity:.375}
+@media(prefers-reduced-motion:reduce){#matrix-rain{opacity:.525}}

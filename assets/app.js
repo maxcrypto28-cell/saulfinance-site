@@ -2623,8 +2623,8 @@ loadUpcomingDividends();
     targets.forEach((t,i)=>{
       const br=t.el.getBoundingClientRect();
       // Title beam aims at the left edge (the G); other beams keep mid-target.
-      const x2=(t.aim==='left'?br.left:(br.left+br.right)/2)-hr.left;
-      const y2=(br.top+br.bottom)/2-hr.top;
+      let x2=(t.aim==='left'?br.left:(br.left+br.right)/2)-hr.left; // cc114: let (pages 2-5 reassign these; was a TypeError on every tab switch)
+      let y2=(br.top+br.bottom)/2-hr.top;
       let x1,y1;
       if(desktop){
         if(t.cls==='header-laser-title'){
@@ -2729,6 +2729,11 @@ loadUpcomingDividends();
         g.car={l:pts[0][0],r:pts[pts.length-1][0],pts};}}
     const t=[document.querySelector('.header-holdings-title'),document.getElementById('holdings-title')].find(e=>e&&e.getBoundingClientRect().width>0);
     g.tx=t?(r=>r.left+r.width/2-hr.left)(t.getBoundingClientRect()):-1;
+    // cc114: no-sit zone under "Get Rich Slowly." (G to "ly.") and the P&L line beneath it — walk/run through only
+    g.z=null;
+    if(t){const tb=e=>{if(!e||e.hidden)return null;const q=document.createRange();q.selectNodeContents(e);const a=q.getBoundingClientRect();return a.width?a:null;};
+      const a=tb(t),pl=desk.matches?tb(document.getElementById('header-launch-pnl')):null;
+      if(a){g.z=[Math.min(a.left,pl?pl.left:1e9)-hr.left,Math.max(a.right,pl?pl.right:-1e9)-hr.left];}}
     placeBtn(hr);
   }
   function placeBtn(hr){ // cc109: absolutely positioned, so the header layout never moves
@@ -2764,7 +2769,9 @@ loadUpcomingDividends();
     let t=rnd(a,b),n=0;while(Math.abs(t-c)<120&&n++<6)t=rnd(a,b);
     target=Math.max(a,Math.min(b,t));dir=target>=c?1:-1;state='walk';
   }
-  function pose(p,ms,now){state='pose';fr=p;until=now+ms;}
+  let pendPose=null;
+  const noSit=x=>!!g.z&&x>g.z[0]-g.cw*0.3&&x<g.z[1]+g.cw*0.3; // body mostly outside the zone before any pause
+  function pose(p,ms,now){if(noSit(c)){pendPose=[p,ms];state='walk';return;}pendPose=null;state='pose';fr=p;until=now+ms;} // cc114: pauses wait until he is past the title zone
   function resume(now){walkUntil=now+rnd(3000,5000);}
   function draw(){
     const k=g.k;
@@ -2799,9 +2806,15 @@ loadUpcomingDividends();
   }
   function cooldown(ms){BTNS.forEach(b=>b.disabled=true);clearTimeout(coolT);coolUntil=Math.max(coolUntil,performance.now()+ms);
     coolT=setTimeout(()=>{if(state==='feed'||feedReq)return;BTNS.forEach(b=>b.disabled=false);mark('ready');},Math.max(0,coolUntil-performance.now()));}
-  function treatSpot(){ // cc112: one fixed spot on the line beneath the header (desktop: middle of the right-hand floor past the tabs; mobile: centre)
-    if(desk.matches&&g.hx2>=0){const a=Math.max(g.hx2,lo()),b=hi();return a<b?(a+b)/2:hi();}
-    return Math.max(lo(),Math.min(hi(),g.w/2));
+  let feedSrc=null;
+  function treatSpot(){ // cc114: directly under the button that was clicked, on whatever surface is below it (floor, raised line or car roof)
+    const hr=header.getBoundingClientRect(),r=feedSrc&&feedSrc.getBoundingClientRect();
+    let x=r&&r.width?r.left+r.width/2-hr.left:g.w/2;
+    x=Math.max(lo(),Math.min(hi(),x));
+    if(g.z){const zm=g.cw*0.3+EAT_FRONT*g.k+4;if(x>g.z[0]-zm&&x<g.z[1]+zm){const L1=g.z[0]-zm,R1=g.z[1]+zm;x=(x-L1<=R1-x&&L1>=lo())||R1>hi()?L1:R1;}} // cc114: never land the treat under the title zone
+    const m=EAT_FRONT*g.k+4,es=[];if(g.hx1>=0)es.push(g.hx1,g.hx2);if(g.car)es.push(g.car.l,g.car.r);
+    for(const e of es){if(Math.abs(x-e)<m)x=e+(x>=e?1:-1)*m;} // keep clear of a step so cat + treat share one surface
+    return Math.max(lo(),Math.min(hi(),x));
   }
   function beginFeed(now){
     feedReq=false;const tx=treatSpot();dir=(tx-c)>=0?1:-1;
@@ -2835,7 +2848,7 @@ loadUpcomingDividends();
     }
   }
   const onFeed=e=>{
-    if(e.currentTarget.disabled)return;cooldown(COOL);
+    if(e.currentTarget.disabled)return;feedSrc=e.currentTarget;cooldown(COOL);
     if(still.matches){feedStill();return;}
     feedReq=true;mark('wait');
   };
@@ -2859,7 +2872,9 @@ loadUpcomingDividends();
         c+=dir*g.h*0.7*dt; // ~stride per 8-frame cycle, scaled to size
         ft+=dt;if(ft>=1/FPS){ft%=1/FPS;frame=(frame+1)%NF;}
         fr=WALK[frame];
-        if(g.tx>=0&&now>lookCool&&Math.abs(c-g.tx)<14){lookCool=now+12000;if(Math.random()<0.6)pose(POSE.lookup,rnd(2000,3000),now);}
+        if(pendPose&&!noSit(c)){const pp=pendPose;pose(pp[0],pp[1],now);}
+        else if(pendPose){if((dir>0&&c>=target)||(dir<0&&c<=target)){target=dir>0?hi():lo();}} // keep walking out of the zone
+        else if(g.tx>=0&&now>lookCool&&Math.abs(c-g.tx)<14){lookCool=now+12000;if(Math.random()<0.6)pose(POSE.lookup,rnd(2000,3000),now);}
         else if(now>=walkUntil){const r=Math.random(),nearT=g.tx>=0&&Math.abs(c-g.tx)<60;
           pose(nearT&&r<0.5?POSE.lookup:(r<0.5?POSE.sit:r<0.88?POSE.idle:POSE.lookup),rnd(2000,3000),now);}
         else if((dir>0&&c>=target)||(dir<0&&c<=target)){c=target;pickTarget();}
@@ -2912,17 +2927,63 @@ loadUpcomingDividends();
   btn.type='button';btn.className='sff-rev-btn';btn.setAttribute('aria-label','Rev the car (press and hold)');btn.title='Rev the Car — press and hold';
   btn.innerHTML=`<img class="rev-pedal" src="${B}pedal.png${V}" alt="" draggable="false"><img class="rev-icon" src="${B}jaguar_icon.png${V}" alt="" draggable="false">`;
   header.appendChild(btn);
+  const hint=document.createElement('span'); // cc114: label under the green border, arrow pointing up at the pedal (desktop)
+  hint.className='sff-rev-hint';hint.setAttribute('aria-hidden','true');hint.textContent='\u2191 Rev the Car \u00b7 hold';header.appendChild(hint);
   const wheel=document.createElement('img');
   wheel.className='sff-rev-wheel';wheel.alt='';wheel.setAttribute('aria-hidden','true');wheel.draggable=false;wheel.src=B+'wheel_spin.png'+V;wheel.hidden=true;header.appendChild(wheel);
   ['smoke_light','smoke_heavy'].forEach(n=>{const i=new Image();i.src=B+n+'.png'+V;});
   const jag=car.closest('.brand-jaguar')||car;
+  // cc114: procedurally synthesized V8 rev + tyre screech (Web Audio API only; no audio files). Plays only while held.
+  let AC=null,snd=null;
+  function audioStart(){
+    try{
+      const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+      if(!AC)AC=new C();if(AC.state==='suspended')AC.resume();
+      if(snd)audioKill(snd,0);
+      const t=AC.currentTime,master=AC.createGain();master.gain.value=0.25;master.connect(AC.destination);
+      // engine: sawtooth at firing rate + square sub-octave -> soft-clip distortion -> lowpass, amplitude 'lope' from an irregular LFO
+      const o1=AC.createOscillator(),o2=AC.createOscillator();o1.type='sawtooth';o2.type='square';o1.frequency.value=45;o2.frequency.value=22.5;
+      const g2=AC.createGain();g2.gain.value=0.55;
+      const sh=AC.createWaveShaper(),N=1024,cv=new Float32Array(N);for(let i=0;i<N;i++){const x=i/(N-1)*2-1;cv[i]=Math.tanh(2.6*x);}sh.curve=cv;
+      const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=380;lp.Q.value=4;
+      const eng=AC.createGain();eng.gain.value=0;
+      const lope=AC.createOscillator(),ld=AC.createGain();lope.type='triangle';lope.frequency.value=11;ld.gain.value=0.35;
+      lope.connect(ld);ld.connect(eng.gain);
+      o1.connect(sh);o2.connect(g2);g2.connect(sh);sh.connect(lp);lp.connect(eng);eng.connect(master);
+      eng.gain.setTargetAtTime(0.6,t,0.05);
+      // screech: looping white noise -> two bandpasses (~2.4-3.6 kHz, wobbling) -> gain that fades in after ~0.8 s
+      const nb=AC.createBuffer(1,AC.sampleRate*2,AC.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+      const ns=AC.createBufferSource();ns.buffer=nb;ns.loop=true;
+      const bp=AC.createBiquadFilter(),bp2=AC.createBiquadFilter();bp.type=bp2.type='bandpass';bp.frequency.value=2900;bp.Q.value=9;bp2.frequency.value=3100;bp2.Q.value=3;
+      const wob=AC.createOscillator(),wd=AC.createGain();wob.frequency.value=6.5;wd.gain.value=350;wob.connect(wd);wd.connect(bp.frequency);
+      const scr=AC.createGain();scr.gain.value=0;ns.connect(bp);bp.connect(bp2);bp2.connect(scr);scr.connect(master);
+      [o1,o2,lope,ns,wob].forEach(n=>n.start(t));
+      snd={master,o1,o2,lp,eng,lope,scr,nodes:[o1,o2,lope,ns,wob]};
+    }catch(e){snd=null;}
+  }
+  function audioUpdate(u,sec){
+    if(!snd||!AC)return;const t=AC.currentTime,f=45+115*u*u+(Math.random()-0.5)*6*(1-u); // firing rate 45 -> 160 Hz with the wheel-spin ramp, uneven at low revs
+    snd.o1.frequency.setTargetAtTime(f,t,0.06);snd.o2.frequency.setTargetAtTime(f/2,t,0.06);
+    snd.lp.frequency.setTargetAtTime(380+1700*u,t,0.08);snd.lope.frequency.setTargetAtTime(f/4*(0.85+Math.random()*0.3),t,0.05);
+    snd.eng.gain.setTargetAtTime(0.55+0.35*u,t,0.1);
+    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.8)/1.2))*0.42,t,0.12);
+  }
+  function audioKill(s,fade){
+    if(!s||!AC)return;const t=AC.currentTime;
+    try{s.o1.frequency.setTargetAtTime(40,t,0.1);s.o2.frequency.setTargetAtTime(20,t,0.1);s.lp.frequency.setTargetAtTime(300,t,0.1);
+      s.master.gain.cancelScheduledValues(t);s.master.gain.setValueAtTime(s.master.gain.value,t);s.master.gain.linearRampToValueAtTime(0,t+Math.max(0.02,fade));
+      s.nodes.forEach(n=>{try{n.stop(t+fade+0.05);}catch(e){}});setTimeout(()=>{try{s.master.disconnect();}catch(e){}},(fade+0.2)*1000);}catch(e){}
+  }
+  function audioStop(){const s=snd;snd=null;audioKill(s,0.3);} // quick rev-down + fade (~0.3 s), all nodes stopped
   let held=false,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[];
   function box(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect();return {hr,r,cx:r.left-hr.left+RW.x*r.width,cy:r.top-hr.top+RW.y*r.height,d:RW.d*r.width};}
   function place(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect(),bw=btn.offsetWidth,bh=btn.offsetHeight;
     if(!r.width){btn.hidden=true;return;}btn.hidden=false;
     // behind (left of) the Jaguar's rear bumper, under the boot line and clear of the title, tabs and the cat's walking line
     const x=Math.max(2,r.left-hr.left-bw+4),y=desk.matches?r.bottom-hr.top-bh-14:r.top-hr.top+(r.height-bh)/2;
-    btn.style.left=Math.round(x)+'px';btn.style.top=Math.round(y)+'px';}
+    btn.style.left=Math.round(x)+'px';btn.style.top=Math.round(y)+'px';
+    const pd=btn.querySelector('.rev-pedal'),pr=pd&&pd.getBoundingClientRect(); // arrow sits right under the pedal, just below the header line
+    hint.style.left=Math.round(Math.max(2,(pr&&pr.width?pr.left+pr.width/2-hr.left:x+8)-3))+'px';hint.style.top=Math.round(header.clientHeight+2)+'px';}
   function puff(b,u,now){
     const heavy=Math.random()<Math.max(0,(u-0.3)/0.5),el=document.createElement('img');
     el.className='sff-rev-smoke';el.alt='';el.setAttribute('aria-hidden','true');el.draggable=false;el.src=B+(heavy?'smoke_heavy':'smoke_light')+'.png'+V;
@@ -2936,6 +2997,7 @@ loadUpcomingDividends();
     const b=box(),u=held?Math.min(1,(now-t0)/CAP):0;
     if(held){
       ang=(ang+dt*360*(1.5+8.5*u*u))%360; // 1.5 → 10 rev/s
+      audioUpdate(u,(now-t0)/1000);
       wheel.style.width=wheel.style.height=b.d.toFixed(1)+'px';
       wheel.style.transform=`translate3d(${(b.cx-b.d/2).toFixed(1)}px,${(b.cy-b.d/2).toFixed(1)}px,0) rotate(${ang.toFixed(1)}deg)`;
       if(now>=nextPuff){puff(b,u,now);nextPuff=now+(260-170*u);}
@@ -2947,11 +3009,11 @@ loadUpcomingDividends();
       p.el.style.opacity=op.toFixed(3);p.el.style.transform=`translate3d(${(x-p.w*g*0.85).toFixed(1)}px,${(y-p.w*g*0.33).toFixed(1)}px,0) scale(${g.toFixed(3)})`;return true;});
     if(held||puffs.length)raf=requestAnimationFrame(frame);else raf=0;
   }
-  function start(){if(held)return;held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held');
+  function start(){if(held)return;held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held');audioStart();
     if(still.matches){const b=box();wheel.hidden=true;puff(b,0.2,t0);const p=puffs[puffs.length-1];p.life=1e9;p.vx=p.vy=0;p.el.style.opacity='0.5';
       p.el.style.transform=`translate3d(${(p.x-p.w*0.85).toFixed(1)}px,${(p.y-p.w*0.33).toFixed(1)}px,0)`;return;} // reduced motion: one static light puff while held
     wheel.hidden=false;if(!raf)raf=requestAnimationFrame(frame);}
-  function stop(){if(!held)return;held=false;btn.classList.remove('is-held');wheel.hidden=true;jag.style.transform='';
+  function stop(){if(!held)return;held=false;btn.classList.remove('is-held');audioStop();wheel.hidden=true;jag.style.transform='';
     const now=performance.now();
     if(still.matches){puffs.forEach(p=>p.el.remove());puffs=[];return;}
     puffs.forEach(p=>{p.fade=now+300;p.fs=now;p.fop=parseFloat(p.el.style.opacity)||0;}); // smoke fades out quickly
