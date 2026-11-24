@@ -2938,15 +2938,15 @@ loadUpcomingDividends();
 (function(){
   const header=document.querySelector('.site-header'),car=header&&header.querySelector('.brand-jaguar-img');
   if(!header||!car)return;
-  const B='/assets/jaguar/',V='?v=cc113',CAP=4500,MAXON=20000; // cc117: toggle; effect ramps to full over ~4.5s, then holds at max; safety auto-off after 20s
+  const B='/assets/jaguar/',V='?v=cc119'; // cc119: one-click 6 s sequence (assets replaced from Max's car package) //off after 20s
   const still=window.matchMedia('(prefers-reduced-motion: reduce)'),desk=window.matchMedia('(min-width:1024px)');
   const RW={x:.197,y:.693,d:.15}; // rear-wheel centre / diameter as fractions of the car image box (measured from jaguar-wheels)
   const btn=document.createElement('button');
-  btn.type='button';btn.className='sff-rev-btn';btn.setAttribute('aria-label','Rev the car (click to start / stop)');btn.setAttribute('aria-pressed','false');btn.title='Rev the Car — click to start, click again to stop';
-  btn.innerHTML=`<img class="rev-pedal" src="${B}pedal.png${V}" alt="" draggable="false"><img class="rev-icon" src="${B}jaguar_icon.png${V}" alt="" draggable="false">`;
+  btn.type='button';btn.className='sff-rev-btn';btn.setAttribute('aria-label','Rev the car (click once to play)');btn.setAttribute('aria-pressed','false');btn.title='Rev the Car — click once';
+  btn.innerHTML=`<img class="rev-pedal" src="${B}pedal.png${V}" alt="" draggable="false"><img class="rev-icon" src="${B}jaguar_icon_right.png${V}" alt="" draggable="false">`;
   header.appendChild(btn);
   const hint=document.createElement('span'); // cc114: label under the green border, arrow pointing up at the pedal (desktop)
-  hint.className='sff-rev-hint';hint.setAttribute('aria-hidden','true');hint.textContent='\u2191 Rev the Car \u00b7 click';header.appendChild(hint);
+  hint.className='sff-rev-hint';hint.setAttribute('aria-hidden','true');hint.innerHTML='<svg class="rev-arrow" viewBox="0 0 14 18" width="14" height="18" aria-hidden="true"><path d="M7 0 14 8H9.5V18h-5V8H0z" fill="currentColor"/></svg><span>Rev the Car \u00b7 click once</span>';header.appendChild(hint);
   const wheel=document.createElement('img');
   wheel.className='sff-rev-wheel';wheel.alt='';wheel.setAttribute('aria-hidden','true');wheel.draggable=false;wheel.src=B+'wheel_spin.png'+V;wheel.hidden=true;header.appendChild(wheel);
   ['smoke_light','smoke_heavy'].forEach(n=>{const i=new Image();i.src=B+n+'.png'+V;});
@@ -2984,7 +2984,7 @@ loadUpcomingDividends();
     snd.o1.frequency.setTargetAtTime(f,t,0.06);snd.o2.frequency.setTargetAtTime(f/2,t,0.06);
     snd.lp.frequency.setTargetAtTime(380+1700*u,t,0.08);snd.lope.frequency.setTargetAtTime(f/4*(0.85+Math.random()*0.3),t,0.05);
     snd.eng.gain.setTargetAtTime(0.55+0.35*u,t,0.1);
-    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.9)/3.6))*0.42,t,0.12); // screech fades in from ~0.9s to full by ~4.5s
+    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.7)/1.6))*0.42,t,0.12); // screech fades in from ~0.7s, full by ~2.3s (stops at the 3s blowout)
   }
   function audioKill(s,fade){
     if(!s||!AC)return;const t=AC.currentTime;
@@ -2993,15 +2993,21 @@ loadUpcomingDividends();
       s.nodes.forEach(n=>{try{n.stop(t+fade+0.05);}catch(e){}});setTimeout(()=>{try{s.master.disconnect();}catch(e){}},(fade+0.2)*1000);}catch(e){}
   }
   function audioStop(){const s=snd;snd=null;audioKill(s,0.3);} // quick rev-down + fade (~0.3 s), all nodes stopped
-  let held=false,offT=0,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[];
+  // cc119: ONE CLICK plays a fixed 6.0 s sequence (Max t731u/t732u):
+  //   0-3 s rear wheel spins up + tyre smoke builds (light -> heavy) | 3.0 s rear tyre blows (blowout flash -> blown tyre) + hood smoke
+  //   3-6 s blown tyre + hood smoke hold | 6.0 s everything fades and resets. Clicks during the sequence are ignored (button dims).
+  const T_BLOW=3000,T_END=6000,T_FADE=450,BLOW_FLASH=260;
+  const blowImg=mkOv('sff-rev-blow','wheel_blowout_right.png'),blownImg=mkOv('sff-rev-blow','wheel_blown_right.png'),hood=mkOv('sff-rev-hood','hood_smoke_right.png');
+  function mkOv(cls,f){const i=document.createElement('img');i.className=cls;i.alt='';i.setAttribute('aria-hidden','true');i.draggable=false;i.src=B+f+V;i.hidden=true;header.appendChild(i);return i;}
+  let held=false,blown=false,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[],endT=0;
   function box(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect();return {hr,r,cx:r.left-hr.left+RW.x*r.width,cy:r.top-hr.top+RW.y*r.height,d:RW.d*r.width};}
   function place(){const hr=header.getBoundingClientRect(),r=car.getBoundingClientRect(),bw=btn.offsetWidth,bh=btn.offsetHeight;
     if(!r.width){btn.hidden=true;return;}btn.hidden=false;
     // behind (left of) the Jaguar's rear bumper, under the boot line and clear of the title, tabs and the cat's walking line
     const x=Math.max(2,r.left-hr.left-bw+4),y=desk.matches?r.bottom-hr.top-bh-14:r.top-hr.top+(r.height-bh)/2;
     btn.style.left=Math.round(x)+'px';btn.style.top=Math.round(y)+'px';
-    const pd=btn.querySelector('.rev-pedal'),pr=pd&&pd.getBoundingClientRect(); // arrow sits right under the pedal, just below the header line
-    hint.style.left=Math.round(Math.max(2,(pr&&pr.width?pr.left+pr.width/2-hr.left:x+8)-3))+'px';hint.style.top=Math.round(header.clientHeight+2)+'px';}
+    const pd=btn.querySelector('.rev-pedal'),pr=pd&&pd.getBoundingClientRect(),aw=(hint.querySelector('svg')||{}).clientWidth||14; // arrow tip right under the pedal, just below the header line
+    hint.style.left=Math.round(Math.max(2,(pr&&pr.width?pr.left+pr.width/2-hr.left:x+8)-aw/2))+'px';hint.style.top=Math.round(header.clientHeight+2)+'px';}
   function puff(b,u,now){
     const heavy=Math.random()<Math.max(0,(u-0.3)/0.5),el=document.createElement('img');
     el.className='sff-rev-smoke';el.alt='';el.setAttribute('aria-hidden','true');el.draggable=false;el.src=B+(heavy?'smoke_heavy':'smoke_light')+'.png'+V;
@@ -3010,39 +3016,73 @@ loadUpcomingDividends();
     puffs.push({el,born:now,life:900+700*u,x:b.cx-b.d*0.35,y:b.cy+b.d*0.45,w,vx:-b.d*(1.0+2.4*u)*(0.7+Math.random()*0.6),vy:-b.d*(0.15+0.5*u)*Math.random(),op:(heavy?0.55:0.4)+0.4*u});
     if(puffs.length>14){const p=puffs.shift();p.el.remove();}
   }
+  function putWheel(el,b,k,extra){const w=b.d*k;el.style.width=el.style.height=w.toFixed(1)+'px';el.style.transform=`translate3d(${(b.cx-w/2).toFixed(1)}px,${(b.cy-w/2).toFixed(1)}px,0)${extra||''}`;}
+  function putHood(b,now,a){const w=b.r.width*0.40,h=w*197/250,hx=b.r.left-b.hr.left+b.r.width*0.80,hy=b.r.top-b.hr.top+b.r.height*0.50; // smoke base sits on the bonnet, front of the car
+    const bob=Math.sin(now/260)*1.2,sc=0.9+0.12*Math.min(1,a)+0.03*Math.sin(now/410);
+    hood.style.width=w.toFixed(1)+'px';hood.style.transform=`translate3d(${(hx-w*0.5).toFixed(1)}px,${(hy-h*0.9+bob).toFixed(1)}px,0) scale(${sc.toFixed(3)})`;}
+  function bang(){ // short synthesized blowout 'bang': noise crack + low thump
+    if(!AC)return;try{const t=AC.currentTime,g=AC.createGain();g.gain.value=0.38;g.connect(AC.destination);
+      const nb=AC.createBuffer(1,AC.sampleRate*0.5,AC.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+      const ns=AC.createBufferSource();ns.buffer=nb;const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(5200,t);lp.frequency.exponentialRampToValueAtTime(500,t+0.35);
+      const ng=AC.createGain();ng.gain.setValueAtTime(1,t);ng.gain.exponentialRampToValueAtTime(0.001,t+0.45);ns.connect(lp);lp.connect(ng);ng.connect(g);
+      const o=AC.createOscillator();o.type='sine';o.frequency.setValueAtTime(95,t);o.frequency.exponentialRampToValueAtTime(32,t+0.3);
+      const og=AC.createGain();og.gain.setValueAtTime(1.1,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.4);o.connect(og);og.connect(g);
+      ns.start(t);o.start(t);ns.stop(t+0.5);o.stop(t+0.45);setTimeout(()=>{try{g.disconnect();}catch(e){}},900);}catch(e){}}
+  function doBlow(b,now){blown=true;wheel.hidden=true;bang();
+    if(snd&&AC){const t=AC.currentTime;snd.scr.gain.cancelScheduledValues(t);snd.scr.gain.setTargetAtTime(0,t,0.04); // screech stops after the blowout
+      snd.o1.frequency.setTargetAtTime(40,t,0.25);snd.o2.frequency.setTargetAtTime(20,t,0.25);snd.lp.frequency.setTargetAtTime(330,t,0.2);snd.eng.gain.setTargetAtTime(0.42,t,0.2);}
+    blowImg.hidden=false;putWheel(blowImg,b,114/108*1.05,' scale(1.12)');hood.hidden=false;hood.style.opacity='0';
+    jag.style.transform='translate(-2px,1.5px)';}
   function frame(now){
     const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
-    const b=box(),u=held?Math.min(1,(now-t0)/CAP):0;
+    const b=box(),el=now-t0;
+    if(held&&el>=T_END){finish(now);}
     if(held){
-      ang=(ang+dt*360*(1.5+8.5*u*u))%360; // 1.5 → 10 rev/s
-      audioUpdate(u,(now-t0)/1000);
-      wheel.style.width=wheel.style.height=b.d.toFixed(1)+'px';
-      wheel.style.transform=`translate3d(${(b.cx-b.d/2).toFixed(1)}px,${(b.cy-b.d/2).toFixed(1)}px,0) rotate(${ang.toFixed(1)}deg)`;
-      if(now>=nextPuff){puff(b,u,now);nextPuff=now+(260-170*u);}
-      const s=u>0.15?(Math.random()-0.5)*1.6*u:0;jag.style.transform=`translate(${s.toFixed(2)}px,${(Math.random()*-0.9*u).toFixed(2)}px)`; // subtle rev shake
-    }
+      if(el<T_BLOW){const u=Math.min(1,el/T_BLOW);
+        ang=(ang+dt*360*(1.5+10.5*u*u))%360; // 1.5 → 12 rev/s
+        audioUpdate(u,el/1000);
+        wheel.style.width=wheel.style.height=b.d.toFixed(1)+'px';
+        wheel.style.transform=`translate3d(${(b.cx-b.d/2).toFixed(1)}px,${(b.cy-b.d/2).toFixed(1)}px,0) rotate(${ang.toFixed(1)}deg)`;
+        if(now>=nextPuff){puff(b,u,now);nextPuff=now+(260-180*u);}
+        const s=u>0.15?(Math.random()-0.5)*1.6*u:0;jag.style.transform=`translate(${s.toFixed(2)}px,${(Math.random()*-0.9*u).toFixed(2)}px)`; // subtle rev shake
+      }else{
+        if(!blown)doBlow(b,now);
+        const be=el-T_BLOW;
+        if(be<BLOW_FLASH){putWheel(blowImg,b,114/108*1.05,` scale(${(1.12-0.1*be/BLOW_FLASH).toFixed(3)})`);}
+        else{if(!blowImg.hidden){blowImg.hidden=true;blownImg.hidden=false;}putWheel(blownImg,b,114/108,'');}
+        if(be>120)jag.style.transform='';
+        const ha=Math.min(1,be/500);hood.style.opacity=(1*ha).toFixed(3);putHood(b,now,be/1500);
+        if(be<900&&now>=nextPuff){puff(b,0.8,now);nextPuff=now+140;} // a last burst of rear smoke from the blowout
+      }
+    }else if(endT){const a=Math.max(0,1-(now-endT)/T_FADE);
+      blownImg.style.opacity=blowImg.style.opacity=a.toFixed(3);hood.style.opacity=(1*a).toFixed(3);if(!hood.hidden)putHood(b,now,1);
+      if(a<=0)reset();}
     puffs=puffs.filter(p=>{const a=(now-p.born)/p.life;if(a>=1||(!held&&p.fade&&now>p.fade)){p.el.remove();return false;}
       const g=1+a*0.9,x=p.x+p.vx*a*p.life/1000,y=p.y+p.vy*a*p.life/1000;
-      const op=p.fade?Math.max(0,p.fop*(1-(now-p.fs)/300)):p.op*(a<0.15?a/0.15:1-(a-0.15)/0.85);
+      const op=p.fade?Math.max(0,p.fop*(1-(now-p.fs)/T_FADE)):p.op*(a<0.15?a/0.15:1-(a-0.15)/0.85);
       p.el.style.opacity=op.toFixed(3);p.el.style.transform=`translate3d(${(x-p.w*g*0.85).toFixed(1)}px,${(y-p.w*g*0.33).toFixed(1)}px,0) scale(${g.toFixed(3)})`;return true;});
-    if(held||puffs.length)raf=requestAnimationFrame(frame);else raf=0;
+    if(held||endT||puffs.length)raf=requestAnimationFrame(frame);else raf=0;
   }
-  function start(){if(held||!desk.matches)return; // cc118: desktop-only (no overlays/audio on mobile)
-    held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held','is-on');btn.setAttribute('aria-pressed','true');audioStart();
-    clearTimeout(offT);offT=setTimeout(stop,MAXON);
-    if(still.matches){const b=box();wheel.hidden=true;puff(b,0.2,t0);const p=puffs[puffs.length-1];p.life=1e9;p.vx=p.vy=0;p.el.style.opacity='0.5';
-      p.el.style.transform=`translate3d(${(p.x-p.w*0.85).toFixed(1)}px,${(p.y-p.w*0.33).toFixed(1)}px,0)`;return;} // reduced motion: one static light puff while held
+  function busy(on){btn.classList.toggle('is-busy',on);btn.classList.toggle('is-held',on);btn.setAttribute('aria-disabled',String(on));btn.setAttribute('aria-pressed',String(on));}
+  function reset(){endT=0;blown=false;[wheel,blowImg,blownImg,hood].forEach(e=>{e.hidden=true;e.style.opacity='';});jag.style.transform='';
+    puffs.forEach(p=>p.el.remove());puffs=[];busy(false);}
+  let rmT=0;
+  function start(){if(held||endT||!desk.matches)return; // cc118: desktop-only (no overlays/audio on mobile)
+    held=true;blown=false;t0=performance.now();last=0;nextPuff=0;busy(true);audioStart();
+    if(still.matches){ // reduced motion: static light puff for 3 s, then the blown tyre + hood smoke (no spin/shake/drift), reset at 6 s
+      const b=box();wheel.hidden=true;puff(b,0.2,t0);const p=puffs[puffs.length-1];p.life=1e9;p.vx=p.vy=0;p.el.style.opacity='0.5';
+      p.el.style.transform=`translate3d(${(p.x-p.w*0.85).toFixed(1)}px,${(p.y-p.w*0.33).toFixed(1)}px,0)`;
+      rmT=setTimeout(()=>{const b=box();blown=true;bang();if(snd&&AC)snd.scr.gain.setTargetAtTime(0,AC.currentTime,0.04);blownImg.hidden=false;putWheel(blownImg,b,114/108,'');hood.hidden=false;hood.style.opacity='0.85';putHood(b,0,1);},T_BLOW);
+      rmT2=setTimeout(()=>{held=false;audioStop();reset();},T_END);return;}
     wheel.hidden=false;if(!raf)raf=requestAnimationFrame(frame);}
-  function stop(){clearTimeout(offT);if(!held)return;held=false;btn.classList.remove('is-held','is-on');btn.setAttribute('aria-pressed','false');audioStop();wheel.hidden=true;jag.style.transform='';
-    const now=performance.now();
-    if(still.matches){puffs.forEach(p=>p.el.remove());puffs=[];return;}
-    puffs.forEach(p=>{p.fade=now+300;p.fs=now;p.fop=parseFloat(p.el.style.opacity)||0;}); // smoke fades out quickly
-    if(!raf)raf=requestAnimationFrame(frame);}
-  // cc117: ON/OFF toggle (click / tap / Enter / Space via native button click); no pointerleave/blur auto-stop
-  btn.addEventListener('click',()=>{held?stop():start();});
+  let rmT2=0;
+  function finish(now){if(!held)return;held=false;audioStop();wheel.hidden=true;jag.style.transform='';endT=now;
+    puffs.forEach(p=>{p.fade=now+T_FADE;p.fs=now;p.fop=parseFloat(p.el.style.opacity)||0;});if(!raf)raf=requestAnimationFrame(frame);}
+  function abort(){clearTimeout(rmT);clearTimeout(rmT2);if(held){held=false;audioStop();}if(raf){cancelAnimationFrame(raf);raf=0;}reset();}
+  btn.addEventListener('click',e=>{e.preventDefault();start();}); // native button click covers mouse, touch, Enter and Space
   btn.addEventListener('contextmenu',e=>e.preventDefault());
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',stop);
-  desk.addEventListener('change',()=>{if(!desk.matches)stop();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)abort();});window.addEventListener('pagehide',abort);
+  desk.addEventListener('change',()=>{if(!desk.matches)abort();});
   let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(place,120);});
   window.addEventListener('load',place);(car.complete?place():car.addEventListener('load',place,{once:true}));place();
 })();
