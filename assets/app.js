@@ -2801,6 +2801,20 @@ loadUpcomingDividends();
     for(const e of es){const ahead=(e-c)*dir;if(ahead>0&&ahead<=d&&Math.abs(floorAt(e-dir*1.5)-floorAt(e+dir*1.5))>3&&(best===null||ahead<(best-c)*dir))best=e;}
     return best;
   }
+  // cc122: shared lazy AudioContext (created/resumed on a button click) + a synthesized 'mew' (Web Audio only, no audio files)
+  window.sffAudio=window.sffAudio||(()=>{let ac=null;return create=>{try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
+    if(!ac&&create)ac=new C();if(ac&&ac.state==='suspended')ac.resume();return ac;}catch(e){return null;}};})();
+  function meow(){const AC=window.sffAudio(false);if(!AC)return;
+    try{const t=AC.currentTime+0.02,D=0.62,out=AC.createGain();out.gain.value=0.2;out.connect(AC.destination);
+      const o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(600,t);o.frequency.exponentialRampToValueAtTime(900,t+0.17);o.frequency.exponentialRampToValueAtTime(500,t+D);
+      const vib=AC.createOscillator(),vd=AC.createGain();vib.frequency.value=6.5;vd.gain.value=14;vib.connect(vd);vd.connect(o.frequency);
+      const env=AC.createGain();env.gain.setValueAtTime(0.0001,t);env.gain.exponentialRampToValueAtTime(1,t+0.05);env.gain.setValueAtTime(1,t+0.32);env.gain.exponentialRampToValueAtTime(0.0001,t+D);
+      const f1=AC.createBiquadFilter(),f2=AC.createBiquadFilter(),g1=AC.createGain(),g2=AC.createGain();f1.type=f2.type='bandpass';f1.Q.value=6;f2.Q.value=9;g1.gain.value=1.4;g2.gain.value=0.9;
+      f1.frequency.setValueAtTime(320,t);f1.frequency.linearRampToValueAtTime(760,t+D*0.75); // 'ee' -> 'ow' vowel formants
+      f2.frequency.setValueAtTime(2300,t);f2.frequency.linearRampToValueAtTime(1150,t+D*0.75);
+      const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3200;
+      o.connect(env);env.connect(f1);env.connect(f2);f1.connect(g1);f2.connect(g2);g1.connect(lp);g2.connect(lp);lp.connect(out);
+      o.start(t);vib.start(t);o.stop(t+D+0.05);vib.stop(t+D+0.05);setTimeout(()=>{try{out.disconnect();}catch(e){}},(D+0.4)*1000);}catch(e){}}
   // cc109: Feed the Cat — treat drop, crouch, run (2x walk), eat 3.0s, happy + hearts 2s, resume.
   let feedReq=false,FD=null,coolUntil=0,coolT=0;
   const DROP=600,CROUCH=375,EAT=3000,HAPPY=2000,COOL=10000;
@@ -2859,7 +2873,7 @@ loadUpcomingDividends();
     }else if(FD.ph==='eat'){
       fr=FEED.eat[Math.min(23,Math.floor(el/TICK))%3]; // 24 ticks @8fps = exactly 3.0s
       treatDraw(FD.tx,fy,Math.max(0,1-el/EAT).toFixed(3));
-      if(el>=EAT){treat.hidden=true;FD.ph='happy';FD.t0=now;fr=FEED.happy;mark('happy');hearts(c,floorAt(c),false);}
+      if(el>=EAT){treat.hidden=true;FD.ph='happy';FD.t0=now;fr=FEED.happy;mark('happy');meow();hearts(c,floorAt(c),false);}
     }else if(FD.ph==='happy'){fr=FEED.happy;
       if(el>=HAPPY){FD=null;mark('done');pickTarget();resume(now);cooldown(2500);}
     }
@@ -2867,6 +2881,7 @@ loadUpcomingDividends();
   const onFeed=e=>{
     if(!desk.matches)return; // cc118: treat sequence is desktop-only (mobile: Truffles just wanders)
     if(e.currentTarget.disabled)return;feedSrc=e.currentTarget;cooldown(COOL);
+    window.sffAudio(true); // unlock audio on the click so the mew can play at the happy pose
     if(still.matches){feedStill();return;}
     feedReq=true;mark('wait');
   };
@@ -2874,7 +2889,7 @@ loadUpcomingDividends();
   function feedStill(){ // reduced motion: treat appears at the fixed spot, happy pose, static hearts — no running
     geom();const tx=treatSpot();
     treat.hidden=false;treatDraw(tx,floorAt(tx),1);fr=POSE.sit;dir=tx>=c?1:-1;draw();mark('drop');
-    setTimeout(()=>{fr=FEED.happy;draw();hearts(c,floorAt(c),true);mark('happy');
+    setTimeout(()=>{fr=FEED.happy;draw();hearts(c,floorAt(c),true);mark('happy');meow();
       setTimeout(()=>{treat.hidden=true;fr=POSE.sit;dir=1;draw();mark('done');},HAPPY);},500);
   }
   function tick(now){
@@ -2956,7 +2971,7 @@ loadUpcomingDividends();
   function audioStart(){
     try{
       const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
-      if(!AC)AC=new C();if(AC.state==='suspended')AC.resume();
+      if(!AC)AC=(window.sffAudio&&window.sffAudio(true))||new C();if(AC.state==='suspended')AC.resume();
       if(snd)audioKill(snd,0);
       const t=AC.currentTime,master=AC.createGain();master.gain.value=0.25;master.connect(AC.destination);
       // engine: sawtooth at firing rate + square sub-octave -> soft-clip distortion -> lowpass, amplitude 'lope' from an irregular LFO
@@ -2984,7 +2999,7 @@ loadUpcomingDividends();
     snd.o1.frequency.setTargetAtTime(f,t,0.06);snd.o2.frequency.setTargetAtTime(f/2,t,0.06);
     snd.lp.frequency.setTargetAtTime(380+1700*u,t,0.08);snd.lope.frequency.setTargetAtTime(f/4*(0.85+Math.random()*0.3),t,0.05);
     snd.eng.gain.setTargetAtTime(0.55+0.35*u,t,0.1);
-    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.9)/2.1))*0.42,t,0.12); // cc120: screech fades in from ~0.9s, full by ~3s (stops at the 4s blowout)
+    snd.scr.gain.setTargetAtTime(Math.max(0,Math.min(1,(sec-0.9)/2.5))*0.42,t,0.12); // cc122: screech fades in from ~0.9s, full by ~3.4s (stops at the 4.5s blowout)
   }
   function audioKill(s,fade){
     if(!s||!AC)return;const t=AC.currentTime;
@@ -2996,7 +3011,7 @@ loadUpcomingDividends();
   // cc119: ONE CLICK plays a fixed 6.0 s sequence (Max t731u/t732u):
   //   0-3 s rear wheel spins up + tyre smoke builds (light -> heavy) | 3.0 s rear tyre blows (blowout flash -> blown tyre) + hood smoke
   //   3-6 s blown tyre + hood smoke hold | 6.0 s everything fades and resets. Clicks during the sequence are ignored (button dims).
-  const T_BLOW=4000,T_END=7000, /* cc120: blowout at 4.0 s, reset at 7.0 s */ T_FADE=450,BLOW_FLASH=260;
+  const T_BLOW=4500,T_END=7500, /* cc122: blowout at 4.5 s, reset at 7.5 s (Max t736u) */ T_FADE=450,BLOW_FLASH=260;
   const blowImg=mkOv('sff-rev-blow','wheel_blowout_right.png'),blownImg=mkOv('sff-rev-blow','wheel_blown_right.png'),hood=mkOv('sff-rev-hood','hood_smoke_right.png');
   function mkOv(cls,f){const i=document.createElement('img');i.className=cls;i.alt='';i.setAttribute('aria-hidden','true');i.draggable=false;i.src=B+f+V;i.hidden=true;header.appendChild(i);return i;}
   let held=false,blown=false,t0=0,raf=0,ang=0,last=0,nextPuff=0,puffs=[],endT=0;
