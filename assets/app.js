@@ -2724,7 +2724,7 @@ loadUpcomingDividends();
   // cc131: scare frames (native art faces LEFT -> nat:-1 so dir=-1 still means 'facing left')
   const SCARE={look:{...F('scare_look_left',210,111,94.9),nat:-1},prone:[{...F('scare_prone_1',255,73,115.2),nat:-1},{...F('scare_prone_2',268,76,118.4),nat:-1}],pounce:{...F('scare_pounce_open',210,106,100.4),nat:-1}};
   const TREAT=F('treat',56,39,27.3),EAT_FRONT=(139-62.3-6); // treat ~27px wide on desktop; mouth reach in frame px
-  [...WALK,...Object.values(POSE),...LEAP,FEED.crouch,...FEED.run,...FEED.eat,FEED.happy,TREAT,SCARE.look,...SCARE.prone,SCARE.pounce].forEach(f=>{const i=new Image();i.src=f.src;i.decode?.().catch(()=>{});});
+  [...WALK,...Object.values(POSE),...LEAP,FEED.crouch,...FEED.run,...FEED.eat,FEED.happy,TREAT,SCARE.look,SCARE.pounce].forEach(f=>{const i=new Image();i.src=f.src;i.decode?.().catch(()=>{});});
   const img=document.createElement('img');
   img.className='sff-cat';img.alt='';img.setAttribute('aria-hidden','true');img.decoding='async';img.draggable=false;
   img.src=POSE.idle.src;header.appendChild(img);
@@ -2951,9 +2951,7 @@ loadUpcomingDividends();
       c=h.c0+(h.c1-h.c0)*u;y=h.f0+(h.f1-h.f0)*u-Math.sin(Math.PI*u)*g.h*0.3;
       if(u>=1){c=h.c1;y=h.f1;SC.hop=null;dir=-1;}return;}
     dir=-1;
-    if(el<SC.lookEnd)fr=SCARE.look;
-    else if(el<SC.peak)fr=SCARE.prone[Math.floor((el-SC.lookEnd)/TICK)%2]; // alternate every 125 ms (8 fps)
-    else fr=SCARE.pounce;
+    fr=el<SC.lookEnd?SCARE.look:SCARE.pounce; // cc132: look-left, then straight to the defensive pounce until the reset (prone frames dropped)
   }
   window.sffCatScare={begin:scareBegin,end:scareEnd,zone:()=>{try{return scareZone();}catch(e){return null;}},state:()=>({state,c:Math.round(c),y:Math.round(y),dir,frame:fr&&fr.src.split('/').pop().split('?')[0],hop:!!(SC&&SC.hop)}),
     _place:x=>{geom();c=x;y=floorAt(x);state='walk';target=x;walkUntil=performance.now()+60000;}}; // _place: test hook only
