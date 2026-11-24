@@ -2721,8 +2721,10 @@ loadUpcomingDividends();
   const SEQ=[0,0,1,1,2,3,3,4,4],AIR0=4,AIRN=3; // leap frame per 125ms tick; airborne ticks 4-6
   // cc109: Feed the Cat frames (feet at canvas bottom; cx = body centre)
   const FEED={crouch:F('crouch',189,97,101.5),run:[F('run_1',242,118,134),F('run_2',232,129,130.3)],eat:[F('eat_1',139,97,62.3),F('eat_2',165,92,83.2),F('eat_3',149,110,72.3)],happy:F('happy_look',114,137,54.9)};
+  // cc131: scare frames (native art faces LEFT -> nat:-1 so dir=-1 still means 'facing left')
+  const SCARE={look:{...F('scare_look_left',210,111,94.9),nat:-1},prone:[{...F('scare_prone_1',255,73,115.2),nat:-1},{...F('scare_prone_2',268,76,118.4),nat:-1}],pounce:{...F('scare_pounce_open',210,106,100.4),nat:-1}};
   const TREAT=F('treat',56,39,27.3),EAT_FRONT=(139-62.3-6); // treat ~27px wide on desktop; mouth reach in frame px
-  [...WALK,...Object.values(POSE),...LEAP,FEED.crouch,...FEED.run,...FEED.eat,FEED.happy,TREAT].forEach(f=>{const i=new Image();i.src=f.src;i.decode?.().catch(()=>{});});
+  [...WALK,...Object.values(POSE),...LEAP,FEED.crouch,...FEED.run,...FEED.eat,FEED.happy,TREAT,SCARE.look,...SCARE.prone,SCARE.pounce].forEach(f=>{const i=new Image();i.src=f.src;i.decode?.().catch(()=>{});});
   const img=document.createElement('img');
   img.className='sff-cat';img.alt='';img.setAttribute('aria-hidden','true');img.decoding='async';img.draggable=false;
   img.src=POSE.idle.src;header.appendChild(img);
@@ -2808,7 +2810,7 @@ loadUpcomingDividends();
   function draw(){
     const k=g.k;
     if(cur!==fr){cur=fr;img.src=fr.src;img.style.width=(fr.w*k)+'px';img.style.height=(fr.h*k)+'px';img.style.transformOrigin=(fr.cx/fr.w*100).toFixed(2)+'% 100%';}
-    img.style.transform=`translate3d(${(c-fr.cx*k).toFixed(1)}px,${(y-fr.h*k).toFixed(1)}px,0) scaleX(${dir})`;
+    img.style.transform=`translate3d(${(c-fr.cx*k).toFixed(1)}px,${(y-fr.h*k).toFixed(1)}px,0) scaleX(${dir*(fr.nat||1)})`;
   }
   function edgeAhead(){ // road step within reach in the walking direction
     const d=g.cw*0.45,es=[];if(g.hx1>=0)es.push(g.hx1,g.hx2);if(g.car)es.push(g.car.l,g.car.r);
@@ -2920,6 +2922,41 @@ loadUpcomingDividends();
       if(el>=HAPPY){FD=null;mark('done');pickTarget();resume(now);cooldown(2500);}
     }
   }
+  // cc131: scare reaction to Rev the Car (desktop only). Zone = from the car's headlights (front edge) to the right end of the Holdings tab;
+  // if he is on the car he hops off in front of it first. Timeline mirrors the 8 s rev: look-left -> prone (alternating @8fps) -> pounce from 4.5 s.
+  let SC=null;
+  function scareZone(){const hr=header.getBoundingClientRect(),car=header.querySelector('.brand-jaguar-img'),tab=header.querySelector('.topnav button');
+    if(!car||!tab)return null;const cr=car.getBoundingClientRect(),tr=tab.getBoundingClientRect();if(!cr.width||!tr.width)return null;
+    return {x0:cr.right-hr.left,x1:tr.right-hr.left};}
+  function scareBegin(t0,total,peak){
+    try{
+      if(!desk.matches||still.matches||state==='feed'||FD||feedReq)return false; // treat active (or reduced motion): no scare
+      geom();const z=scareZone();if(!z)return false;
+      if(state==='leap'&&L){c=L.c1;y=L.f1;L=null;}
+      const onCar=!!g.car&&c>=g.car.l&&c<=g.car.r&&floorAt(c)<roadAt(c)-2;
+      if(!onCar&&!(c>=z.x0&&c<=z.x1))return false;
+      pendPose=null;state='scare';dir=-1;
+      SC={t0:t0||performance.now(),total:total||8000,peak:peak||4500,z,hop:null,lookEnd:1500};
+      if(onCar){const land=Math.min(z.x1,Math.max(z.x0+g.cw*0.45,z.x0+6));
+        SC.hop={t0:SC.t0,dur:700,c0:c,c1:land,f0:y,f1:roadAt(land)};SC.lookEnd=1700;dir=1;}
+      mark('scare');return true;
+    }catch(e){SC=null;if(state==='scare')state='walk';return false;}
+  }
+  function scareEnd(){if(!SC&&state!=='scare')return;SC=null;if(state==='scare'){state='walk';dir=-1;const n=performance.now();pickTarget();resume(n);mark('scare-end');}}
+  function scareTick(now){
+    const el=now-SC.t0;
+    if(el>=SC.total+400){scareEnd();return;} // safety: never outlive the rev sequence
+    const h=SC.hop;
+    if(h){const u=Math.min(1,(now-h.t0)/h.dur);fr=LEAP[[1,2,3,3,4][Math.min(4,Math.floor(u*5))]];dir=1;
+      c=h.c0+(h.c1-h.c0)*u;y=h.f0+(h.f1-h.f0)*u-Math.sin(Math.PI*u)*g.h*0.3;
+      if(u>=1){c=h.c1;y=h.f1;SC.hop=null;dir=-1;}return;}
+    dir=-1;
+    if(el<SC.lookEnd)fr=SCARE.look;
+    else if(el<SC.peak)fr=SCARE.prone[Math.floor((el-SC.lookEnd)/TICK)%2]; // alternate every 125 ms (8 fps)
+    else fr=SCARE.pounce;
+  }
+  window.sffCatScare={begin:scareBegin,end:scareEnd,zone:()=>{try{return scareZone();}catch(e){return null;}},state:()=>({state,c:Math.round(c),y:Math.round(y),dir,frame:fr&&fr.src.split('/').pop().split('?')[0],hop:!!(SC&&SC.hop)}),
+    _place:x=>{geom();c=x;y=floorAt(x);state='walk';target=x;walkUntil=performance.now()+60000;}}; // _place: test hook only
   const onFeed=e=>{
     if(!desk.matches)return; // cc118: treat sequence is desktop-only (mobile: Truffles just wanders)
     if(e.currentTarget.disabled)return;feedSrc=e.currentTarget;cooldown(COOL);
@@ -2936,8 +2973,9 @@ loadUpcomingDividends();
   }
   function tick(now){
     const dt=Math.min(0.05,(now-(last||now))/1000);last=now;
-    if(feedReq&&state!=='leap'&&state!=='feed')beginFeed(now); // mid-leap: waits for the landing
+    if(feedReq&&state!=='leap'&&state!=='feed'&&state!=='scare')beginFeed(now); // mid-leap: waits for the landing
     if(state==='feed'&&FD)feedTick(now,dt);
+    else if(state==='scare'&&SC)scareTick(now);
     else if(state==='walk'){
       const e=edgeAhead();
       if(e!==null){const d=g.cw*0.45,c1=Math.max(lo(),Math.min(hi(),e+dir*d));
@@ -2971,7 +3009,7 @@ loadUpcomingDividends();
       if((target-c)*dir>40&&Math.random()<0.7)state='walk'; // carry on toward the current target
       else pickTarget();
     }
-    if(state!=='leap'&&!(state==='feed'&&FD&&FD.ph==='leap')){
+    if(state!=='leap'&&!(state==='feed'&&FD&&FD.ph==='leap')&&!(state==='scare'&&SC&&SC.hop)){
       c=Math.max(lo(),Math.min(hi(),c));
       const fy=floorAt(c);y+=(fy-y)*Math.min(1,dt*14);if(Math.abs(fy-y)<0.3)y=fy;
     }
@@ -3121,11 +3159,12 @@ loadUpcomingDividends();
     if(held||endT||puffs.length)raf=requestAnimationFrame(frame);else raf=0;
   }
   function busy(on){btn.classList.toggle('is-busy',on);btn.classList.toggle('is-held',on);btn.setAttribute('aria-disabled',String(on));btn.setAttribute('aria-pressed',String(on));}
-  function reset(){endT=0;blown=false;[wheel,blowImg,blownImg,hood].forEach(e=>{e.hidden=true;e.style.opacity='';});jag.style.transform='';
+  function reset(){try{window.sffCatScare&&window.sffCatScare.end();}catch(e){}endT=0;blown=false;[wheel,blowImg,blownImg,hood].forEach(e=>{e.hidden=true;e.style.opacity='';});jag.style.transform='';
     puffs.forEach(p=>p.el.remove());puffs=[];busy(false);}
   let rmT=0;
   function start(){if(held||endT||!desk.matches)return; // cc118: desktop-only (no overlays/audio on mobile)
     held=true;blown=false;t0=performance.now();last=0;nextPuff=0;busy(true);audioStart();
+    try{window.sffCatScare&&window.sffCatScare.begin(t0,T_END,T_BLOW-500);}catch(e){} // cc131: Truffles scare (if he is in the zone)
     if(still.matches){ // reduced motion: static light puff for 3 s, then the blown tyre + hood smoke (no spin/shake/drift), reset at 6 s
       const b=box();wheel.hidden=true;puff(b,0.2,t0);const p=puffs[puffs.length-1];p.life=1e9;p.vx=p.vy=0;p.el.style.opacity='0.5';
       p.el.style.transform=`translate3d(${(p.x-p.w*0.85).toFixed(1)}px,${(p.y-p.w*0.33).toFixed(1)}px,0)`;
