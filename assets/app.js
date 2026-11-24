@@ -2865,6 +2865,7 @@ loadUpcomingDividends();
     }
   }
   const onFeed=e=>{
+    if(!desk.matches)return; // cc118: treat sequence is desktop-only (mobile: Truffles just wanders)
     if(e.currentTarget.disabled)return;feedSrc=e.currentTarget;cooldown(COOL);
     if(still.matches){feedStill();return;}
     feedReq=true;mark('wait');
@@ -3026,7 +3027,8 @@ loadUpcomingDividends();
       p.el.style.opacity=op.toFixed(3);p.el.style.transform=`translate3d(${(x-p.w*g*0.85).toFixed(1)}px,${(y-p.w*g*0.33).toFixed(1)}px,0) scale(${g.toFixed(3)})`;return true;});
     if(held||puffs.length)raf=requestAnimationFrame(frame);else raf=0;
   }
-  function start(){if(held)return;held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held','is-on');btn.setAttribute('aria-pressed','true');audioStart();
+  function start(){if(held||!desk.matches)return; // cc118: desktop-only (no overlays/audio on mobile)
+    held=true;t0=performance.now();last=0;nextPuff=0;btn.classList.add('is-held','is-on');btn.setAttribute('aria-pressed','true');audioStart();
     clearTimeout(offT);offT=setTimeout(stop,MAXON);
     if(still.matches){const b=box();wheel.hidden=true;puff(b,0.2,t0);const p=puffs[puffs.length-1];p.life=1e9;p.vx=p.vy=0;p.el.style.opacity='0.5';
       p.el.style.transform=`translate3d(${(p.x-p.w*0.85).toFixed(1)}px,${(p.y-p.w*0.33).toFixed(1)}px,0)`;return;} // reduced motion: one static light puff while held
@@ -3040,6 +3042,7 @@ loadUpcomingDividends();
   btn.addEventListener('click',()=>{held?stop():start();});
   btn.addEventListener('contextmenu',e=>e.preventDefault());
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',stop);
+  desk.addEventListener('change',()=>{if(!desk.matches)stop();});
   let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(place,120);});
   window.addEventListener('load',place);(car.complete?place():car.addEventListener('load',place,{once:true}));place();
 })();
