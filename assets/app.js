@@ -2773,24 +2773,25 @@ loadUpcomingDividends();
   }
   function placeBtn(hr){ // cc109: absolutely positioned, so the header layout never moves
     const bw=btn.offsetWidth,bh=btn.offsetHeight;let x,y;
+    const EX=b=>{const i=desk.matches&&b.querySelector('.cat-emo');return i&&i.offsetWidth?i.offsetWidth+4:0;}; // cc137: Truffles icons sit outside the border; keep room for them
     if(desk.matches){const s=header.querySelector('.brand-row .sff'),ck=header.querySelector('.market-clocks');
       const sr=s&&s.getBoundingClientRect(),cr=ck&&ck.getBoundingClientRect();
-      x=(sr&&sr.width?sr.right-hr.left:g.w-36)-bw;y=Math.max(sr?sr.bottom:0,cr?cr.bottom:0)-hr.top+8;}
+      x=(sr&&sr.width?sr.right-hr.left:g.w-36)-bw-EX(btn);y=Math.max(sr?sr.bottom:0,cr?cr.bottom:0)-hr.top+8;}
     else{const o=header.querySelector('.market-clock-open'),orc=o&&o.getBoundingClientRect();
       x=(orc&&orc.width?orc.left-hr.left:g.w-160)-bw-6;y=(orc&&orc.height?orc.top-hr.top+(orc.height-bh)/2:34);}
     btn.style.left=Math.max(4,Math.round(x))+'px';btn.style.top=Math.max(2,Math.round(y))+'px';
     const tb=desk.matches&&header.querySelector('.topnav button');
     if(tb){const r=tb.getBoundingClientRect(),pl=document.getElementById('header-launch-pnl');
       const box=e=>{if(!e||e.hidden)return null;const q=document.createRange();q.selectNodeContents(e);const a=q.getBoundingClientRect();return a.width?a:null;};
-      const over=(a,pad)=>{if(!a)return 0;const q=btnTab.getBoundingClientRect();return q.right>a.left-pad&&q.left<a.right+pad&&q.bottom>a.top&&q.top<a.bottom?q.right-(a.left-pad):0;};
+      const over=(a,pad)=>{if(!a)return 0;const b0=btnTab.getBoundingClientRect(),e=EX(btnTab),q={left:b0.left-e,right:b0.right+e,top:b0.top,bottom:b0.bottom};return q.right>a.left-pad&&q.left<a.right+pad&&q.bottom>a.top&&q.top<a.bottom?q.right-(a.left-pad):0;};
       btnTab.classList.remove('is-compact');
       // cc111: on the "SAUL FINANCE FUND" title line (same vertical centre), left edge at the Holdings tab or just right of the title
       const t=box(header.querySelector('.brand-title-block h1')),blk=[header.querySelector('.header-holdings-kicker'),header.querySelector('.header-holdings-title'),header.querySelector('.header-holdings-launch'),pl].map(box);
-      const onTitle=()=>{if(!t)return false;btnTab.style.left=Math.round(Math.max(r.left,t.right+10)-hr.left)+'px';btnTab.style.top=Math.round((t.top+t.bottom)/2-btnTab.offsetHeight/2-hr.top)+'px';return !blk.some(a=>over(a,8));};
+      const onTitle=()=>{if(!t)return false;btnTab.style.left=Math.round(Math.max(r.left+EX(btnTab),t.right+10+EX(btnTab))-hr.left)+'px';btnTab.style.top=Math.round((t.top+t.bottom)/2-btnTab.offsetHeight/2-hr.top)+'px';return !blk.some(a=>over(a,8));};
       if(!onTitle()){btnTab.classList.add('is-compact');
         if(!onTitle()){btnTab.classList.remove('is-compact'); // too narrow (≈1024-1180px): keep the cc110 spot above the Holdings tab
-          const put=()=>{btnTab.style.left=Math.round(r.left-hr.left)+'px';btnTab.style.top=Math.round(r.top-hr.top-8.6-btnTab.offsetHeight-6)+'px';};
-          put();if(over(box(pl),6)){btnTab.classList.add('is-compact');put();const o=over(box(pl),6);if(o)btnTab.style.left=Math.round(r.left-hr.left-o)+'px';}}}} // never cover the launch P&L line
+          const put=()=>{btnTab.style.left=Math.round(r.left+EX(btnTab)-hr.left)+'px';btnTab.style.top=Math.round(r.top-hr.top-8.6-btnTab.offsetHeight-6)+'px';};
+          put();if(over(box(pl),6)){btnTab.classList.add('is-compact');put();const o=over(box(pl),6);if(o){const cr=header.querySelector('.brand-jaguar-img')?.getBoundingClientRect(),minL=cr&&cr.width?cr.right+4+EX(btnTab):0;btnTab.style.left=Math.round(Math.max(minL,r.left+EX(btnTab)-o)-hr.left)+'px';const P=box(pl);if(P&&over(P,4)){const nav=header.querySelector('.topnav').getBoundingClientRect(),i=btnTab.querySelector('.cat-emo').getBoundingClientRect(),b0=btnTab.getBoundingClientRect(),dy=Math.min(P.bottom+1-i.top,nav.top-2-b0.bottom);if(dy>0)btnTab.style.top=Math.round(b0.top+dy-hr.top)+'px';}}}}}} // cc137: never push the left Truffles onto the car // never cover the launch P&L line
   }
   {const pl=document.getElementById('header-launch-pnl');if(pl&&window.MutationObserver)new MutationObserver(()=>requestAnimationFrame(()=>placeBtn(header.getBoundingClientRect()))).observe(pl,{attributes:true,childList:true,characterData:true,subtree:true});} // cc110: re-place when the launch P&L line fills in
   const EXT=Math.max(ORG,1-ORG);const lo=()=>g.cw*EXT, hi=()=>g.w-g.cw*EXT; // keeps whole cat on the line either facing

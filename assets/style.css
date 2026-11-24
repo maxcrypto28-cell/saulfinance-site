@@ -2168,8 +2168,9 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 @media(prefers-reduced-motion:reduce){#matrix-rain{opacity:.63}}
 /* cc134: tiny Truffles (static sit frame) either side of the treat button label (desktop; button height unchanged) */
 .sff-feed-btn .cat-emo{display:none}
-@media(min-width:1024px){.site-header .sff-feed-btn .cat-emo{display:inline-block;height:1.1em;width:auto;vertical-align:-.2em;margin:-2px .4em 0;pointer-events:none}
-.site-header .sff-feed-btn .cat-emo:first-child{margin-left:0}.site-header .sff-feed-btn .cat-emo.is-flip{margin-right:0;transform:scaleX(-1)}}
+/* cc137: tiny Truffles sit just OUTSIDE the green border, one each side, 25% larger (1.1em -> 1.375em); the button fits the text again */
+@media(min-width:1024px){.site-header .sff-feed-btn{overflow:visible}.site-header .sff-feed-btn .cat-emo{display:block;position:absolute;top:50%;height:1.375em;width:auto;margin:0;transform:translateY(-50%);pointer-events:none}
+.site-header .sff-feed-btn .cat-emo:first-child{right:calc(100% + 4px)}.site-header .sff-feed-btn .cat-emo.is-flip{left:calc(100% + 4px);transform:translateY(-50%) scaleX(-1)}}
 /* cc134: mobile — green gain line moves to the bottom of the P&L strip, directly above the best-performer line (divider between them) */
 @media(max-width:1023.98px){#daily-pnl-strip .daily-pnl-since.last-close{order:5}}
 /* cc135: FX badge under the desktop pie */
