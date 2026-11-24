@@ -2038,3 +2038,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 
 /* cc104: desktop donut — let right-side leader lines/labels extend past the svg box (they are aligned to the covered-calls chip edge) */
 @media(min-width:1024px){#native-holdings .native-donut{overflow:visible}}
+
+/* cc106: donut ticker labels are links (look unchanged until hover) */
+.native-donut .donut-link{cursor:pointer}
+.native-donut .donut-link:hover .donut-ticker,.native-donut .donut-link:hover .donut-ticker-mobile,.native-donut .donut-link:focus-visible .donut-ticker{fill:#38ff77;text-decoration:underline}
