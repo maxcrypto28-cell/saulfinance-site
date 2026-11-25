@@ -1037,9 +1037,10 @@ function renderCoveredCalls(data){
   const histTable=history.length?`<section class="native-panel cc-panel"><div class="native-table-heading"><h3>Closed / assigned</h3><span>${history.length} recorded</span></div><div class="native-scroll" data-scroll-region tabindex="0" aria-label="Covered call history"><table class="cc-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Shares</th><th scope="col">Contracts</th><th scope="col">Strike</th><th scope="col">Expiration</th><th scope="col">Premium</th><th scope="col">Status</th><th scope="col">P&amp;L</th></tr></thead><tbody>${history.map(histRow).join('')}</tbody></table></div></section>`:'';
 
   const learn=coveredCallExplainerLink('cc-page-learn');
-  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><div class="cc-income-head"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,'CAD')}</strong></div>${learn}</div><details class="cc-strategy"><summary><span class="cc-strategy-title">My strategy</span><span class="cc-strategy-tag">Credits in. Shares stay.</span></summary><ul><li>Sell calls about one month out, with strikes 6–8% above the current price.</li><li>If the stock gets within 2% of the strike, roll out to next month at a higher strike.</li><li>Only roll for a net credit, never a debit.</li><li>Never let shares get called away.</li></ul></details><p class="cc-income-line">${incomeLine}</p></section>`:'';
+  const income=open.length?`<section class="native-panel cc-income" aria-label="Covered call income"><div class="cc-income-row"><div class="cc-income-head"><span class="cc-income-label">Covered call income</span><strong class="cc-income-value">${moneySigned(premiumSum,'CAD')}</strong></div>${learn}</div><details class="cc-strategy"><summary><span class="cc-strategy-title">My strategy</span><span class="cc-strategy-tag">Credits in. Shares stay.</span></summary><ul><li>Sell calls about one month out, with strikes 6–8% above the current price.</li><li>If the stock gets within 2% of the strike, roll out to next month at a higher strike.</li><li>Only roll for a net credit, never a debit.</li><li>Never let shares get called away.</li></ul></details><p class="cc-strike-note">% to strike: how far the stock has to climb for the degenerate (who paid me) to make money, betting it would pass the strike before expiration.</p><p class="cc-income-line">${incomeLine}</p></section>`:'';
 
   host.innerHTML=`${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
+  try{ccStrikeNoteAlign();}catch(e){}
   if(!host.dataset.ccToggle){host.dataset.ccToggle='1'; // cc115: desktop compact rows expand on click / Enter / Space
     host.addEventListener('click',e=>{const head=e.target.closest('.cc-card-head');if(!head||e.target.closest('a'))return;
       const card=head.closest('.cc-card'),b=card&&card.querySelector('.cc-toggle');if(!b||getComputedStyle(b).display==='none')return;
@@ -3266,3 +3267,13 @@ window.addEventListener('resize',()=>{try{paintFxBadge();}catch(e){}});
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit).catch(()=>{});
   if(window.ResizeObserver){const b=hd.querySelector('.brand-row');const ro=new ResizeObserver(()=>requestAnimationFrame(fit));ro.observe(nav);if(b)ro.observe(b);}
 }catch(e){}})();
+
+// cc140: desktop — line the strike note's right edge up with the 'To strike' column of the first card row
+function ccStrikeNoteAlign(){
+  const n=document.querySelector('#covered-calls .cc-strike-note');if(!n)return;
+  if(!window.matchMedia('(min-width:1024px)').matches){n.style.right='';return;}
+  const box=n.closest('.cc-income'),col=[...document.querySelectorAll('#covered-calls .cc-card-head .cc-sum small')].find(e=>/To strike/i.test(e.textContent)&&e.getBoundingClientRect().width);
+  if(!box||!col)return;const b=box.getBoundingClientRect(),q=(col.closest('.cc-sum,[class*=cc-sum]')||col).getBoundingClientRect();
+  if(!q.width||!b.width)return;n.style.right=Math.max(12,Math.round(b.right-q.right))+'px';
+}
+window.addEventListener('resize',()=>{try{ccStrikeNoteAlign();}catch(e){}});

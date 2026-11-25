@@ -2179,3 +2179,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .fx-badge[hidden]{display:none}
 .fx-badge .fx-pnl.is-up{color:var(--green)}.fx-badge .fx-pnl.is-down{color:#ff5b5b}
 .fx-badge .fx-mix{font-weight:500;font-size:11px;color:#a9cdb6}}
+
+/* cc140: '% to strike' explainer inside the covered-call strategy box (green, small). Desktop: in the empty right-hand area, right edge over the To strike column; mobile: below the existing text */
+#covered-calls .cc-strike-note{margin:0;color:var(--green);font-size:12px;line-height:1.4;flex:1 1 100%;width:100%;text-wrap:pretty}
+@media(min-width:1024px){#covered-calls .cc-income{position:relative}#covered-calls .cc-strike-note{position:absolute;right:20px;top:22px;width:auto;max-width:min(360px,26%);font-size:11.5px;text-align:right}}
