@@ -2809,6 +2809,8 @@ loadUpcomingDividends();
   const noSit=x=>!!g.z&&x>g.z[0]-g.cw*0.3&&x<g.z[1]+g.cw*0.3; // body mostly outside the zone before any pause
   function pose(p,ms,now){if(noSit(c)){pendPose=[p,ms];state='walk';return;}pendPose=null;state='pose';fr=p;until=now+ms;} // cc114: pauses wait until he is past the title zone
   function resume(now){walkUntil=now+rnd(3000,5000);}
+  let edgeHold=false; // cc139 (mobile only): at a screen edge he stops, pauses on the idle frame, then turns and walks back
+  function edgeTurn(now){pendPose=null;state='pose';fr=POSE.idle;until=now+rnd(650,950);edgeHold=true;}
   function draw(){
     const k=g.k;
     if(cur!==fr){cur=fr;img.src=fr.src;img.style.width=(fr.w*k)+'px';img.style.height=(fr.h*k)+'px';img.style.transformOrigin=(fr.cx/fr.w*100).toFixed(2)+'% 100%';}
@@ -2997,6 +2999,8 @@ loadUpcomingDividends();
         else{L={t0:now,c0:c,c1,f0:floorAt(c),f1:floorAt(c1)};state='leap';}}
       else{
         c+=dir*g.h*0.7*dt; // ~stride per 8-frame cycle, scaled to size
+        if(!desk.matches){const a=lo(),b=hi();if((dir<0&&c<=a)||(dir>0&&c>=b)){c=dir<0?a:b;edgeTurn(now);}}
+        if(state==='walk'){
         ft+=dt;if(ft>=1/FPS){ft%=1/FPS;frame=(frame+1)%NF;}
         fr=WALK[frame];
         if(pendPose&&!noSit(c)){const pp=pendPose;pose(pp[0],pp[1],now);}
@@ -3005,6 +3009,7 @@ loadUpcomingDividends();
         else if(now>=walkUntil){const r=Math.random(),nearT=g.tx>=0&&Math.abs(c-g.tx)<60;
           pose(nearT&&r<0.5?POSE.lookup:(r<0.5?POSE.sit:r<0.88?POSE.idle:POSE.lookup),rnd(2000,3000),now);}
         else if((dir>0&&c>=target)||(dir<0&&c<=target)){c=target;pickTarget();}
+        }
       }
     }
     if(state==='leap'){
@@ -3018,6 +3023,8 @@ loadUpcomingDividends();
         c=L.c0+(L.c1-L.c0)*u;
         y=L.f0+(L.f1-L.f0)*u-Math.sin(Math.PI*u)*g.h*0.35;
       }
+    }else if(state==='pose'&&now>=until&&edgeHold){
+      edgeHold=false;resume(now);dir=-dir;const room=dir>0?hi()-c:c-lo();target=c+dir*Math.min(room,rnd(120,Math.max(121,room)));state='walk';frame=0;
     }else if(state==='pose'&&now>=until){
       resume(now);
       if((target-c)*dir>40&&Math.random()<0.7)state='walk'; // carry on toward the current target
