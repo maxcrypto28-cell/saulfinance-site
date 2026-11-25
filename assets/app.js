@@ -3240,3 +3240,22 @@ function paintFxBadge(data){
   el.style.top=Math.round(rowMid-hr.top-el.offsetHeight/2)+'px';
 }
 window.addEventListener('resize',()=>{try{paintFxBadge();}catch(e){}});
+
+// cc138: mobile header fit. The header height is a fixed CSS value; when the phone's fonts make the brand row taller
+// (Android fallback fonts), the tab row spilled below the header and covered the top of the page. Grow --header-height
+// to the real tab-row bottom on mobile only; where everything already fits, nothing changes. Desktop is untouched.
+(()=>{try{
+  const mq=window.matchMedia('(max-width:1023px)'),hd=document.querySelector('.site-header'),nav=hd&&hd.querySelector('.topnav'),root=document.documentElement;
+  if(!hd||!nav)return;
+  function fit(){
+    root.style.removeProperty('--header-height');
+    if(!mq.matches)return;
+    const h=hd.getBoundingClientRect(),need=Math.ceil(nav.getBoundingClientRect().bottom-h.top+1);
+    if(need>h.height+0.5)root.style.setProperty('--header-height',need+'px');
+  }
+  fit();
+  window.addEventListener('resize',fit);window.addEventListener('orientationchange',fit);window.addEventListener('load',fit);
+  if(mq.addEventListener)mq.addEventListener('change',fit);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit).catch(()=>{});
+  if(window.ResizeObserver){const b=hd.querySelector('.brand-row');const ro=new ResizeObserver(()=>requestAnimationFrame(fit));ro.observe(nav);if(b)ro.observe(b);}
+}catch(e){}})();
