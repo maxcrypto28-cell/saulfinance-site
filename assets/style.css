@@ -2183,3 +2183,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 /* cc140: '% to strike' explainer inside the covered-call strategy box (green, small). Desktop: in the empty right-hand area, right edge over the To strike column; mobile: below the existing text */
 #covered-calls .cc-strike-note{margin:0;color:var(--green);font-size:12px;line-height:1.4;flex:1 1 100%;width:100%;text-wrap:pretty}
 @media(min-width:1024px){#covered-calls .cc-income{position:relative}#covered-calls .cc-strike-note{position:absolute;right:20px;top:22px;width:auto;max-width:min(360px,26%);font-size:11.5px;text-align:right}}
+
+/* cc141: small green arrow under the note (desktop), pointing down at the To strike column of the rows below */
+@media(min-width:1024px){#covered-calls .cc-strike-note::after{content:'';position:absolute;top:calc(100% + 2px);right:16px;width:10px;height:16px;opacity:.85;pointer-events:none;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cpath d='M5 1v12M1.5 9.5 5 13.5l3.5-4' fill='none' stroke='%2338ff77' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}}
+#covered-calls .cc-strike-note u{text-decoration:underline;text-underline-offset:2px}
