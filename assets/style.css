@@ -264,11 +264,13 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
 #index-strip.has-vs>.index-kicker,
 #index-strip.has-vs>.index-asof{display:none!important}
 #index-strip.has-vs>.index-kicker-sff{
-  display:block!important;
+  display:inline-flex!important;
+  align-items:center;
   order:1;
   margin:0;
   padding-right:2px;
   flex-shrink:0;
+  gap:.2em;
   font-size:9px;
   line-height:normal;
   font-weight:400;
@@ -276,6 +278,19 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   font-family:ui-monospace,monospace;
   text-transform:none;
   color:#38ff77;
+  white-space:nowrap;
+}
+/* cc148: same mirrored light-skin fist as desktop, between the label and the vs pill. */
+#index-strip.has-vs>.index-kicker-sff .index-fist{
+  display:inline-block;
+  transform:translateX(3px) scaleX(-1);
+  transform-origin:center;
+  font-size:1em;
+  line-height:1;
+  font-style:normal;
+  font-weight:400;
+  letter-spacing:0;
+  color:inherit;
 }
 #index-strip.has-vs>.vs-badge{
   /* Pull the existing badge in from the far right, without fully centering it. */
