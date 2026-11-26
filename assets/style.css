@@ -2187,3 +2187,15 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 /* cc141: small green arrow under the note (desktop), pointing down at the To strike column of the rows below */
 @media(min-width:1024px){#covered-calls .cc-strike-note::after{content:'';position:absolute;top:calc(100% + 2px);right:16px;width:10px;height:16px;opacity:.85;pointer-events:none;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 16'%3E%3Cpath d='M5 1v12M1.5 9.5 5 13.5l3.5-4' fill='none' stroke='%2338ff77' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}}
 #covered-calls .cc-strike-note u{text-decoration:underline;text-underline-offset:2px}
+/* cc143: mobile covered-call cards show % To strike under the ticker, same colour rules as the desktop To strike column */
+@media(max-width:1023px){
+#covered-calls .cc-card-head{flex-wrap:wrap}
+#covered-calls .cc-sum[data-cc-field="dist"]{display:flex;flex-direction:row;align-items:baseline;gap:6px;order:10;flex:0 0 100%;margin:-2px 0 0;padding-left:var(--cc-dist-indent,19px);box-sizing:border-box;min-width:0}
+#covered-calls .cc-sum[data-cc-field="dist"] small{font-size:11px;color:var(--dim);line-height:1.2}
+#covered-calls .cc-sum[data-cc-field="dist"] small::before{content:'% '}
+#covered-calls .cc-sum[data-cc-field="dist"] b{font:600 13px/1.25 ui-monospace,monospace;font-variant-numeric:tabular-nums;color:var(--text);white-space:nowrap}
+#covered-calls .cc-sum[data-cc-field="dist"][data-cc-dist="cc-dist-green"] b{color:var(--green)}
+#covered-calls .cc-sum[data-cc-field="dist"][data-cc-dist="cc-dist-orange"] b{color:#ffad42}
+#covered-calls .cc-sum[data-cc-field="dist"][data-cc-dist="cc-dist-red"] b{color:#ff5b5b}
+#covered-calls .cc-sum[data-cc-field="dist"][data-cc-dist="cc-dist-na"] b{color:var(--dim)}
+}
