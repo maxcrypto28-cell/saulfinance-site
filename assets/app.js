@@ -489,6 +489,33 @@ function findCurrentClose(now){
  if(now<sess[0]||now>=close)return null;
  return [close,sess[1]];
 }
+function findSessionOnYmd(ymd){
+ const ss=OPEN_CALENDAR&&OPEN_CALENDAR.sessions;
+ if(!ss)return null;
+ for(const s of ss){ if(etYmd(s[0])===ymd) return s; }
+ return null;
+}
+// US cash-session holiday names for TSX-open / NYSE-closed days only.
+// Shared closures (e.g. 2026-12-25 Christmas) have no TSX-only session, so they stay hidden.
+const US_HOLIDAY_NAMES={
+ '2026-01-19':'MLK Day',
+ '2026-05-25':'Memorial Day',
+ '2026-06-19':'Juneteenth',
+ '2026-07-03':'Independence Day',
+ '2026-11-26':'Thanksgiving'
+};
+function paintUsHolidayNote(){
+ const el=document.querySelector('.us-holiday-note');
+ if(!el)return;
+ const ymd=etYmd(clockNow());
+ const sess=findSessionOnYmd(ymd);
+ const name=(sess&&sess[1]==='TSX')?US_HOLIDAY_NAMES[ymd]:null;
+ if(!name){el.hidden=true;el.replaceChildren();return;}
+ const turkey=name==='Thanksgiving'?' <span class="us-holiday-turkey" aria-hidden="true">🦃</span>':'';
+ el.hidden=false;
+ el.innerHTML='<span class="us-holiday-flag" aria-hidden="true">🇺🇸</span> <span class="us-holiday-chart" aria-hidden="true"><span class="us-holiday-chart-icon">📈</span><span class="us-holiday-chart-x">❌</span></span> US markets closed today for '+name+turkey;
+}
+
 function formatCountdown(ms){const total=Math.max(0,Math.ceil(ms/1000)),days=Math.floor(total/86400),pad=n=>String(n).padStart(2,'0');return `${days?days+'d ':''}${pad(Math.floor(total/3600)%24)}:${pad(Math.floor(total/60)%60)}:${pad(total%60)}`}
 function setText(id,value){const el=$(id); if(el) el.textContent=value}
 function clockNow(){
@@ -534,6 +561,7 @@ function clockNow(){
   }
   setTimeout(tick,1000);
  }
+ paintUsHolidayNote();
  tick();
 })();
 // Subtle descending SAUL FINANCE streams, adapted from the approved Matrix graphics.

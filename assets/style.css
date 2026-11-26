@@ -2244,3 +2244,23 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .ticker-px.is-live-wait .pnl-loader.is-compact{width:3.2em}
 .donut-center-value.is-live-wait{min-width:0}
 .donut-center-value.is-live-wait .pnl-loader.is-compact{width:4.2em}
+
+/* cc150: small US-holiday caption under the Live dashboard pyramid.
+   Stays a sibling-like third line (not one of the two title spans), so the
+   centred triangle of "Live dashboard." / "My dividend portfolio." is unchanged. */
+.us-holiday-note{display:none;margin:4px 0 0;padding:0;font-family:inherit;font-weight:600;font-size:10px;line-height:1.25;letter-spacing:.02em;color:var(--green);text-align:center;white-space:nowrap;max-width:none}
+.us-holiday-note:not([hidden]){display:block}
+.page-one-heading-copy>.us-holiday-note{font-size:10px;font-weight:600;letter-spacing:.02em;white-space:nowrap}
+.us-holiday-chart{display:inline-grid;place-items:center;vertical-align:-.14em;width:1.25em;height:1.15em;line-height:1}
+.us-holiday-chart-icon,.us-holiday-chart-x{grid-area:1/1;line-height:1}
+.us-holiday-chart-icon{font-size:1.15em}
+.us-holiday-chart-x{font-size:.7em;transform:translate(.06em,-.04em);filter:drop-shadow(0 0 1px var(--bg,#050b07))}
+@media(min-width:1024px){
+.header-holdings-aside .page-one-heading-copy:has(.us-holiday-note:not([hidden])){max-width:none}
+.header-holdings-aside .us-holiday-note{margin-top:3px;font-size:10px}
+}
+@media(max-width:1023px){
+.us-holiday-note:not([hidden]){font-size:9px;white-space:normal;max-width:22em}
+#holdings-page .page-one-heading-copy:has(.us-holiday-note:not([hidden])){grid-row:1 / span 3;align-self:start;justify-self:end}
+#holdings-page .slide-heading:has(.us-holiday-note:not([hidden])) .daily-pnl-streak{grid-row:4}
+}
