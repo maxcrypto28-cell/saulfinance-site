@@ -1294,7 +1294,10 @@ function fillLiveWait(el){
   if(!el)return;
   el.classList.add('is-live-wait');
   el.setAttribute('aria-busy','true');
-  el.innerHTML=LIVE_WAIT_HTML;
+  // cc145: headline Daily P&L uses a transform-swept green bar + 'Page loading…' (CSS only; still moves under reduced motion)
+  if(el.classList.contains('daily-pnl-value')){
+    el.innerHTML='<span class="pnl-loader" role="status"><span class="pnl-loader-track" aria-hidden="true"><span class="pnl-loader-swipe"><span class="pnl-loader-bar"></span></span></span><span class="pnl-loader-label">Page loading…</span></span>';
+  }else el.innerHTML=LIVE_WAIT_HTML;
 }
 function applyLiveWaitTimeout(){
   document.querySelectorAll('.daily-pnl-value.is-live-wait').forEach(el=>{clearLiveWait(el);el.textContent='—';});
