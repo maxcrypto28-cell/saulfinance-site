@@ -2245,7 +2245,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .donut-center-value.is-live-wait{min-width:0}
 .donut-center-value.is-live-wait .pnl-loader.is-compact{width:4.2em}
 
-/* cc150: small US-holiday caption under the Live dashboard pyramid.
+/* cc150–cc151: small holiday caption under the Live dashboard pyramid.
    Stays a sibling-like third line (not one of the two title spans), so the
    centred triangle of "Live dashboard." / "My dividend portfolio." is unchanged. */
 .us-holiday-note{display:none;margin:4px 0 0;padding:0;font-family:inherit;font-weight:600;font-size:10px;line-height:1.25;letter-spacing:.02em;color:var(--green);text-align:center;white-space:nowrap;max-width:none}

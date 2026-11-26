@@ -496,7 +496,6 @@ function findSessionOnYmd(ymd){
  return null;
 }
 // US cash-session holiday names for TSX-open / NYSE-closed days only.
-// Shared closures (e.g. 2026-12-25 Christmas) have no TSX-only session, so they stay hidden.
 const US_HOLIDAY_NAMES={
  '2026-01-19':'MLK Day',
  '2026-05-25':'Memorial Day',
@@ -504,16 +503,67 @@ const US_HOLIDAY_NAMES={
  '2026-07-03':'Independence Day',
  '2026-11-26':'Thanksgiving'
 };
+// TSX closures on NYSE-open days (OPEN_CALENDAR session "NYSE"). Names from the
+// official TMX 2026–2027 holiday calendars (tsx.com calendars / Schedule for 2026–2027).
+const CAN_HOLIDAY_NAMES={
+ '2026-05-18':'Victoria Day',
+ '2026-07-01':'Canada Day',
+ '2026-08-03':'Civic Holiday',
+ '2026-10-12':'Thanksgiving',
+ '2026-12-28':'Boxing Day',
+ '2027-05-24':'Victoria Day',
+ '2027-07-01':'Canada Day',
+ '2027-08-02':'Civic Holiday',
+ '2027-10-11':'Thanksgiving',
+ '2027-12-27':'Christmas',
+ '2027-12-28':'Boxing Day'
+};
+// Weekdays both markets are closed (no OPEN_CALENDAR session). Weekends are omitted.
+// Shared names from official TMX and NYSE 2026–2027 calendars; when the official
+// names differ, both are shown.
+const SHARED_HOLIDAY_NAMES={
+ '2026-01-01':"New Year's Day",
+ '2026-02-16':'Family Day and Washington\'s Birthday',
+ '2026-04-03':'Good Friday',
+ '2026-09-07':'Labor Day / Labour Day',
+ '2026-12-25':'Christmas',
+ '2027-01-01':"New Year's Day",
+ '2027-02-15':'Family Day and Washington\'s Birthday',
+ '2027-03-26':'Good Friday',
+ '2027-09-06':'Labor Day / Labour Day'
+};
+function holidayChartHtml(){
+ return '<span class="us-holiday-chart" aria-hidden="true"><span class="us-holiday-chart-icon">📈</span><span class="us-holiday-chart-x">❌</span></span>';
+}
 function paintUsHolidayNote(){
  const el=document.querySelector('.us-holiday-note');
  if(!el)return;
  const ymd=etYmd(clockNow());
  const sess=findSessionOnYmd(ymd);
- const name=(sess&&sess[1]==='TSX')?US_HOLIDAY_NAMES[ymd]:null;
- if(!name){el.hidden=true;el.replaceChildren();return;}
- const turkey=name==='Thanksgiving'?' <span class="us-holiday-turkey" aria-hidden="true">🦃</span>':'';
- el.hidden=false;
- el.innerHTML='<span class="us-holiday-flag" aria-hidden="true">🇺🇸</span> <span class="us-holiday-chart" aria-hidden="true"><span class="us-holiday-chart-icon">📈</span><span class="us-holiday-chart-x">❌</span></span> US markets closed today for '+name+turkey;
+ const chart=holidayChartHtml();
+ if(sess&&sess[1]==='TSX'){
+  const name=US_HOLIDAY_NAMES[ymd];
+  if(!name){el.hidden=true;el.replaceChildren();return;}
+  const turkey=name==='Thanksgiving'?' <span class="us-holiday-turkey" aria-hidden="true">🦃</span>':'';
+  el.hidden=false;
+  el.innerHTML='<span class="us-holiday-flag" aria-hidden="true">🇺🇸</span> <span class="us-holiday-chart" aria-hidden="true"><span class="us-holiday-chart-icon">📈</span><span class="us-holiday-chart-x">❌</span></span> US markets closed today for '+name+turkey;
+  return;
+ }
+ if(sess&&sess[1]==='NYSE'){
+  const name=CAN_HOLIDAY_NAMES[ymd];
+  if(!name){el.hidden=true;el.replaceChildren();return;}
+  el.hidden=false;
+  el.innerHTML='<span class="us-holiday-flag" aria-hidden="true">🇨🇦</span> '+chart+' Canadian markets closed today for '+name;
+  return;
+ }
+ if(!sess){
+  const name=SHARED_HOLIDAY_NAMES[ymd];
+  if(!name){el.hidden=true;el.replaceChildren();return;}
+  el.hidden=false;
+  el.innerHTML='<span class="us-holiday-flag" aria-hidden="true">🇺🇸🇨🇦</span> '+chart+' US and Canadian markets closed today for '+name;
+  return;
+ }
+ el.hidden=true;el.replaceChildren();
 }
 
 function formatCountdown(ms){const total=Math.max(0,Math.ceil(ms/1000)),days=Math.floor(total/86400),pad=n=>String(n).padStart(2,'0');return `${days?days+'d ':''}${pad(Math.floor(total/3600)%24)}:${pad(Math.floor(total/60)%60)}:${pad(total%60)}`}
