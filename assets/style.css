@@ -280,10 +280,13 @@ html{scroll-behavior:smooth}body{overflow-wrap:anywhere}header,main{width:100%;m
   color:#38ff77;
   white-space:nowrap;
 }
+/* cc149: label fills up to the pill (cancel the 8px strip gap), fist centred in the free space. */
+#index-strip.has-vs>.index-kicker-sff{flex:1 1 auto;flex-direction:row;direction:ltr;unicode-bidi:isolate;gap:0;padding-right:0;margin-right:-8px;justify-content:flex-start}
 /* cc148: same mirrored light-skin fist as desktop, between the label and the vs pill. */
 #index-strip.has-vs>.index-kicker-sff .index-fist{
   display:inline-block;
-  transform:translateX(3px) scaleX(-1);
+  order:2;margin:0 auto;
+  transform:scaleX(-1);
   transform-origin:center;
   font-size:1em;
   line-height:1;
