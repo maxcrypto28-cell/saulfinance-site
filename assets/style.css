@@ -2209,3 +2209,15 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .pnl-loader-label{font:600 12px/1.2 ui-monospace,monospace;letter-spacing:.06em;color:var(--green);text-transform:none;white-space:nowrap;text-shadow:0 0 6px rgba(56,255,119,.35)}
 @keyframes pnl-loader-sweep{0%{transform:translate3d(-100%,0,0)}100%{transform:translate3d(100%,0,0)}}
 @media(prefers-reduced-motion:reduce){.pnl-loader-swipe{animation-duration:2.8s;animation-timing-function:linear}}
+
+/* cc146: compact sweeping bar for the remaining desktop (and mobile) pulse-tick placeholders; headline Daily P&L keeps the labelled cc145 loader */
+.pnl-loader.is-compact{min-width:0;width:3.6em;max-width:100%;gap:0}
+.pnl-loader.is-compact .pnl-loader-track{height:5px}
+.header-holdings-pnl.is-live-wait{min-width:0}
+.header-holdings-pnl.is-live-wait .pnl-loader.is-compact{width:4.8em}
+.index-strip.is-live-wait .pnl-loader.is-compact{width:5.5em}
+.day-pct.is-live-wait .pnl-loader.is-compact,
+.all-time-pnl.is-live-wait .pnl-loader.is-compact{width:3.4em;margin-left:0}
+.ticker-px.is-live-wait .pnl-loader.is-compact{width:3.2em}
+.donut-center-value.is-live-wait{min-width:0}
+.donut-center-value.is-live-wait .pnl-loader.is-compact{width:4.2em}

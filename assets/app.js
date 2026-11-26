@@ -1275,7 +1275,9 @@ function pnlMarketOpen(now=clockNow()){
   return !!findCurrentClose(now);
 }
 
-const LIVE_WAIT_HTML='<span class="live-wait" aria-hidden="true"><i></i><i></i><i></i></span>';
+const LIVE_WAIT_TRACK='<span class="pnl-loader-track" aria-hidden="true"><span class="pnl-loader-swipe"><span class="pnl-loader-bar"></span></span></span>';
+const LIVE_WAIT_HTML='<span class="pnl-loader" role="status">'+LIVE_WAIT_TRACK+'<span class="pnl-loader-label">Page loading…</span></span>';
+const LIVE_WAIT_COMPACT='<span class="pnl-loader is-compact" aria-hidden="true">'+LIVE_WAIT_TRACK+'</span>';
 const LIVE_WAIT_MS=8000;
 let liveWaitOn=false;
 let liveWaitTimer=0;
@@ -1295,9 +1297,8 @@ function fillLiveWait(el){
   el.classList.add('is-live-wait');
   el.setAttribute('aria-busy','true');
   // cc145: headline Daily P&L uses a transform-swept green bar + 'Page loading…' (CSS only; still moves under reduced motion)
-  if(el.classList.contains('daily-pnl-value')){
-    el.innerHTML='<span class="pnl-loader" role="status"><span class="pnl-loader-track" aria-hidden="true"><span class="pnl-loader-swipe"><span class="pnl-loader-bar"></span></span></span><span class="pnl-loader-label">Page loading…</span></span>';
-  }else el.innerHTML=LIVE_WAIT_HTML;
+  if(el.classList.contains('daily-pnl-value')) el.innerHTML=LIVE_WAIT_HTML;
+  else el.innerHTML=LIVE_WAIT_COMPACT;
 }
 function applyLiveWaitTimeout(){
   document.querySelectorAll('.daily-pnl-value.is-live-wait').forEach(el=>{clearLiveWait(el);el.textContent='—';});
@@ -1332,7 +1333,7 @@ function beginLiveWait(){
     el.classList.add('is-live-wait');
     el.setAttribute('aria-busy','true');
     el.setAttribute('aria-label','Loading index levels');
-    el.innerHTML='<span class="index-kicker">Indexes</span>'+LIVE_WAIT_HTML;
+    el.innerHTML='<span class="index-kicker">Indexes</span>'+LIVE_WAIT_COMPACT;
   });
   clearTimeout(liveWaitTimer);
   liveWaitTimer=setTimeout(()=>{
@@ -1687,7 +1688,7 @@ function paintIndexes(data){
         el.classList.add('is-live-wait');
         el.setAttribute('aria-busy','true');
         el.setAttribute('aria-label','Loading index levels');
-        el.innerHTML='<span class="index-kicker">Indexes</span>'+LIVE_WAIT_HTML;
+        el.innerHTML='<span class="index-kicker">Indexes</span>'+LIVE_WAIT_COMPACT;
       }
       return;
     }
