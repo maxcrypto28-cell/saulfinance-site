@@ -2155,6 +2155,11 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 /* cc130: opaque backing under the header Jaguar (rain no longer bleeds through the car; still visible all around it) */
 .site-header .brand-jaguar{position:relative}
 .site-header .brand-jaguar-img{position:relative;z-index:1}
+/* cc147: on mobile the transparent header lets rain show through the car; isolate the mask backing + image as one layer above the rain */
+@media(max-width:1023px){
+.site-header .brand-jaguar{isolation:isolate;z-index:1}
+.sff-jag-back{z-index:0;-webkit-mask:url(/assets/jaguar-mask.png?v=cc147) center/100% 100% no-repeat;mask:url(/assets/jaguar-mask.png?v=cc147) center/100% 100% no-repeat}
+}
 .sff-jag-back{position:absolute;left:0;top:0;z-index:0;pointer-events:none;background:var(--bg,#050b07);-webkit-mask:url(/assets/jaguar-mask.png?v=cc130) center/100% 100% no-repeat;mask:url(/assets/jaguar-mask.png?v=cc130) center/100% 100% no-repeat}
 /* cc133: thin separator between the green gain line and the hottest-stock line (only when both show) */
 .daily-pnl-strip:has(.daily-pnl-since.last-close:not([hidden]))+.daily-pnl-hot .hot-line{position:relative}

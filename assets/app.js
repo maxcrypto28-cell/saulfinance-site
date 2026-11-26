@@ -540,11 +540,14 @@ function clockNow(){
 (()=>{
  const canvas=$('matrix-rain');if(!canvas?.getContext)return;const ctx=canvas.getContext('2d');if(!ctx)return;
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');let width=0,height=0,columns=0,raf=null,last=0,resizeTimer;
+ const carMask=new Image();carMask.src='/assets/jaguar-mask.png?v=cc147'; // cc147: punch the car silhouette out of the rain so it never draws over the Jaguar
+ function punchCar(){try{const car=document.querySelector('.site-header .brand-jaguar-img');if(!car||!carMask.complete||!carMask.naturalWidth)return;const r=car.getBoundingClientRect();if(!r.width)return;ctx.save();ctx.globalCompositeOperation='destination-out';ctx.drawImage(carMask,r.left,r.top,r.width,r.height);ctx.restore();const side=document.querySelector('div.rain');if(side){const sr=side.getBoundingClientRect(),cut=Math.ceil(sr.right-r.left+1);side.style.clipPath=cut>0?'inset(0 '+cut+'px 0 0)':'';}}catch(e){}}
  function size(){const ratio=Math.min(window.devicePixelRatio||1,1.5);width=window.innerWidth;height=window.innerHeight;canvas.width=Math.round(width*ratio);canvas.height=Math.round(height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);columns=Math.min(width<700?14:42,Math.ceil(width/36));draw(0)}
  function draw(time){ctx.clearRect(0,0,width,height);ctx.font='14px ui-monospace, monospace';ctx.textAlign='center';const letters='SAULFINANCE';
   for(let c=0;c<columns;c++){const x=(c+.5)*width/columns,period=height+460,speed=23+(c%4)*7,head=((time/1000*speed+c*91)%period)-40;
    for(let k=0;k<25;k++){const y=head-432+k*18;if(y<0||y>height)continue;ctx.fillStyle=k===24?'rgba(119,255,168,.65)':`rgba(30,170,78,${.1+k/100})`;ctx.fillText(letters[k%letters.length],x,y)}
   }
+  punchCar();
  }
  function frame(time){raf=null;if(document.hidden||reduced.matches)return;if(time-last>=80){draw(time);last=time}raf=requestAnimationFrame(frame)}
  function restart(){if(raf!==null)cancelAnimationFrame(raf);raf=null;if(reduced.matches){draw(0);return}if(!document.hidden)raf=requestAnimationFrame(frame)}
@@ -2550,14 +2553,14 @@ loadUpcomingDividends();
     const desktop=mq.matches;
     const targets=[];
     if(desktop){
-      const tab=document.querySelector('.topnav button[data-page="0"]');
+      const tab=document.querySelector('.topnav button[aria-current="page"]')||document.querySelector('.topnav button[data-page="0"]');
       const title=document.querySelector('.header-holdings-title');
       if(tab)targets.push({cls:'header-laser-tab',el:tab,aim:'center'});
       if(title)targets.push({cls:'header-laser-title',el:title,aim:'left'});
     }else{
       // cc82 mobile: fog lamp to the Holdings tab; headlight to the
       // market-open countdown (#open-countdown), never the date line.
-      const tab=document.querySelector('.topnav button[data-page="0"]');
+      const tab=document.querySelector('.topnav button[aria-current="page"]')||document.querySelector('.topnav button[data-page="0"]');
       const countdown=document.querySelector('#open-countdown');
       const cBox=countdown&&countdown.getBoundingClientRect();
       const countdownOn=!!(countdown&&cBox&&cBox.width>2&&cBox.height>2&&getComputedStyle(countdown).display!=='none'&&getComputedStyle(countdown).visibility!=='hidden');
@@ -2631,20 +2634,32 @@ loadUpcomingDividends();
       core.setAttribute('d',d);
       const len=Math.max(1,core.getTotalLength());
       const bolt=Math.min(36,Math.max(18,len*0.28));
-      [haze,core].forEach(el=>{
-        el.style.strokeDasharray=bolt+' '+len;
-        el.style.strokeDashoffset=String(bolt);
-        el.getAnimations().forEach(a=>a.cancel());
-        el.animate(
-          [
+      const frames=[
             {strokeDashoffset:bolt, opacity:0, offset:0},
             {strokeDashoffset:bolt*0.2, opacity:1, offset:0.08},
             {strokeDashoffset:-len, opacity:1, offset:0.32},
             {strokeDashoffset:-len, opacity:0, offset:0.48},
             {strokeDashoffset:-len, opacity:0, offset:1}
-          ],
-          {duration:period, delay:delay, iterations:Infinity, easing:'linear'}
-        );
+          ];
+      const timing={duration:period, delay:delay, iterations:Infinity, easing:'linear'};
+      // cc147: retarget the path without restarting the interval (preserve currentTime; never start a second animation)
+      [haze,core].forEach(el=>{
+        el.style.strokeDasharray=bolt+' '+len;
+        const running=(el.getAnimations()||[]).find(a=>a.playState!=='idle'&&a.effect);
+        if(running){
+          const t=running.currentTime;
+          const dur=running.effect.getTiming().duration;
+          const del=running.effect.getTiming().delay;
+          if(dur===period&&del===delay&&t!=null){
+            try{running.effect.setKeyframes(frames);return;}catch(e){}
+          }
+          running.cancel();
+          const a=el.animate(frames,timing);
+          if(t!=null)a.currentTime=t;
+          return;
+        }
+        el.style.strokeDashoffset=String(bolt);
+        el.animate(frames,timing);
       });
     }
     const n=targets.length;
