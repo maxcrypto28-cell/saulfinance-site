@@ -1533,21 +1533,12 @@ function paintDayPct(data=lastPnlData){
     if(!s||!Number.isFinite(p))continue;
     bySym.set(s,p);
   }
-  const winners=new Set(bestPerformers(data).map(w=>w.symbol));
   for(const el of cells){
     if(!el)continue;
     el.classList.remove('day-pct-up','day-pct-down','day-pct-flat','day-pct-hot');
     el.removeAttribute('title');
     el.removeAttribute('aria-label');
     const sym=el.getAttribute('data-day-pct-symbol');
-    if(winners.has(sym)){
-      clearLiveWait(el);
-      el.textContent='–';
-      el.classList.add('day-pct-hot');
-      el.title='Best performer OTD';
-      el.setAttribute('aria-label',(sym?sym+' daily P&L, best performer OTD. Stock performance':'Best performer OTD'));
-      continue;
-    }
     if(!bySym.has(sym)){
       if(liveWaitOn) fillLiveWait(el);
       else{clearLiveWait(el);el.textContent='–';}
