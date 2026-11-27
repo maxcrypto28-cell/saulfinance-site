@@ -2357,3 +2357,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
  .portfolio-additions .pa-table td:nth-child(5){text-align:center}
  .portfolio-additions .pa-table td:nth-child(6){text-align:right}
 }
+
+/* cc161: subtle secondary label beside the DCA header */
+.portfolio-additions .pa-lead{white-space:nowrap}
+.portfolio-additions .pa-lead-sub{margin-left:4px;font-weight:500;font-size:10px;letter-spacing:.3px;color:var(--dim)}
