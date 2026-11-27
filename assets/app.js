@@ -1029,7 +1029,7 @@ function renderCoveredCalls(data){
 
   if(!open.length&&!history.length){
     const learn=coveredCallExplainerLink('cc-page-learn');
-    host.innerHTML=`<div class="cc-empty native-panel" role="status">${learn}<p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O, NNN. CRT.UN (250) has no listed Montréal options.</p></div>`;
+    host.innerHTML=`<div class="cc-empty native-panel" role="status">${learn}<p class="eyebrow">COVERED CALLS</p><h3>No open covered calls yet</h3><p class="muted">Positions will appear here once calls are sold. Eligible 100-share lots: ENB, PPL, CNQ, CU, SOBO, O. CRT.UN (250) has no listed Montréal options.</p></div>`;
     return;
   }
 

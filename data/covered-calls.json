@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-20T08:35:00-07:00",
+  "updated_at": "2026-11-27T07:50:00-07:00",
   "notes": "Open covered calls sold in the Wealthsimple TFSA. Premiums are net as shown on the brokerage activity. Options are listed on the Montréal Exchange. IV at sale is unknown. Option marks are Montréal Exchange LAST TRADE only (not a live mid), as of after the 2026-11-12 regular close. Ex-dividend figures marked approximate are labeled with a tilde in the UI.",
   "positions": [
     {
@@ -135,7 +135,7 @@
       "notes": "Wealthsimple net premium as reported by Max (C$12.96). 1 contract covers 100 shares. Montréal Exchange. Sold 2026-11-17."
     },
     {
-      "id": "cc-o-2026-12-18-65c",
+      "id": "cc-o-2027-01-15-65c",
       "underlying": "O",
       "name": "Realty Income Corporation",
       "option_type": "call",
@@ -143,11 +143,11 @@
       "shares_covered": 100,
       "contracts": 1,
       "strike": 65,
-      "expiration": "2026-12-18",
+      "expiration": "2027-01-15",
       "premium_received": {
-        "per_share": 0.05,
-        "total": 5.0,
-        "total_cad": 7.15
+        "per_share": 0.17,
+        "total": 17.0,
+        "total_cad": 24.24
       },
       "currency": "USD",
       "opened_date": "2026-11-18",
@@ -158,15 +158,29 @@
       "option_mark_source": null,
       "option_mark_note": null,
       "option_open_interest": null,
-      "ex_dividend_date": null,
-      "ex_dividend_date_approximate": null,
-      "ex_dividend_amount": null,
-      "ex_dividend_amount_approximate": null,
-      "ex_dividend_source": null,
+      "ex_dividend_date": "2026-11-30",
+      "ex_dividend_date_approximate": false,
+      "ex_dividend_amount": 0.272,
+      "ex_dividend_amount_approximate": false,
+      "ex_dividend_source": "Realty Income monthly dividend, ex 2026-11-30 US$0.272 (yfinance declared); next monthly ex ~Dec 31 also before the Jan 15 expiry.",
       "close_price": null,
       "close_date": null,
       "realized_pnl": null,
-      "notes": "Wealthsimple limit sell to open 1 x US$0.05 = US$5.00 credit, filled 2026-11-18. C$7.15 at 1.43028 CAD/USD. 1 contract covers 100 of 125 shares."
+      "notes": "Opened 2026-11-18: sell to open Dec 18 $65 call 1 x US$0.05 = US$5.00 (C$7.15 at 1.43028). Rolled 2026-11-27 07:41: bought to close Dec 18 $65 at 1 x US$0.03, sold to open Jan 15 2027 $65 at 1 x US$0.15, net US$12.00 credit (C$17.09 at 1.42442). Collected premium US$17.00 / C$24.24. 1 contract covers 100 of 125 shares.",
+      "rolls": [
+        {
+          "date": "2026-11-27",
+          "from_expiration": "2026-12-18",
+          "to_expiration": "2027-01-15",
+          "strike": 65,
+          "buy_to_close_per_share": 0.03,
+          "sell_to_open_per_share": 0.15,
+          "net_credit": 12.0,
+          "net_credit_cad": 17.09,
+          "fx_cad_per_usd": 1.42442,
+          "filled": "2026-11-27 07:41"
+        }
+      ]
     },
     {
       "id": "cc-h-2026-12-18-60c",
@@ -233,6 +247,40 @@
       "close_date": null,
       "realized_pnl": null,
       "notes": "Wealthsimple limit sell to open 1 x C$0.13 less C$0.04 fee = C$12.96 net credit, filled 2026-11-20 8:27. 1 contract covers 100 shares. Montréal Exchange."
+    },
+    {
+      "id": "cc-nnn-2026-12-18-45c",
+      "underlying": "NNN",
+      "name": "NNN REIT, Inc.",
+      "option_type": "call",
+      "exchange": "US",
+      "shares_covered": 100,
+      "contracts": 1,
+      "strike": 45,
+      "expiration": "2026-12-18",
+      "premium_received": {
+        "per_share": 0.05,
+        "total": 5.0,
+        "total_cad": 7.12
+      },
+      "currency": "USD",
+      "opened_date": "2026-11-27",
+      "status": "open",
+      "iv_at_sale": null,
+      "option_mark": null,
+      "option_mark_as_of": null,
+      "option_mark_source": null,
+      "option_mark_note": null,
+      "option_open_interest": null,
+      "ex_dividend_date": null,
+      "ex_dividend_date_approximate": null,
+      "ex_dividend_amount": null,
+      "ex_dividend_amount_approximate": null,
+      "ex_dividend_source": null,
+      "close_price": null,
+      "close_date": null,
+      "realized_pnl": null,
+      "notes": "Wealthsimple sell to open 1 x US$0.05 = US$5.00 credit, filled 2026-11-27 07:44 (earlier pending NNN order cancelled). C$7.12 at 1.42442 CAD/USD. 1 contract covers all 100 shares."
     }
   ]
 }
