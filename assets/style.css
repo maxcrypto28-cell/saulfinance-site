@@ -2376,3 +2376,4 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
  .portfolio-additions .pa-table tr.pa-avg-row td{display:block;padding:0;white-space:normal}
  .portfolio-additions .pa-table tr.pa-avg-row td::before{content:none}
 }
+.portfolio-additions .pa-avg-chip.pa-avg-up{color:#ff8a8a;border-color:rgba(255,91,91,.45)}

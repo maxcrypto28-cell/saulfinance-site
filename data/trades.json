@@ -1,7 +1,7 @@
 {
   "updated_at": "2026-11-27",
   "title": "Additions to the portfolio [Trades]",
-  "notes": "Share purchases made after the Nov 9, 2026 launch, from the tracker's BOOKED CONTRIBUTION events (pending_events.csv) and all_time_baseline.json contributions. null = not recorded. Times are the Wealthsimple fill times as recorded; only the Nov 17 PZA record names its zone (America/Vancouver), and the other fill times are shown in the same owner-local Pacific time. avg_before/avg_after = average cost per share before/after the buy (book cost from positions.csv: Nov 9 price shown, not broker average). Not shown for PZA (position opened after launch; Nov 12 fills not recorded).",
+  "notes": "Share purchases made after the Nov 9, 2026 launch, from the tracker's BOOKED CONTRIBUTION events (pending_events.csv) and all_time_baseline.json contributions. null = not recorded. Times are the Wealthsimple fill times as recorded; the Nov 11 PZA buys (Wealthsimple screenshots) and the Nov 17 PZA record are explicitly Pacific; the other fill times are shown in the same owner-local Pacific time. avg_before/avg_after = average cost per share before/after the buy (book cost from positions.csv: Nov 9 price shown, not broker average). PZA avg is book cost per share from its first buy (Nov 11, 10:39 PT).",
   "trades": [
     {
       "symbol": "IRM",
@@ -62,7 +62,10 @@
       "currency": "CAD",
       "total": 7.96,
       "source": "pending_events PZA-TOPUP-2026-11-18",
-      "note": "Funded by H covered-call premium"
+      "note": "Funded by H covered-call premium",
+      "avg_before": 11.713304,
+      "avg_after": 11.696333,
+      "avg_source": "7.1295 sh, C$83.51 book before; (83.51 + 7.96) / 7.8204"
     },
     {
       "symbol": "PZA",
@@ -75,31 +78,39 @@
       "currency": "CAD",
       "total": 12.96,
       "source": "pending_events PZA-TOPUP-2026-11-17",
-      "note": "Funded by covered-call premium"
+      "note": "Funded by covered-call premium",
+      "avg_before": 11.721216,
+      "avg_after": 11.713304,
+      "avg_source": "6.0190 sh, C$70.55 book before; (70.55 + 12.96) / 7.1295"
     },
     {
       "symbol": "PZA",
-      "date": "2026-11-12",
-      "time": null,
-      "time_zone": null,
-      "shares": null,
-      "price": null,
+      "date": "2026-11-11",
+      "time": "12:12",
+      "time_zone": "PT",
+      "time_zone_recorded": true,
+      "shares": 4.6786,
+      "price": 11.73,
       "currency": "CAD",
       "total": 54.88,
-      "source": "pending_events PZA-CONTRIB-2026-11-12 (buy 1 of 2)",
-      "note": "Exact fill not recorded; Nov 12 share count estimated at 6.1295 combined"
+      "source": "Wealthsimple screenshot (owner, 2026-11-27); pending_events PZA-CONTRIB-2026-11-11",
+      "note": "Market buy",
+      "avg_before": 11.69054,
+      "avg_after": 11.721216,
+      "avg_source": "1.3404 sh @ C$11.69054 before; (15.67 + 54.88) / 6.0190"
     },
     {
       "symbol": "PZA",
-      "date": "2026-11-12",
-      "time": null,
-      "time_zone": null,
-      "shares": null,
-      "price": null,
+      "date": "2026-11-11",
+      "time": "10:39",
+      "time_zone": "PT",
+      "time_zone_recorded": true,
+      "shares": 1.3404,
+      "price": 11.69,
       "currency": "CAD",
       "total": 15.67,
-      "source": "pending_events PZA-CONTRIB-2026-11-12 (buy 2 of 2)",
-      "note": "Exact fill not recorded; Nov 12 share count estimated at 6.1295 combined"
+      "source": "Wealthsimple screenshot (owner, 2026-11-27); pending_events PZA-CONTRIB-2026-11-11",
+      "note": "Market buy; opened the position"
     }
   ]
 }

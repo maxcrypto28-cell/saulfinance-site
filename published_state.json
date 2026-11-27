@@ -422,10 +422,10 @@
       "value_cad": 91.47,
       "quote": null,
       "weight_cad": 0.0007898954852567608,
-      "shares": 7.9309,
-      "starting_shares_theoretical": 6.1295,
+      "shares": 7.8204,
+      "starting_shares_theoretical": 6.019,
       "annual_rate_native": 0.81,
-      "reference_price_native": 11.5334,
+      "reference_price_native": 11.6963,
       "div_yield": 0.07037358818418767,
       "pay_months": "1,2,3,4,5,6,7,8,9,10,11,12"
     },
@@ -558,10 +558,10 @@
     "Payments": 0.020498084526017313
   },
   "income": {
-    "annual_gross_cad": 4228.88493620984,
-    "annual_net_reinvestable_cad": 3967.9894294783644,
-    "blended_gross_yield": 0.03651882714313411,
-    "net_yield": 0.03426584602483339,
+    "annual_gross_cad": 4228.79543120984,
+    "annual_net_reinvestable_cad": 3967.8999244783645,
+    "blended_gross_yield": 0.0365180542165417,
+    "net_yield": 0.03426507309824098,
     "usd_withholding_proxy": 0.15
   }
 }
