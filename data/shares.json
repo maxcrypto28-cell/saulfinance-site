@@ -1,5 +1,5 @@
 {
-  "source": "Wealthsimple TFSA actual holdings 2026-11-09 (~09:13 America/Regina); CTGO leftover + VGFCQ excluded from public site; PZA.TO added 2026-11-12 (6.1295 sh estimated from C$70.55 / 11.51 close — pending exact fill confirmation); PZA.TO +1.1105 sh on 2026-11-17 (C$12.96 at C$11.67, covered-call premium redeployed), now 7.24 sh; 2026-11-18: PZA.TO +0.6909 sh (C$7.96 at C$11.52) now 7.9309 sh, RTX +0.0265 sh (US$5.17 at US$195.2337) now 12.0265 sh, both covered-call premium redeployed; 2026-11-20: RY.TO +0.0484 sh (C$12.95 at C$267.46) now 5.5472 sh, CU covered-call premium redeployed",
+  "source": "Wealthsimple TFSA actual holdings 2026-11-09 (~09:13 America/Regina); CTGO leftover + VGFCQ excluded from public site; PZA.TO added 2026-11-12 (6.1295 sh estimated from C$70.55 / 11.51 close — pending exact fill confirmation); PZA.TO +1.1105 sh on 2026-11-17 (C$12.96 at C$11.67, covered-call premium redeployed), now 7.24 sh; 2026-11-18: PZA.TO +0.6909 sh (C$7.96 at C$11.52) now 7.9309 sh, RTX +0.0265 sh (US$5.17 at US$195.2337) now 12.0265 sh, both covered-call premium redeployed; 2026-11-20: RY.TO +0.0484 sh (C$12.95 at C$267.46) now 5.5472 sh, CU covered-call premium redeployed; 2026-11-27: IRM +0.1634 sh (US$17.01 at US$104.1271) now 20.1634 sh, covered-call premium redeployed",
   "shares": {
     "BNS.TO": 25.0,
     "CM.TO": 25.0,
@@ -10,7 +10,7 @@
     "EIF.TO": 35.0,
     "ENB.TO": 130.3722,
     "H.TO": 115.0,
-    "IRM": 20.0,
+    "IRM": 20.1634,
     "JNJ": 10.0,
     "KO": 5.0,
     "LMT": 5.0,
