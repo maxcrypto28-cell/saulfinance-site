@@ -3539,7 +3539,16 @@ async function loadPortfolioAdditions(){
   const num=(n,min,max)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:min,maximumFractionDigits:max});
   const ok=n=>n!=null&&Number.isFinite(Number(n));
   const dt=d=>{const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d||''));if(!m)return NR;return esc(new Date(Date.UTC(+m[1],m[2]-1,+m[3],12)).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'}));};
-  const rows=list.map(t=>`<tr><th scope="row">${esc(t.symbol||'')}</th><td data-label="Date">${dt(t.date)}</td><td data-label="Time">${t.time?esc(t.time)+(t.time_zone?' '+esc(t.time_zone):''):NR}</td><td data-label="Shares bought">${ok(t.shares)?esc(num(t.shares,4,4)):NR}</td><td data-label="Buy price">${ok(t.price)?esc(pre(t.currency)+num(t.price,2,4)):NR}</td><td data-label="Total cost">${ok(t.total)?esc(pre(t.currency)+num(t.total,2,2)):NR}</td></tr>`).join('');
+  // cc162: average-cost chip for adds to an existing position (avg_before/avg_after from data/trades.json only).
+  const avgLine=t=>{
+    if(!ok(t.avg_before)||!ok(t.avg_after))return '';
+    const b=Number(t.avg_before),a=Number(t.avg_after),pct=(a/b-1)*100,c=pre(t.currency);
+    const pctTxt=(pct<0?'−':'+')+Math.abs(pct).toFixed(2)+'%';
+    const B=c+num(b,2,2),A=c+num(a,2,2);
+    const inner=`<span class="pa-avg-chip"><span aria-hidden="true">${pct<0?'▼':'▲'}</span> ${esc(pctTxt.replace(/^[−+]/,''))}</span><span class="pa-avg-new">avg ${esc(A)}</span>`;
+    return `<tr class="pa-avg-row"><td colspan="6"><span class="pa-avg" title="Average cost per share ${esc(B)} before → ${esc(A)} after this buy">${inner}</span></td></tr>`;
+  };
+  const rows=list.map(t=>{const al=avgLine(t);return `<tr${al?' class="pa-has-avg"':''}><th scope="row">${esc(t.symbol||'')}</th><td data-label="Date">${dt(t.date)}</td><td data-label="Time">${t.time?esc(t.time)+(t.time_zone?' '+esc(t.time_zone):''):NR}</td><td data-label="Shares bought">${ok(t.shares)?esc(num(t.shares,4,4)):NR}</td><td data-label="Buy price">${ok(t.price)?esc(pre(t.currency)+num(t.price,2,4)):NR}</td><td data-label="Total cost">${ok(t.total)?esc(pre(t.currency)+num(t.total,2,2)):NR}</td></tr>${al}`;}).join('');
   const open=PA_OPEN;host.classList.toggle('is-open',open);
   host.innerHTML=`<p class="pa-lead">DCA <span class="pa-lead-sub">[Dollar Cost Averaging]</span></p><button type="button" class="pa-toggle" aria-expanded="${open}" aria-controls="pa-body"><span class="pa-arrow" aria-hidden="true">▸</span><span class="pa-title">Additions to the portfolio [Trades]</span><span class="pa-count">${list.length}</span></button><div class="pa-body" id="pa-body"${open?'':' hidden'}><div class="pa-scroll"><table class="pa-table"><thead><tr><th scope="col">Ticker</th><th scope="col">Date</th><th scope="col">Time</th><th scope="col">Shares bought</th><th scope="col">Buy price</th><th scope="col">Total cost</th></tr></thead><tbody>${rows}</tbody></table></div><p class="fine pa-note">Newest first. Fill times as recorded (PT = Pacific). Nov 12 PZA: exact fills not recorded; share count estimated at 6.1295 combined.</p></div>`;
   host.hidden=false;

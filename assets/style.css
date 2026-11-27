@@ -2361,3 +2361,18 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 /* cc161: subtle secondary label beside the DCA header */
 .portfolio-additions .pa-lead{white-space:nowrap}
 .portfolio-additions .pa-lead-sub{margin-left:4px;font-weight:500;font-size:10px;letter-spacing:.3px;color:var(--dim)}
+
+/* cc162: average-cost line under adds to an existing position */
+.portfolio-additions .pa-table tr.pa-has-avg>*{border-bottom:0}
+.portfolio-additions .pa-table tr.pa-avg-row td{padding:0 8px 5px;text-align:left;white-space:nowrap}
+.portfolio-additions .pa-avg{display:inline-flex;align-items:baseline;gap:6px;font:11px/1.3 ui-monospace,monospace;color:var(--dim)}
+.portfolio-additions .pa-avg-chip{display:inline-flex;align-items:center;gap:3px;padding:0 6px;border:1px solid rgba(0,255,120,.35);border-radius:999px;color:var(--green);font-size:10px;line-height:1.5}
+.portfolio-additions .pa-avg-chip span{font-size:8px}
+.portfolio-additions .pa-avg-new{color:var(--text)}
+@media(min-width:1024px){.portfolio-additions .pa-table tr.pa-avg-row td{padding-left:58px}}
+@media(max-width:1023.98px){
+ .portfolio-additions .pa-table tr.pa-has-avg{border-bottom:0;padding-bottom:2px}
+ .portfolio-additions .pa-table tr.pa-avg-row{display:block;padding:0 8px 6px;border-bottom:1px solid rgba(0,255,120,.08)}
+ .portfolio-additions .pa-table tr.pa-avg-row td{display:block;padding:0;white-space:normal}
+ .portfolio-additions .pa-table tr.pa-avg-row td::before{content:none}
+}
