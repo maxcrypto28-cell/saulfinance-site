@@ -2268,3 +2268,10 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 /* cc154: last session's performance line turns red on a down session */
 .daily-pnl-since.last-close.last-close-down,.daily-pnl-since.last-close.last-close-down .daily-pnl-face{color:#ff5b5b;text-shadow:0 0 6px rgba(255,91,91,.35)}
 @media(max-width:1023.98px){.daily-pnl-since.last-close{white-space:normal;line-height:1.25}}
+
+/* cc155: Canadian-market tag beside DAILY PNL while only the TSX is in session */
+.daily-pnl-ca-tag{display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding:1px 6px;border:1px solid rgba(0,255,120,.35);border-radius:999px;font:600 9px/1.4 ui-monospace,monospace;letter-spacing:.4px;color:var(--mint);white-space:nowrap;vertical-align:middle}
+.daily-pnl-ca-tag[hidden]{display:none}
+.daily-pnl-ca-flag{width:16px;height:8px;object-fit:contain;flex-shrink:0;display:block}
+@media(max-width:1023.98px){.daily-pnl-ca-tag{font-size:10px}}
+@media(min-width:1024px){.daily-pnl-header{position:relative}.daily-pnl-header .daily-pnl-ca-tag{position:absolute;left:14px;top:-8px;margin:0;font-size:8px;line-height:1.3;padding:0 5px;background:#03140a;z-index:2}.daily-pnl-header .daily-pnl-ca-flag{width:14px;height:7px}}

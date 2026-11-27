@@ -538,9 +538,17 @@ function holidayChartHtml(){
 function paintUsHolidayNote(){
  const el=document.querySelector('.us-holiday-note');
  if(!el)return;
- const ymd=etYmd(clockNow());
+ const now=clockNow();
+ const ymd=etYmd(now);
  const sess=findSessionOnYmd(ymd);
  const chart=holidayChartHtml();
+ // cc155: NYSE early-close days — after the 13:00 ET NYSE close, same line style as the holiday notes.
+ if(sess&&/NYSE/.test(String(sess[1]||''))&&NYSE_EARLY_CLOSES.has(ymd)&&now>=sessionCloseMs(sess[0])){
+  const html='<span class="us-holiday-flag" aria-hidden="true">🇺🇸</span> '+chart+' US markets closed early today';
+  el.hidden=false;
+  if(el.innerHTML!==html)el.innerHTML=html;
+  return;
+ }
  if(sess&&sess[1]==='TSX'){
   const name=US_HOLIDAY_NAMES[ymd];
   if(!name){el.hidden=true;el.replaceChildren();return;}
@@ -612,6 +620,8 @@ function clockNow(){
   setTimeout(tick,1000);
  }
  paintUsHolidayNote();
+ // cc155: repaint the market note each minute so the early-close line appears at 13:00 ET without a reload.
+ setInterval(()=>{try{paintUsHolidayNote();}catch(e){}},60000);
  tick();
 })();
 // Subtle descending SAUL FINANCE streams, adapted from the approved Matrix graphics.
@@ -1362,6 +1372,18 @@ function combinedSessionCloseMs(sess){
   const tsx=/TSX/.test(label)?sess[0]+(TSX_EARLY_CLOSES.has(ymd)?3.5:6.5)*3600*1000:null;
   return Math.max(nyse??-Infinity,tsx??-Infinity);
 }
+function tsxOnlySession(now=clockNow()){
+  // cc155: true while the TSX is in session but the NYSE is not (NYSE early close or US holiday).
+  try{
+    if(!pnlMarketOpen(now))return false;
+    const sess=findSessionOnYmd(etYmd(now));
+    if(!sess)return false;
+    const label=String(sess[1]||'');
+    if(!/TSX/.test(label))return false;
+    if(!/NYSE/.test(label))return true;
+    return now>=sessionCloseMs(sess[0]);
+  }catch(e){return false;}
+}
 function pnlMarketOpen(now=clockNow()){
   // Open while either market is in its regular session (NYSE, TSX, or both).
   if(findCurrentClose(now))return true;
@@ -1970,6 +1992,12 @@ function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine='', last
     const sinceEl=el.querySelector('.daily-pnl-since');
     el.classList.remove('pnl-up','pnl-down','has-since');
     if(label)label.textContent=labelText;
+    try{ // cc155: small Canadian-market tag beside the DAILY PNL label while only the TSX is trading
+      let tag=el.querySelector('.daily-pnl-ca-tag');
+      const showTag=mode==='daily'&&tsxOnlySession();
+      if(showTag&&!tag&&label){tag=document.createElement('span');tag.className='daily-pnl-ca-tag';tag.innerHTML='<img class="daily-pnl-ca-flag" src="/assets/canada-flag-v1.svg" alt="" width="16" height="8">Canadian market';label.after(tag);}
+      if(tag)tag.hidden=!showTag;
+    }catch(e){}
     if(up==null){
       if(liveWaitOn){ if(value) fillLiveWait(value); }
       else{ if(value){clearLiveWait(value);value.textContent='—';} }
