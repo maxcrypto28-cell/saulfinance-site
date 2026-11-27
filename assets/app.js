@@ -1351,9 +1351,27 @@ const PNL_FALLBACK='/data/daily-pnl.json';
 const INCEPTION_FALLBACK='/data/inception.json';
 const INCEPTION_DEFAULT={inception_date:'2026-11-09',label:'Since Nov 9',start_value_cad:114897.09};
 let INCEPTION=INCEPTION_DEFAULT;
+const TSX_EARLY_CLOSES=new Set(['2026-12-24','2027-12-24']);
+function combinedSessionCloseMs(sess){
+  // cc154: P&L headline follows the combined NYSE+TSX session: open until the
+  // later of the two closes (e.g. NYSE 13:00 early close, TSX still to 16:00 ET).
+  // TSX closes early (13:00 ET) only on Christmas Eve (TMX calendar).
+  if(!sess)return null;
+  const label=String(sess[1]||''), ymd=etYmd(sess[0]);
+  const nyse=/NYSE/.test(label)?sessionCloseMs(sess[0]):null;
+  const tsx=/TSX/.test(label)?sess[0]+(TSX_EARLY_CLOSES.has(ymd)?3.5:6.5)*3600*1000:null;
+  return Math.max(nyse??-Infinity,tsx??-Infinity);
+}
 function pnlMarketOpen(now=clockNow()){
-  // Reuse findCurrentClose: open when a session is in progress (incl. early closes).
-  return !!findCurrentClose(now);
+  // Open while either market is in its regular session (NYSE, TSX, or both).
+  if(findCurrentClose(now))return true;
+  try{
+    if(now<OPEN_CALENDAR.start||now>OPEN_CALENDAR.end)return false;
+    const sess=findSessionOnYmd(etYmd(now));
+    if(!sess)return false;
+    const close=combinedSessionCloseMs(sess);
+    return now>=sess[0]&&close!=null&&now<close;
+  }catch(e){return false;}
 }
 
 const LIVE_WAIT_TRACK='<span class="pnl-loader-track" aria-hidden="true"><span class="pnl-loader-swipe"><span class="pnl-loader-bar"></span></span></span>';
@@ -1905,7 +1923,7 @@ function paintDonutSlices(s){
   }
 }
 
-function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine=''){
+function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine='', lastCloseUp=true){
   const els=[...document.querySelectorAll('.daily-pnl-strip')]; if(!els.length)return;
   let text='—', faceHtml='', metaText='', up=null, sinceLine='', sinceUp=null;
   const labelText=labelOverride||(mode==='since'?(INCEPTION.label||'Since Nov 9'):'Daily PNL');
@@ -1969,8 +1987,10 @@ function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine=''){
       if(sinceLine){
         sinceEl.hidden=false;
         sinceEl.textContent=sinceLine;
-        if(sinceUp==null){const f=document.createElement('span');f.className='daily-pnl-face';f.innerHTML=pnlFace(true);sinceEl.appendChild(document.createTextNode(' '));sinceEl.appendChild(f);} // cc127: same green SVG smiley as the headline (was a yellow emoji)
+        if(sinceUp==null){const f=document.createElement('span');f.className='daily-pnl-face';f.innerHTML=pnlFace(lastCloseUp!==false);sinceEl.appendChild(document.createTextNode(' '));sinceEl.appendChild(f);} // cc127: same SVG face as the headline; cc154: frown when the last session was red
+        sinceEl.classList.remove('last-close-down');
         sinceEl.classList.add(sinceUp==null?'last-close':(sinceUp?'since-up':'since-down'));
+        if(sinceUp==null&&lastCloseUp===false)sinceEl.classList.add('last-close-down');
         el.classList.add('has-since');
       }else{
         sinceEl.hidden=true;
@@ -2233,11 +2253,13 @@ async function loadDailyPnl(){
   }
   try{
     // cc108: outside the regular session always show the since-inception total; add a tiny 'Last close' line only when that session closed green.
-    let extra='';
+    // cc154: once both markets are closed, show 'Last session's performance' (real feed close data only), green if up, red if down.
+    let extra='', extraUp=true;
     if(!open){const ls=lastCompletedSessionPnl(data);
-      if(ls&&ls.cad>0){const f=formatPnl(ls.cad,ls.pct),i=f.indexOf(', ');
-        extra=(ls.label==='Today'?'Today\u2019s gain ':'Last session\u2019s gain ')+(i>0?f.slice(0,i)+' ('+f.slice(i+2)+')':f)+' · '+ls.short;}} // cc116: larger green 'Today's gain' line
-    paintPnl(data, open?'daily':'since', null, extra);
+      if(ls&&Number.isFinite(ls.cad)){const f=formatPnl(ls.cad,ls.pct),i=f.indexOf(', ');
+        extraUp=ls.cad>=0;
+        extra='Last session\u2019s performance '+(i>0?f.slice(0,i)+' ('+f.slice(i+2)+')':f)+' · '+ls.short;}}
+    paintPnl(data, open?'daily':'since', null, extra, extraUp);
   }catch(e){}
   try{paintWinStreak(data);}catch(e){}
   try{paintDonutTotal(data);}catch(e){}

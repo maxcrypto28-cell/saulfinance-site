@@ -2264,3 +2264,7 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 #holdings-page .page-one-heading-copy:has(.us-holiday-note:not([hidden])){grid-row:1 / span 3;align-self:start;justify-self:end}
 #holdings-page .slide-heading:has(.us-holiday-note:not([hidden])) .daily-pnl-streak{grid-row:4}
 }
+
+/* cc154: last session's performance line turns red on a down session */
+.daily-pnl-since.last-close.last-close-down,.daily-pnl-since.last-close.last-close-down .daily-pnl-face{color:#ff5b5b;text-shadow:0 0 6px rgba(255,91,91,.35)}
+@media(max-width:1023.98px){.daily-pnl-since.last-close{white-space:normal;line-height:1.25}}
