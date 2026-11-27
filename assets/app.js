@@ -1372,6 +1372,40 @@ function combinedSessionCloseMs(sess){
   const tsx=/TSX/.test(label)?sess[0]+(TSX_EARLY_CLOSES.has(ymd)?3.5:6.5)*3600*1000:null;
   return Math.max(nyse??-Infinity,tsx??-Infinity);
 }
+// cc156: desktop — the Canadian-market tag sits in the open space under the '1 · Holdings' tab, with 'Still open' beneath it.
+function placeCaSessionNote(){
+  const note=document.getElementById('ca-session-note');
+  if(!note||note.hidden)return;
+  const header=document.querySelector('.site-header');
+  const tab=document.querySelector('.topnav button');
+  const strip=document.getElementById('daily-pnl-strip-header');
+  if(!header||!tab||!strip)return;
+  const hr=header.getBoundingClientRect(),tr=tab.getBoundingClientRect(),sr=strip.getBoundingClientRect();
+  // Centre under the tab, but keep clear of the Daily PNL pill on the right and the 'Rev the Car' caption on the left.
+  const rev=[...document.querySelectorAll('.site-header span')].find(e=>/^Rev the Car/.test(e.textContent||''));
+  const rr=rev&&rev.offsetParent?rev.getBoundingClientRect():null;
+  const w=note.offsetWidth,right=sr.left-12;
+  let top=tr.bottom+8,left=Math.min(tr.left+tr.width/2-w/2,right-w);
+  if(rr&&left<rr.right+8&&top<rr.bottom+6){top=Math.max(top,rr.bottom+8);}
+  left=Math.max(hr.left+16,left);
+  note.style.left=Math.round(left-hr.left)+'px';
+  note.style.top=Math.round(top-hr.top)+'px';
+}
+function paintCaSessionNote(show){
+  const header=document.querySelector('.site-header');
+  if(!header)return;
+  let note=document.getElementById('ca-session-note');
+  if(show&&!note){
+    note=document.createElement('div');note.id='ca-session-note';note.className='ca-session-note';
+    note.innerHTML='<span class="ca-session-tag"><img class="ca-session-flag" src="/assets/canada-flag-v1.svg" alt="" width="20" height="10">Canadian market</span><span class="ca-session-open">Still open</span>';
+    header.appendChild(note);
+    window.addEventListener('resize',()=>{try{placeCaSessionNote();}catch(e){}});
+  }
+  if(!note)return;
+  note.hidden=!show;
+  document.documentElement.classList.toggle('has-ca-session-note',!!show);
+  if(show)placeCaSessionNote();
+}
 function tsxOnlySession(now=clockNow()){
   // cc155: true while the TSX is in session but the NYSE is not (NYSE early close or US holiday).
   try{
@@ -1997,6 +2031,7 @@ function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine='', last
       const showTag=mode==='daily'&&tsxOnlySession();
       if(showTag&&!tag&&label){tag=document.createElement('span');tag.className='daily-pnl-ca-tag';tag.innerHTML='<img class="daily-pnl-ca-flag" src="/assets/canada-flag-v1.svg" alt="" width="16" height="8">Canadian market';label.after(tag);}
       if(tag)tag.hidden=!showTag;
+      if(el.classList.contains('daily-pnl-header'))paintCaSessionNote(showTag);
     }catch(e){}
     if(up==null){
       if(liveWaitOn){ if(value) fillLiveWait(value); }
