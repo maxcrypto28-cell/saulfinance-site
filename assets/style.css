@@ -2319,3 +2319,41 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 #covered-calls .cc-prem-toggle{box-sizing:border-box;min-width:0;min-height:0;width:16px;height:16px;flex:0 0 auto;align-self:center}
 #covered-calls .cc-sum b:has(.cc-prem-toggle),#covered-calls .cc-metric-prem strong{display:flex;align-items:center;gap:0}
 #covered-calls .cc-sum b:has(.cc-prem-toggle){justify-content:flex-end}
+
+/* cc160: DCA · Additions to the portfolio [Trades] — collapsible list under The Machine (same arrow style as the cc159 premium dropdown) */
+.portfolio-additions{margin:8px 0 0;padding:6px 0 0;border-top:1px solid var(--edge)}
+.portfolio-additions[hidden]{display:none}
+.portfolio-additions .pa-lead{margin:0 0 2px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:1.2px;color:var(--green)}
+.portfolio-additions .pa-toggle{display:flex;align-items:center;gap:8px;width:100%;margin:0;padding:2px 0;border:0;background:transparent;color:var(--text);font:600 13px/1.3 inherit;text-align:left;cursor:pointer;min-height:0}
+.portfolio-additions .pa-arrow{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;flex:0 0 16px;border:1px solid rgba(0,255,120,.35);border-radius:4px;color:var(--green);font:600 10px/1 ui-monospace,monospace;transition:transform .15s}
+.portfolio-additions.is-open .pa-arrow{transform:rotate(90deg)}
+.portfolio-additions .pa-count{margin-left:auto;font:600 11px/1 ui-monospace,monospace;color:var(--dim)}
+.portfolio-additions .pa-toggle:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+.portfolio-additions .pa-body{margin:6px 0 0}
+.portfolio-additions .pa-body[hidden]{display:none}
+.portfolio-additions .pa-scroll{overflow-x:auto;border:1px solid var(--edge);border-radius:8px;background:#0b2618}
+.portfolio-additions .pa-table{width:100%;border-collapse:collapse;font:12px/1.35 ui-monospace,monospace;font-variant-numeric:tabular-nums}
+.portfolio-additions .pa-table th,.portfolio-additions .pa-table td{padding:4px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid rgba(0,255,120,.08)}
+.portfolio-additions .pa-table thead th{font:600 10px/1.2 inherit;color:var(--mint);font-family:inherit}
+.portfolio-additions .pa-table th[scope=row],.portfolio-additions .pa-table thead th:first-child{text-align:left;color:var(--green)}
+.portfolio-additions .pa-table td:nth-child(2),.portfolio-additions .pa-table td:nth-child(3),.portfolio-additions .pa-table thead th:nth-child(2),.portfolio-additions .pa-table thead th:nth-child(3){text-align:left}
+.portfolio-additions .pa-table tbody tr:last-child>*{border-bottom:0}
+.portfolio-additions .pa-nr{color:var(--dim);font-style:italic}
+.portfolio-additions .pa-note{margin:4px 0 0}
+@media(max-width:1023.98px){.portfolio-additions .pa-table{font-size:11px}.portfolio-additions .pa-table th,.portfolio-additions .pa-table td{padding:4px 6px}}
+@media(min-width:1024px){
+ .portfolio-additions{position:relative}
+ .portfolio-additions .pa-body{position:absolute;left:0;right:0;bottom:100%;margin:0 0 6px;z-index:5;padding:8px;border:1px solid rgba(0,255,120,.35);border-radius:10px;background:#04140b;box-shadow:0 -6px 24px rgba(0,0,0,.55)}
+}
+@media(max-width:1023.98px){
+ .portfolio-additions .pa-scroll{overflow:visible}
+ .portfolio-additions .pa-table thead{display:none}
+ .portfolio-additions .pa-table,.portfolio-additions .pa-table tbody{display:block}
+ .portfolio-additions .pa-table tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px 8px;padding:6px 8px;border-bottom:1px solid rgba(0,255,120,.08)}
+ .portfolio-additions .pa-table tbody tr:last-child{border-bottom:0}
+ .portfolio-additions .pa-table th,.portfolio-additions .pa-table td{display:block;padding:0;border:0;white-space:normal;text-align:left}
+ .portfolio-additions .pa-table td:nth-child(3){text-align:right}
+ .portfolio-additions .pa-table td:nth-child(n+4)::before{content:attr(data-label);display:block;font-size:9px;color:var(--mint);line-height:1.3}
+ .portfolio-additions .pa-table td:nth-child(5){text-align:center}
+ .portfolio-additions .pa-table td:nth-child(6){text-align:right}
+}

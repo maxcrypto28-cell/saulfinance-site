@@ -1,0 +1,14 @@
+{
+  "updated_at": "2026-11-27",
+  "title": "Additions to the portfolio [Trades]",
+  "notes": "Share purchases made after the Nov 9, 2026 launch, from the tracker's BOOKED CONTRIBUTION events (pending_events.csv) and all_time_baseline.json contributions. null = not recorded. Times are the Wealthsimple fill times as recorded; only the Nov 17 PZA record names its zone (America/Vancouver), and the other fill times are shown in the same owner-local Pacific time.",
+  "trades": [
+    {"symbol":"IRM","date":"2026-11-27","time":"07:48","time_zone":"PT","time_zone_recorded":false,"shares":0.1634,"price":104.1271,"currency":"USD","total":17.01,"source":"pending_events IRM-TOPUP-2026-11-27","note":"Paid from USD cash (covered-call premium)"},
+    {"symbol":"RY","date":"2026-11-20","time":"08:34","time_zone":"PT","time_zone_recorded":false,"shares":0.0484,"price":267.46,"currency":"CAD","total":12.95,"source":"pending_events RY-TOPUP-2026-11-20","note":"Funded by CU covered-call premium"},
+    {"symbol":"RTX","date":"2026-11-18","time":"08:18","time_zone":"PT","time_zone_recorded":false,"shares":0.0265,"price":195.2337,"currency":"USD","total":5.17,"source":"pending_events RTX-TOPUP-2026-11-18","note":"Funded mostly by O covered-call premium"},
+    {"symbol":"PZA","date":"2026-11-18","time":"08:17","time_zone":"PT","time_zone_recorded":false,"shares":0.6909,"price":11.52,"currency":"CAD","total":7.96,"source":"pending_events PZA-TOPUP-2026-11-18","note":"Funded by H covered-call premium"},
+    {"symbol":"PZA","date":"2026-11-17","time":"07:51","time_zone":"PT","time_zone_recorded":true,"shares":1.1105,"price":11.67,"currency":"CAD","total":12.96,"source":"pending_events PZA-TOPUP-2026-11-17","note":"Funded by covered-call premium"},
+    {"symbol":"PZA","date":"2026-11-12","time":null,"time_zone":null,"shares":null,"price":null,"currency":"CAD","total":54.88,"source":"pending_events PZA-CONTRIB-2026-11-12 (buy 1 of 2)","note":"Exact fill not recorded; Nov 12 share count estimated at 6.1295 combined"},
+    {"symbol":"PZA","date":"2026-11-12","time":null,"time_zone":null,"shares":null,"price":null,"currency":"CAD","total":15.67,"source":"pending_events PZA-CONTRIB-2026-11-12 (buy 2 of 2)","note":"Exact fill not recorded; Nov 12 share count estimated at 6.1295 combined"}
+  ]
+}
