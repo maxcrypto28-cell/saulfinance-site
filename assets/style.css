@@ -2285,3 +2285,8 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
  .ca-session-flag{width:20px;height:10px;object-fit:contain;flex-shrink:0;display:block}
  .ca-session-open{font:600 10px/1.2 ui-monospace,monospace;letter-spacing:.6px;color:var(--green);text-transform:uppercase;text-shadow:0 0 6px rgba(56,255,119,.35)}
 }
+
+/* cc157: desktop US early-close line beside the Daily PNL / index stack, larger and readable */
+.us-early-note{display:none}
+@media(min-width:1024px){.us-early-note:not([hidden]){display:block;position:absolute;z-index:3;pointer-events:none;font-weight:600;font-size:14px;line-height:1.3;letter-spacing:.02em;color:var(--green);white-space:nowrap;text-shadow:0 0 6px rgba(56,255,119,.3)}}
+@media(min-width:1024px) and (max-width:1279.98px){.us-early-note:not([hidden]){font-size:13px;white-space:normal}}

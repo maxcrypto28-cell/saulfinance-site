@@ -535,6 +535,36 @@ const SHARED_HOLIDAY_NAMES={
 function holidayChartHtml(){
  return '<span class="us-holiday-chart" aria-hidden="true"><span class="us-holiday-chart-icon">📈</span><span class="us-holiday-chart-x">❌</span></span>';
 }
+function placeUsEarlyNote(){
+  const note=document.getElementById('us-early-note');
+  if(!note||note.hidden)return;
+  const header=document.querySelector('.site-header');
+  const stack=document.querySelector('.header-market-stack');
+  if(!header||!stack)return;
+  // Sit to the right of the 'Best performer' line and the SFF vs Indices row, vertically centred on them.
+  const rows=['daily-pnl-hot-header','index-strip-header'].map(id=>document.getElementById(id)).filter(e=>e&&!e.hidden&&e.offsetParent);
+  const rr=(rows.length?rows:[stack]).map(e=>e.getBoundingClientRect());
+  const hr=header.getBoundingClientRect();
+  const right=Math.max(...rr.map(r=>r.right)),top=Math.min(...rr.map(r=>r.top)),bottom=Math.max(...rr.map(r=>r.bottom));
+  const left=right+24,maxW=Math.max(0,hr.right-16-left);
+  note.style.left=Math.round(left-hr.left)+'px';
+  note.style.maxWidth=Math.round(maxW)+'px';
+  note.style.top=Math.round(top-hr.top+(bottom-top-note.offsetHeight)/2)+'px';
+}
+function paintUsEarlyNote(html){
+  const header=document.querySelector('.site-header');
+  if(!header)return;
+  let note=document.getElementById('us-early-note');
+  if(html&&!note){
+    note=document.createElement('div');note.id='us-early-note';note.className='us-early-note';
+    header.appendChild(note);
+  }
+  if(!note)return;
+  if(!html){note.hidden=true;return;}
+  note.hidden=false;
+  if(note.innerHTML!==html)note.innerHTML=html;
+  placeUsEarlyNote();
+}
 function paintUsHolidayNote(){
  const el=document.querySelector('.us-holiday-note');
  if(!el)return;
@@ -545,10 +575,14 @@ function paintUsHolidayNote(){
  // cc155: NYSE early-close days — after the 13:00 ET NYSE close, same line style as the holiday notes.
  if(sess&&/NYSE/.test(String(sess[1]||''))&&NYSE_EARLY_CLOSES.has(ymd)&&now>=sessionCloseMs(sess[0])){
   const html='<span class="us-holiday-flag" aria-hidden="true">🇺🇸</span> '+chart+' US markets closed early today';
-  el.hidden=false;
+  // cc157: on desktop the early-close line moves beside the Daily PNL stack (larger); mobile keeps it here.
+  const desk=window.matchMedia('(min-width:1024px)').matches;
+  el.hidden=desk;
   if(el.innerHTML!==html)el.innerHTML=html;
+  paintUsEarlyNote(desk?html:'');
   return;
  }
+ paintUsEarlyNote('');
  if(sess&&sess[1]==='TSX'){
   const name=US_HOLIDAY_NAMES[ymd];
   if(!name){el.hidden=true;el.replaceChildren();return;}
@@ -622,6 +656,8 @@ function clockNow(){
  paintUsHolidayNote();
  // cc155: repaint the market note each minute so the early-close line appears at 13:00 ET without a reload.
  setInterval(()=>{try{paintUsHolidayNote();}catch(e){}},60000);
+ window.addEventListener('resize',()=>{try{paintUsHolidayNote();}catch(e){}});
+ window.addEventListener('load',()=>{try{placeUsEarlyNote();}catch(e){}});
  tick();
 })();
 // Subtle descending SAUL FINANCE streams, adapted from the approved Matrix graphics.
@@ -2062,6 +2098,7 @@ function paintPnl(data, mode='daily', labelOverride=null, lastCloseLine='', last
     }
   }
   try{paintHeaderLaunchPnl(data);}catch(e){}
+  try{placeUsEarlyNote();}catch(e){}
   try{paintFxBadge(data);}catch(e){}
 }
 function paintHeaderLaunchPnl(data){
