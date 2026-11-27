@@ -543,7 +543,8 @@ function placeUsEarlyNote(){
   if(!header||!stack)return;
   // Sit to the right of the 'Best performer' line and the SFF vs Indices row, vertically centred on them.
   const rows=['daily-pnl-hot-header','index-strip-header'].map(id=>document.getElementById(id)).filter(e=>e&&!e.hidden&&e.offsetParent);
-  const rr=(rows.length?rows:[stack]).map(e=>e.getBoundingClientRect());
+  const off=!rows.length;note.classList.toggle('is-off',off);if(off)return; // cc159: off on pages without the Daily PNL stack
+  const rr=rows.map(e=>e.getBoundingClientRect());
   const hr=header.getBoundingClientRect();
   const right=Math.max(...rr.map(r=>r.right)),top=Math.min(...rr.map(r=>r.top)),bottom=Math.max(...rr.map(r=>r.bottom));
   const left=right+24,maxW=Math.max(0,hr.right-16-left);
@@ -658,6 +659,8 @@ function clockNow(){
  setInterval(()=>{try{paintUsHolidayNote();}catch(e){}},60000);
  window.addEventListener('resize',()=>{try{paintUsHolidayNote();}catch(e){}});
  window.addEventListener('load',()=>{try{placeUsEarlyNote();}catch(e){}});
+ // cc159: keep the desktop notes tied to the Holdings-page stack as pages change
+ setInterval(()=>{try{placeUsEarlyNote();}catch(e){}try{if(typeof placeCaSessionNote==='function')placeCaSessionNote();}catch(e){}},700);
  tick();
 })();
 // Subtle descending SAUL FINANCE streams, adapted from the approved Matrix graphics.
@@ -690,6 +693,32 @@ function premiumTotal(pos){
     return Number(pos.premium_received.per_share)*shares;
   }
   return null;
+}
+// cc159: per-date premium ledger for a covered call, from covered-calls.json only (original sale + any rolls' net credits).
+function ccPremiumLedger(pos){
+  const cur=String(pos&&pos.currency||'CAD').toUpperCase();
+  const total=premiumTotal(pos);
+  if(total==null||!Number.isFinite(total))return null;
+  const rec=pos.premium_received&&typeof pos.premium_received==='object'?pos.premium_received:{};
+  const totalCad=rec.total_cad!=null&&Number.isFinite(Number(rec.total_cad))?Number(rec.total_cad):null;
+  const rolls=(Array.isArray(pos.rolls)?pos.rolls:[]).filter(r=>r&&r.net_credit!=null&&Number.isFinite(Number(r.net_credit)));
+  const rollNative=rolls.reduce((a,r)=>a+Number(r.net_credit),0);
+  const rollCadOk=rolls.every(r=>r.net_credit_cad!=null&&Number.isFinite(Number(r.net_credit_cad)));
+  const rollCad=rolls.reduce((a,r)=>a+Number(r.net_credit_cad||0),0);
+  const round=n=>Math.round(n*100)/100;
+  const rows=[{date:pos.opened_date||null,label:'Sold to open',native:round(total-rollNative),cad:cur==='CAD'?null:(totalCad!=null&&rollCadOk?round(totalCad-rollCad):null)}];
+  for(const r of rolls){
+    const to=r.to_expiration?formatShortDate(r.to_expiration):'';
+    rows.push({date:r.date||null,label:'Rolled'+(to?' to '+to:'')+(r.strike!=null?' $'+Number(r.strike)+' call':'')+' · net credit',native:Number(r.net_credit),cad:cur==='CAD'?null:(r.net_credit_cad!=null?Number(r.net_credit_cad):null)});
+  }
+  return {cur,rows,total,totalCad:cur==='CAD'?null:totalCad};
+}
+function ccPremiumLedgerHtml(pos){
+  const L=ccPremiumLedger(pos);if(!L)return '';
+  const amt=(n,c)=>esc(moneySigned(n,c));
+  const row=r=>`<li class="cc-prem-row"><span class="cc-prem-date">${r.date?esc(formatShortDate(r.date)):'date not recorded'}</span><span class="cc-prem-what">${esc(r.label)}</span><span class="cc-prem-amt cc-green">${amt(r.native,L.cur)}</span>${L.cur==='CAD'?'':`<span class="cc-prem-cad">${r.cad==null?'—':esc(money(r.cad,'CAD'))}</span>`}</li>`;
+  const tot=`<li class="cc-prem-row cc-prem-total"><span class="cc-prem-date">Total</span><span class="cc-prem-what">${L.rows.length} premium${L.rows.length===1?'':'s'}</span><span class="cc-prem-amt cc-green">${amt(L.total,L.cur)}</span>${L.cur==='CAD'?'':`<span class="cc-prem-cad">${L.totalCad==null?'—':esc(money(L.totalCad,'CAD'))}</span>`}</li>`;
+  return `<ul class="cc-prem-ledger" aria-label="Premiums collected by date">${L.rows.map(row).join('')}${L.rows.length>1?tot:''}</ul>`;
 }
 function formatShortDate(s){
   if(!s)return '—';
@@ -1121,18 +1150,22 @@ function renderCoveredCalls(data){
     const dist=ccDistance(live&&live.price,strike),mid='cc-m-'+String(p.id||tkr).replace(/[^\w-]/g,'');
     const sum=(k,v,attrs='')=>`<span class="cc-sum"${attrs}><small>${k}</small><b>${v}</b></span>`;
     const metric=(label,value,attrs='',cls='')=>`<div class="cc-metric${cls?' '+cls:''}"${attrs}><span>${label}</span><strong>${value}</strong></div>`;
+    const ledger=ccPremiumLedgerHtml(p);
+    const premBtn=`<button type="button" class="cc-prem-toggle" aria-expanded="false" aria-label="Show premiums collected by date for ${esc(tkr)}"><span aria-hidden="true">▸</span></button>`;
     return `<article class="native-panel cc-card" data-cc-id="${esc(p.id||tkr)}" data-cc-underlying="${esc(p.underlying||tkr)}" data-cc-strike="${strike==null?'':esc(String(strike))}" data-cc-expiry="${esc(p.expiration||'')}" data-cc-exdiv="${esc(ex&&ex.kind==='before_expiry'?ex.date:'')}" data-cc-currency="${esc(cur)}">
       <header class="cc-card-head">
         <span class="ticker-dot" style="background:${esc(color)}"></span>
         <div class="cc-card-title"><button type="button" class="cc-toggle" aria-expanded="false" aria-controls="${esc(mid)}" aria-label="Show all details for ${esc(tkr)}"><span aria-hidden="true">▾</span></button>${title}<span class="cc-card-name">${esc(name)}</span></div>
-        ${sum('Strike',strike==null?'—':money(strike,cur))}${sum('Expiry',esc(formatShortDate(p.expiration)))}${sum('Days left',esc(ccDaysLeft(p.expiration)),' data-cc-field="days"')}${sum('Premium','<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>')}${sum('To strike',esc(dist.text),' data-cc-field="dist" title="'+esc(dist.title)+'" data-cc-dist="'+dist.cls+'"')}
+        ${sum('Strike',strike==null?'—':money(strike,cur))}${sum('Expiry',esc(formatShortDate(p.expiration)))}${sum('Days left',esc(ccDaysLeft(p.expiration)),' data-cc-field="days"')}${sum('Premium','<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>'+(ledger?premBtn:''))}${sum('To strike',esc(dist.text),' data-cc-field="dist" title="'+esc(dist.title)+'" data-cc-dist="'+dist.cls+'"')}
         <span class="cc-status cc-status-open">Open</span>
       </header>
+      ${ledger?'<div class="cc-prem-ledger-wrap cc-prem-ledger-desktop">'+ledger+'</div>':''}
       <div class="cc-metrics" id="${esc(mid)}">
         ${metric('Contracts / shares', esc(contracts)+' · '+esc(shares), '', 'cc-metric-secondary')}
         ${metric('Strike', strike==null?'—':money(strike,cur), '', 'cc-metric-key')}
         ${metric('Expiry', esc(formatShortDate(p.expiration)), '', 'cc-metric-key')}
-        ${metric('Premium received', '<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>', '', 'cc-metric-key')}
+        ${metric('Premium received', '<span class="cc-green">'+(prem==null?'—':moneySigned(prem,cur))+'</span>'+(ledger?premBtn:''), '', 'cc-metric-key cc-metric-prem')}
+        ${ledger?'<div class="cc-prem-ledger-wrap cc-prem-ledger-mobile">'+ledger+'</div>':''}
         ${metric('Premium / share', esc(moneyPerShare(per,cur)), '', 'cc-metric-secondary')}
         ${metric('Days to expiry', daysText, ' data-cc-field="days"', 'cc-metric-secondary')}
         ${metric('Underlying', live?money(live.price,live.currency):'—', ' data-cc-field="underlying"', 'cc-metric-secondary')}
@@ -1169,7 +1202,10 @@ function renderCoveredCalls(data){
   host.innerHTML=`${income}<div class="cc-cards" data-scroll-region tabindex="0">${cards}</div>${histTable}`;
   try{ccStrikeNoteAlign();}catch(e){}
   if(!host.dataset.ccToggle){host.dataset.ccToggle='1'; // cc115: desktop compact rows expand on click / Enter / Space
-    host.addEventListener('click',e=>{const head=e.target.closest('.cc-card-head');if(!head||e.target.closest('a'))return;
+    host.addEventListener('click',e=>{
+      const pb=e.target.closest('.cc-prem-toggle'); // cc159: premium-by-date dropdown; does not open/close the row
+      if(pb){e.stopPropagation();const card=pb.closest('.cc-card');if(!card)return;const on=!card.classList.contains('is-prem-open');card.classList.toggle('is-prem-open',on);card.querySelectorAll('.cc-prem-toggle').forEach(b=>b.setAttribute('aria-expanded',String(on)));return;}
+      const head=e.target.closest('.cc-card-head');if(!head||e.target.closest('a'))return;
       const card=head.closest('.cc-card'),b=card&&card.querySelector('.cc-toggle');if(!b||getComputedStyle(b).display==='none')return;
       const on=!card.classList.contains('is-open');card.classList.toggle('is-open',on);b.setAttribute('aria-expanded',String(on));});}
   try{paintCoveredCallLive();}catch(e){}
@@ -1417,6 +1453,8 @@ function placeCaSessionNote(){
   const strip=document.getElementById('daily-pnl-strip-header');
   if(!header||!tab||!strip)return;
   const hr=header.getBoundingClientRect(),tr=tab.getBoundingClientRect(),sr=strip.getBoundingClientRect();
+  // cc159: only beside the Holdings-page Daily PNL pill; off on pages where it isn't shown.
+  const off=!(sr.width>0&&sr.height>0&&strip.offsetParent);note.classList.toggle('is-off',off);if(off)return;
   // Centre under the tab, but keep clear of the Daily PNL pill on the right and the 'Rev the Car' caption on the left.
   const rev=[...document.querySelectorAll('.site-header span')].find(e=>/^Rev the Car/.test(e.textContent||''));
   const rr=rev&&rev.offsetParent?rev.getBoundingClientRect():null;

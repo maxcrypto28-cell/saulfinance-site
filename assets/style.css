@@ -2292,3 +2292,30 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 @media(min-width:1024px) and (max-width:1279.98px){.us-early-note:not([hidden]){font-size:13px;white-space:normal}}
 /* cc158: the header pyramid span rule (display:block) was overriding [hidden] on the holiday note */
 .us-holiday-note[hidden]{display:none!important}
+
+/* cc159: covered-call premium dropdown — total stays collapsed; arrow shows each dated premium */
+#covered-calls .cc-prem-toggle{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin-left:4px;padding:0;border:1px solid rgba(0,255,120,.35);border-radius:4px;background:transparent;color:var(--green);font:600 10px/1 ui-monospace,monospace;cursor:pointer;vertical-align:middle}
+#covered-calls .cc-prem-toggle span{display:inline-block;transition:transform .15s}
+#covered-calls .cc-card.is-prem-open .cc-prem-toggle span{transform:rotate(90deg)}
+#covered-calls .cc-prem-toggle:focus-visible{outline:1px solid var(--green);outline-offset:1px}
+#covered-calls .cc-prem-ledger-wrap{display:none}
+#covered-calls .cc-prem-ledger{list-style:none;margin:0;padding:6px 10px;border:1px solid var(--edge);border-radius:8px;background:#0b2618;display:grid;gap:3px}
+#covered-calls .cc-prem-row{display:grid;grid-template-columns:minmax(92px,auto) minmax(0,1fr) auto auto;gap:4px 12px;align-items:baseline;font:12px/1.35 ui-monospace,monospace;color:var(--text)}
+#covered-calls .cc-prem-date{color:var(--mint)}
+#covered-calls .cc-prem-what{color:var(--dim);min-width:0;overflow-wrap:anywhere}
+#covered-calls .cc-prem-amt,#covered-calls .cc-prem-cad{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+#covered-calls .cc-prem-cad{color:var(--dim)}
+#covered-calls .cc-prem-total{border-top:1px solid var(--edge);padding-top:3px;margin-top:1px;font-weight:600}
+@media(min-width:1024px){
+ #covered-calls .cc-metric-prem .cc-prem-toggle{display:none}
+ #covered-calls .cc-card.is-prem-open .cc-prem-ledger-desktop{display:block;margin:6px 0 4px}
+}
+@media(max-width:1023.98px){
+ #covered-calls .cc-card.is-prem-open .cc-prem-ledger-mobile{display:block;grid-column:1/-1}
+ #covered-calls .cc-prem-row{grid-template-columns:auto minmax(0,1fr) auto;font-size:11px}
+ #covered-calls .cc-prem-cad{grid-column:3}
+}
+#us-early-note.is-off,#ca-session-note.is-off{display:none!important}
+#covered-calls .cc-prem-toggle{box-sizing:border-box;min-width:0;min-height:0;width:16px;height:16px;flex:0 0 auto;align-self:center}
+#covered-calls .cc-sum b:has(.cc-prem-toggle),#covered-calls .cc-metric-prem strong{display:flex;align-items:center;gap:0}
+#covered-calls .cc-sum b:has(.cc-prem-toggle){justify-content:flex-end}
