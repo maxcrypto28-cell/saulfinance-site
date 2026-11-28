@@ -2399,6 +2399,8 @@ body:has(#close-clock:not([hidden])) .header-holdings-aside{
 .header-holdings-aside{overflow:visible}
 /* Sit just under the fixed header so the open panel does not cover the tab row */
 .header-holdings-aside .tfsa-info-panel{top:calc(var(--header-height) - 8px + 8px);font-size:12px;z-index:40}
+/* cc166: move '?' out of the TFSA line into the existing gap under '1/5 accounts', ~2x size, no extra block height */
+.header-holdings-aside .tfsa-info-toggle{position:absolute;left:50%;top:100%;margin:3px 0 0;padding:0!important;transform:translateX(-50%);width:18px;height:18px;min-width:18px;min-height:0!important;font:700 13px/1 system-ui,-apple-system,sans-serif;z-index:7}
 }
 @media(max-width:1023px){
 .tfsa-info-panel{font-size:12px;z-index:20}
