@@ -3554,3 +3554,33 @@ async function loadPortfolioAdditions(){
   host.hidden=false;
   if(!host.dataset.bound){host.dataset.bound='1';host.addEventListener('click',e=>{const b=e.target.closest('.pa-toggle');if(!b)return;const on=!host.classList.contains('is-open');PA_OPEN=on;host.classList.toggle('is-open',on);b.setAttribute('aria-expanded',String(on));const body=host.querySelector('.pa-body');if(body)body.hidden=!on;});}
 }
+
+
+/* cc165: TFSA heading '?' explainer (starts collapsed) */
+(function(){
+  function bindTfsaInfo(){
+    const toggle=document.querySelector('.tfsa-info-toggle');
+    const panel=document.querySelector('#tfsa-info-panel');
+    if(!toggle||!panel||toggle.dataset.tfsaBound)return;
+    toggle.dataset.tfsaBound='1';
+    const setOpen=open=>{
+      toggle.setAttribute('aria-expanded',open?'true':'false');
+      panel.hidden=!open;
+    };
+    toggle.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(toggle.getAttribute('aria-expanded')!=='true');
+    });
+    document.addEventListener('click',e=>{
+      if(panel.hidden)return;
+      if(panel.contains(e.target)||toggle.contains(e.target))return;
+      setOpen(false);
+    });
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape')setOpen(false);
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindTfsaInfo);
+  else bindTfsaInfo();
+})();
